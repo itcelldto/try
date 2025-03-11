@@ -24,7 +24,7 @@
 </head>
 <body class="container py-4" style="background-color: #d7e2ff6e;">
     <div class="card p-4">
-        <h5 class="mb-4" style="color: #0093ff;">Token Search</h5>
+        <h5 class="mb-4" style="color: #0093ff;">Date Wise Token Search</h5>
         <div class="row g-3">
             <div class="col-md-3">
                 <label for="fromDate" class="form-label">From Date:</label>
@@ -35,12 +35,12 @@
                 <input type="date" id="toDate" class="form-control" required>
             </div>
             <div class="col-md-2 d-flex align-items-end">
-                <button class="btn btn-danger" onclick="searchData()">Search</button>
+                <button class="btn btn-danger" onclick="searchData()">View</button>
             </div>
         </div>
     </div>
     
-    <div class="loading mt-3">⌛ Loading data...</div>
+    <div class="loading mt-3">⌛ Loading. Please Wait...</div>
     <br>    
     <div class="card p-4">
         <h5 id="resultHeading" style="color: #5f87c5;">Bill Details <span id="billCount" style="font-size: 14px; color: #ff0000;"></span></h5>
