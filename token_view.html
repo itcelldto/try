@@ -71,45 +71,48 @@
     </div>
     
     <script>
-    function searchData() {
-        let fromDateInput = $('#fromDate').val();
-        let toDateInput = $('#toDate').val();
+   function searchData() {
+    let fromDateInput = $('#fromDate').val();
+    let toDateInput = $('#toDate').val();
 
-        if (!fromDateInput || !toDateInput) {
-            Swal.fire('Error', 'Please enter both From Date and To Date', 'error');
-            return;
-        }
-
-        let fromDate = new Date(fromDateInput);
-        let toDate = new Date(toDateInput);
-
-        $('.loading').show();
-
-        let sheetId = "1IVNc7bKiWxrulGgdcpb4rNKVhfCIzPoBRLli1SZZcr8";
-        let apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
-        let range = "DB!A:L";
-        let url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                let rows = data.values || [];
-                rows.shift();
-
-                let filteredRows = rows.filter(row => {
-                    let rowFromDate = parseDate(row[10]);
-                    let rowToDate = parseDate(row[11]);
-                    return rowFromDate >= fromDate && rowToDate <= toDate;
-                });
-
-                displayResults(filteredRows);
-                $('.loading').hide();
-            })
-            .catch(error => {
-                console.error("Error fetching data: ", error);
-                $('.loading').hide();
-            });
+    if (!fromDateInput || !toDateInput) {
+        Swal.fire('Error', 'Please enter both From Date and To Date', 'error');
+        return;
     }
+
+    let fromDate = new Date(fromDateInput);
+    let toDate = new Date(toDateInput);
+
+    // Set fromDate to one day before
+    fromDate.setDate(fromDate.getDate() - 1);
+
+    $('.loading').show();
+
+    let sheetId = "1IVNc7bKiWxrulGgdcpb4rNKVhfCIzPoBRLli1SZZcr8";
+    let apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+    let range = "DB!A:L";
+    let url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            let rows = data.values || [];
+            rows.shift();
+
+            let filteredRows = rows.filter(row => {
+                let rowFromDate = parseDate(row[10]);
+                let rowToDate = parseDate(row[11]);
+                return rowFromDate >= fromDate && rowToDate <= toDate;
+            });
+
+            displayResults(filteredRows);
+            $('.loading').hide();
+        })
+        .catch(error => {
+            console.error("Error fetching data: ", error);
+            $('.loading').hide();
+        });
+}
 
     function parseDate(dateStr) {
         if (!dateStr) return new Date(0);
