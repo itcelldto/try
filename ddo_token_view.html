@@ -143,6 +143,7 @@
         let toDate = new Date(toDateInput.split('/').reverse().join('-'));
           // Set fromDate to one day before
         fromDate.setDate(fromDate.getDate() - 1);
+	toDate.setDate(toDate.getDate() + 1);
         $('.loading').show();
 
         let sheetId = "1IVNc7bKiWxrulGgdcpb4rNKVhfCIzPoBRLli1SZZcr8";
