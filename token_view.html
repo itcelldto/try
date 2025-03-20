@@ -84,6 +84,15 @@
             changeMonth: true,
             changeYear: true
         });
+
+        // Initialize DataTable
+        $('#resultTable').DataTable({
+            paging: true,
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            searching: true,
+            ordering: true
+        });
     });
 
     function searchData() {
@@ -158,13 +167,17 @@
 
         $('#grandTotal').text(totalGrossAmount.toFixed(2));
         $('#billCount').text(`(${data.length} -Bills found)`);
-            $('#resultTable').DataTable({
+
+        // Destroy existing DataTable instance and reinitialize
+        if ($.fn.DataTable.isDataTable('#resultTable')) {
+            $('#resultTable').DataTable().destroy();
+        }
+        $('#resultTable').DataTable({
             paging: true,
             pageLength: 10,
             lengthMenu: [10, 25, 50, 100],
             searching: true,
-            ordering: true,
-            destroy: true
+            ordering: true
         });
     }
     </script>
