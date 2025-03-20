@@ -138,6 +138,11 @@
     }
 
     function displayResults(data) {
+
+           if ($.fn.DataTable.isDataTable('#resultTable')) {
+            $('#resultTable').DataTable().destroy();
+        }
+        
         let tableBody = $("#resultTable tbody");
         tableBody.empty();
         let totalGrossAmount = 0;
@@ -166,9 +171,7 @@
         $('#billCount').text(`(${data.length} -Bills found)`);
 
         // Destroy existing DataTable instance and reinitialize
-        if ($.fn.DataTable.isDataTable('#resultTable')) {
-            $('#resultTable').DataTable().destroy();
-        }
+     
         $('#resultTable').DataTable({
             paging: true,
             pageLength: 10,
