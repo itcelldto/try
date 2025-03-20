@@ -162,6 +162,9 @@
         }
 
         function displayResults(data) {
+             if ($.fn.DataTable.isDataTable('#resultTable')) {
+            $('#resultTable').DataTable().destroy();
+        }
             let tableBody = $("#resultTable tbody");
             tableBody.empty();
             let totalGrossAmount = 0;
