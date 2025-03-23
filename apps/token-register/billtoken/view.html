@@ -186,9 +186,11 @@ function updateResultHeading(officeName, totalBills, totalGrossAmount) {
     }
 
     function displayResults(data) {
+       if ($.fn.DataTable.isDataTable('#resultTable')) {
+            $('#resultTable').DataTable().destroy();
+        }
         let tableBody = $("#resultTable tbody");
         tableBody.empty();
-        let totalGrossAmount = 0;
 
         data.forEach(row => {
             totalGrossAmount += parseFloat(row[10]) || 0;
@@ -208,7 +210,13 @@ function updateResultHeading(officeName, totalBills, totalGrossAmount) {
 
         $('#grandTotal').text(totalGrossAmount.toFixed(2));
 	$('#billCount').text(`(${data.length} bills found)`);
-
+        	$('#resultTable').DataTable({
+            paging: true,
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            searching: true,
+            ordering: true
+        });
         if (data.length === 0) {
             Swal.fire('No Records Found', 'No matching records found for the selected criteria.', 'info');
         }
