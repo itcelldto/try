@@ -64,15 +64,17 @@
 	<br>	
     <div class="card p-4">
    <h5 id="resultHeading" class=""style="color: #5f87c5;">Bill Details <span id="billCount" style="font-size: 14px; color: #ff0000;"></span></h5>
-    <table id="resultTable" class="table table-striped table-bordered dataTable">
+    <table id="resultTable" class="table table-striped table-bordered ">
         <thead>
-            <tr>                
+            <tr>
+			
+                
                 <th>TRY</th>
                 <th>Time</th>
                 <th>Token</th>
                 <th>DDO</th>
                 <th>BRN</th>
-		<th>Nature</th>
+				<th>Nature</th>
                 <th>Type</th>
                 <th>Gross</th>
                 <th>Remarks</th>
@@ -91,7 +93,7 @@
 	  
     <script>
  $(document).ready(function () {
-         // Initialize jQuery UI Datepicker
+        // Initialize jQuery UI Datepicker
         $("#fromDate, #toDate").datepicker({
             dateFormat: "dd/mm/yy",
             changeMonth: true,
@@ -103,7 +105,6 @@
         $('.select2').select2();
         fetchDDOCodes();
     });
-
 
     function fetchDDOCodes() {
         let sheetId = "1k_yci80JBMDMvLS4CRViAtj5p1AGlGHVMCcVJUmX70A";
@@ -185,13 +186,9 @@ function updateResultHeading(officeName, totalBills, totalGrossAmount) {
     }
 
     function displayResults(data) {
-       if ($.fn.DataTable.isDataTable('#resultTable')) {
-            $('#resultTable').DataTable().destroy();
-        }
         let tableBody = $("#resultTable tbody");
         tableBody.empty();
         let totalGrossAmount = 0;
-
 
         data.forEach(row => {
             totalGrossAmount += parseFloat(row[10]) || 0;
@@ -204,21 +201,14 @@ function updateResultHeading(officeName, totalBills, totalGrossAmount) {
                 <td>${row[7]}</td>
                 <td>${row[8]}</td>
                 <td>${row[9]}</td>
-		<td>${row[10]}</td>
-		<td>${row[11]}</td>
+				<td>${row[10]}</td>
+				<td>${row[11]}</td>
             </tr>`);
         });
 
         $('#grandTotal').text(totalGrossAmount.toFixed(2));
 	$('#billCount').text(`(${data.length} bills found)`);
-          $('#resultTable').DataTable({
-            paging: true,
-            pageLength: 10,
-           
-            searching: true,
-            ordering: true,
-            destroy: true
-        });
+
         if (data.length === 0) {
             Swal.fire('No Records Found', 'No matching records found for the selected criteria.', 'info');
         }
