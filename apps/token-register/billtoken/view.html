@@ -93,19 +93,19 @@
 	  
     <script>
  $(document).ready(function () {
-        // Initialize jQuery UI Datepicker
+         // Initialize jQuery UI Datepicker
         $("#fromDate, #toDate").datepicker({
             dateFormat: "dd/mm/yy",
             changeMonth: true,
             changeYear: true
         });
-	 
     });
-    
+
     $(document).ready(function() {
         $('.select2').select2();
         fetchDDOCodes();
     });
+
 
     function fetchDDOCodes() {
         let sheetId = "1k_yci80JBMDMvLS4CRViAtj5p1AGlGHVMCcVJUmX70A";
@@ -187,12 +187,11 @@ function updateResultHeading(officeName, totalBills, totalGrossAmount) {
     }
 
     function displayResults(data) {
-      if ($.fn.DataTable.isDataTable('#resultTable')) {
+       if ($.fn.DataTable.isDataTable('#resultTable')) {
             $('#resultTable').DataTable().destroy();
         }
         let tableBody = $("#resultTable tbody");
         tableBody.empty();
-
         let totalGrossAmount = 0;
 
 
@@ -214,12 +213,13 @@ function updateResultHeading(officeName, totalBills, totalGrossAmount) {
 
         $('#grandTotal').text(totalGrossAmount.toFixed(2));
 	$('#billCount').text(`(${data.length} bills found)`);
-        	$('#resultTable').DataTable({
+          $('#resultTable').DataTable({
             paging: true,
             pageLength: 10,
             lengthMenu: [10, 25, 50, 100],
             searching: true,
-            ordering: true
+            ordering: true,
+            destroy: true
         });
         if (data.length === 0) {
             Swal.fire('No Records Found', 'No matching records found for the selected criteria.', 'info');
