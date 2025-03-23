@@ -99,7 +99,14 @@
             changeMonth: true,
             changeYear: true
         });
-	  // Initialize DataTable
+	 
+    });
+    
+    $(document).ready(function() {
+        $('.select2').select2();
+        fetchDDOCodes();
+    });
+ // Initialize DataTable
         $('#resultTable').DataTable({
             paging: true,
             pageLength: 10,
@@ -107,13 +114,6 @@
             searching: true,
             ordering: true
         });
-    });
-
-    $(document).ready(function() {
-        $('.select2').select2();
-        fetchDDOCodes();
-    });
-
     function fetchDDOCodes() {
         let sheetId = "1k_yci80JBMDMvLS4CRViAtj5p1AGlGHVMCcVJUmX70A";
         let apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
