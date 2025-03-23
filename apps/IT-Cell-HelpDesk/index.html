@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Help Desk | IT Cell Treasury </title>
+    <!-- Tell the browser to be responsive -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <!-- Bootstrap 3.3.7 -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/css/AdminLTE.min.css">
+    <!-- AdminLTE Skins -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/css/skins/_all-skins.min.css">
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+    <div class="wrapper">
+        <!-- Main Header -->
+        <header class="main-header">
+            <!-- Logo -->
+            <a href="index2.html" class="logo">
+                <span class="logo-mini"><b>IT</b>HD</span>
+                <span class="logo-lg"><b>IT Cell</b>Help Desk</span>
+            </a>
+            <!-- Header Navbar -->
+            <nav class="navbar navbar-static-top" role="navigation">
+                <!-- Sidebar toggle button-->
+                <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+                    <span class="sr-only">Toggle navigation</span>
+                </a>
+				  <!-- Current Date and Time -->
+        <span id="current-date-time" style="float: right; padding: 15px; font-size: 16px; color: #fff;"></span>
+
+            </nav>
+        </header>
+        <!-- Left side column. contains the logo and sidebar -->
+        <aside class="main-sidebar">
+            <!-- sidebar: style can be found in sidebar.less -->
+            <section class="sidebar">
+                <!-- Sidebar Menu -->
+                <ul class="sidebar-menu" data-widget="tree" id="sidebar-menu">
+                    <!-- Menu items will be dynamically populated here -->
+                </ul>
+                <!-- /.sidebar-menu -->
+            </section>
+            <!-- /.sidebar -->
+        </aside>
+        <!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Running Text Section -->
+    <div class="running-text" style="background: #f4f4f4; border-bottom: 1px solid #ddd;">
+        <marquee id="news-reel" behavior="scroll" direction="left" scrollamount="5"></marquee>
+    </div>
+
+    <!-- Main Content -->
+    <section class="content">
+        <iframe id="main-iframe" src="" style="width: 100%; height: calc(100vh - 100px); border: none;"></iframe>
+    </section>
+</div>
+
+        <!-- /.content-wrapper -->
+        <!-- Main Footer -->
+        <footer class="main-footer">
+            <div class="pull-right hidden-xs">
+                Version 1
+            </div>
+            <strong>Copyright &copy; 2025 <a href="#">IT Cell Treasury</a>.</strong> All rights reserved.
+        </footer>
+    </div>
+    <!-- ./wrapper -->
+    <!-- jQuery 3 -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <!-- Bootstrap 3.3.7 -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/js/adminlte.min.js"></script>
+	<style>
+	   #current-date-time {
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+        margin-right: 20px;
+    }
+
+	.content {
+    padding: 0px !important;
+	}
+	.treeview-menu>li>a {
+    padding: 5px 5px 5px 35px;
+    display: block;
+    font-size: 14px;
+}
+.running-text {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: #f8f9fa;
+        padding: 5px;
+        border-bottom: 1px solid #ddd;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    #news-reel {
+        font-weight: normal;
+        color: #333;
+    }
+
+	</style>
+    <script>
+ function updateDateTime() {
+    const now = new Date();
+
+    // Format date as dd-mm-yyyy
+    const day = String(now.getDate()).padStart(2, '0'); // Ensure 2 digits
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+    const year = now.getFullYear();
+    const dateString = `${day}-${month}-${year}`; // Format: dd-mm-yyyy
+
+    // Format time in 12-hour base with AM/PM
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0'); // Ensure 2 digits
+    const seconds = String(now.getSeconds()).padStart(2, '0'); // Ensure 2 digits
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12 || 12; // Convert to 12-hour format
+    const timeString = `${hours}:${minutes}:${seconds} ${ampm}`; // Format: hh:mm:ss AM/PM
+
+    // Combine date and time
+    const dateTimeString = `${dateString} ${timeString}`;
+
+    // Update the date and time in the navbar
+    document.getElementById('current-date-time').textContent = dateTimeString;
+}
+
+// Update the date and time every second
+setInterval(updateDateTime, 1000);
+
+// Initialize the date and time immediately
+updateDateTime();
+
+       
+
+$(document).ready(function() {
+   const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+   const sheetId = '11wvVQ2G41ke3g6RdfYX8AJAl0w-fnf2NQ_Agufz0wXY';
+   
+
+    // Fetch data for the sidebar menu
+    const menuSheetName = 'Sub treasury-nav-links';
+    const menuUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${menuSheetName}?key=${apiKey}`;
+
+    // Fetch data for the running text
+    const reelSheetName = 'Scroll-reel';
+    const reelUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${reelSheetName}?key=${apiKey}`;
+
+    // Fetch and populate the running text
+    $.get(reelUrl, function(data) {
+        const rows = data.values;
+        let runningText = '';
+
+        // Combine all text from column A2:A into a single string
+        rows.slice(1).forEach(row => {
+            if (row[0]) {
+                runningText += row[0] + ' • '; // Add a separator between items
+            }
+        });
+
+        // Set the running text content
+        $('#news-reel').text(runningText);
+    });
+
+    // Fetch and populate the sidebar menu
+    $.get(menuUrl, function(data) {
+        const rows = data.values;
+        let currentMainMenu = '';
+        let mainMenuLi = null;
+        let subMenuUl = null;
+
+        rows.slice(1).forEach(row => {
+            const mainMenu = row[0];
+            const subMenu = row[1];
+            const subMenuLink = row[2];
+
+            if (mainMenu !== currentMainMenu) {
+                currentMainMenu = mainMenu;
+                mainMenuLi = $('<li>').addClass('treeview');
+                subMenuUl = $('<ul>').addClass('treeview-menu');
+
+                // Add glyphicon-plus icon before the main menu text
+                const mainMenuLink = $('<a>')
+                    .append($('<i>').addClass('glyphicon glyphicon-plus')) // Add glyphicon-plus icon
+                    .append(' ' + mainMenu) // Add space and main menu text
+                    .append($('<i>').addClass('fa fa-angle-left pull-right')); // Add angle-left icon for dropdown
+
+                mainMenuLi.append(mainMenuLink);
+                mainMenuLi.append(subMenuUl);
+                $('#sidebar-menu').append(mainMenuLi);
+            }
+
+            if (subMenu && subMenuLink) {
+                const subMenuLi = $('<li>').append($('<a>').attr('href', '#').text(subMenu).click(function(e) {
+                    e.preventDefault();
+                    $('#main-iframe').attr('src', subMenuLink);
+                }));
+                subMenuUl.append(subMenuLi);
+            }
+        });
+    });
+});
+
+
+    </script>
+</body>
+</html>
+
