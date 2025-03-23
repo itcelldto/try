@@ -66,15 +66,13 @@
    <h5 id="resultHeading" class=""style="color: #5f87c5;">Bill Details <span id="billCount" style="font-size: 14px; color: #ff0000;"></span></h5>
     <table id="resultTable" class="table table-striped table-bordered dataTable">
         <thead>
-            <tr>
-			
-                
+            <tr>                
                 <th>TRY</th>
                 <th>Time</th>
                 <th>Token</th>
                 <th>DDO</th>
                 <th>BRN</th>
-				<th>Nature</th>
+		<th>Nature</th>
                 <th>Type</th>
                 <th>Gross</th>
                 <th>Remarks</th>
@@ -206,8 +204,8 @@ function updateResultHeading(officeName, totalBills, totalGrossAmount) {
                 <td>${row[7]}</td>
                 <td>${row[8]}</td>
                 <td>${row[9]}</td>
-				<td>${row[10]}</td>
-				<td>${row[11]}</td>
+		<td>${row[10]}</td>
+		<td>${row[11]}</td>
             </tr>`);
         });
 
@@ -216,7 +214,7 @@ function updateResultHeading(officeName, totalBills, totalGrossAmount) {
           $('#resultTable').DataTable({
             paging: true,
             pageLength: 10,
-            lengthMenu: [10, 25, 50, 100],
+           
             searching: true,
             ordering: true,
             destroy: true
