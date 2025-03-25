@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cheque Submission Form</title>
+    <!-- Include Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Include jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Include jQuery UI CSS -->
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <!-- Include jQuery UI JS -->
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <!-- Include Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Include Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Include SweetAlert2 CSS and JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        #spinner {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        .panel-heading {
+            font-weight: bold;
+            font-size: 18px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #ddd;
+        }
+        .panel-body {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body style="background-color:#d7e2ff6e;">
+    <br>
+    <div class="container">
+        <div class="card">
+            <div class="card-header">Cheque Submission Form</div>
+            <div class="card-body">
+                <form id="chequeForm">
+                    <div class="row">
+                        <!-- Column 1 -->
+                        <div class="col-md-6">
+                            <!-- Treasury Code (Select2 Dropdown) -->
+                            <div class="mb-2">
+                                <label for="treasuryCode" class="form-label">Treasury Code:</label>
+                                <select id="treasuryCode" name="treasuryCode" class="form-control select2" style="width: 100%;" required>
+                                    <option value="">Select Treasury Code</option>
+                                </select>
+                            </div>
+                             <!-- Cheque Alpha Code -->
+                            <div class="mb-3">
+                                <label for="chequeAlphaCode" class="form-label">Cheque Alpha Code (2 digits):</label>
+                                <input type="text" class="form-control" id="chequeAlphaCode" name="chequeAlphaCode" placeholder="2 Digit Alpha Code" maxlength="2" required>
+                            </div>
+
+                            <!-- Cheque Date -->
+                            <div class="mb-3">
+                                <label for="chequeDate" class="form-label">Cheque Date:</label>
+                                <input type="text" class="form-control" id="chequeDate" name="chequeDate" required>
+                            </div>
+
+                           
+                        </div>
+
+                        <!-- Column 2 -->
+                        <div class="col-md-6">
+                            <!-- Cheque No -->
+							
+							  <!-- Office -->
+                            <div class="mb-3">
+                                <label for="office" class="form-label">Account No:</label>
+                                <input type="text" class="form-control" id="office" name="office" placeholder="15 Digit Account No." maxlength="15" required>
+                            </div>
+							
+                           
+                               <!-- Office -->
+                             <div class="mb-3">
+                                <label for="chequeNo" class="form-label">Cheque Number:</label>
+                                <input type="text" class="form-control" id="chequeNo" name="chequeNo" placeholder="Enter Cheque Number" required>
+                            </div>
+                           
+
+                            <!-- Gross Amount -->
+                            <div class="mb-3">
+                                <label for="gross" class="form-label">Gross Amount:</label>
+                                <input type="number" class="form-control" id="gross" name="gross" placeholder="Enter Gross Amount" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Remarks -->
+                    <div class="mb-3">
+                        <label for="remarks" class="form-label">Remarks:</label>
+                        <textarea class="form-control" id="remarks" name="remarks" rows="4" required>***</textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center">
+                        <div id="spinner" class="mt-3">
+                            <div class="spinner-grow text-muted"></div>
+                            <div class="spinner-grow text-primary"></div>
+                            <div class="spinner-grow text-success"></div>
+                            <div class="spinner-grow text-info"></div>
+                            <div class="spinner-grow text-warning"></div>
+                            <div class="spinner-grow text-danger"></div>
+                        </div><br>
+                        <button type="submit" id="submitBtn" class="btn btn-primary">Submit</button>
+                        <button type="reset" id="resetBtn" class="btn btn-secondary">Reset</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2();
+            fetchTreasuryCodes();
+            initializeChequeAlphaCode();
+            initializeDatepicker();
+        });
+
+        function fetchTreasuryCodes() {
+            let sheetId = "1k_yci80JBMDMvLS4CRViAtj5p1AGlGHVMCcVJUmX70A";
+            let apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+            let range = "Treasury!A2:A"; // Fetch only Treasury Code column
+            let url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    let treasuryDropdown = $('#treasuryCode');
+                    treasuryDropdown.empty();
+                    treasuryDropdown.append('<option value="">Select Treasury Code</option>');
+                    let uniqueCodes = [...new Set((data.values || []).flat())];
+                    uniqueCodes.forEach(code => {
+                        treasuryDropdown.append(`<option value="${code}">${code}</option>`);
+                    });
+                })
+                .catch(error => console.error("Error fetching Treasury Codes:", error));
+        }
+
+        function initializeChequeAlphaCode() {
+            // Convert to uppercase on keyup
+            $('#chequeAlphaCode').on('keyup', function() {
+                this.value = this.value.toUpperCase();
+            });
+
+            // Validate length on blur
+            $('#chequeAlphaCode').on('blur', function() {
+                if (this.value.length !== 2) {
+                    Swal.fire({
+                        title: "Error!",
+                        text: "Cheque Alpha Code must be exactly 2 characters long.",
+                        icon: "error",
+                        confirmButtonText: "OK",
+                    });
+                }
+            });
+        }
+
+        function initializeDatepicker() {
+            $("#chequeDate").datepicker({
+                dateFormat: "dd/mm/yy",
+                changeMonth: true,
+                changeYear: true,
+                defaultDate: new Date() // Set default to today
+            });
+            
+            // Set today's date as default
+            $("#chequeDate").datepicker("setDate", new Date());
+        }
+
+        // Form submission logic
+        document.getElementById("chequeForm").onsubmit = function (e) {
+            e.preventDefault(); // Prevent default form submission
+
+            // Show spinner and hide the submit button
+            const submitButton = document.getElementById("submitBtn");
+            const spinner = document.getElementById("spinner");
+            spinner.style.display = "flex";
+            submitButton.style.display = "none";
+
+            // Prepare form data
+            const formData = new FormData(this);
+
+            // Submit form data using XMLHttpRequest
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "https://script.google.com/macros/s/AKfycbytmGLsULZGMicE7uLaTzESVGFel8oKfHMM77PK_9yw0lU54os-qSyWaAwiUrkr7jJd/exec", true);
+            xhr.onload = function () {
+                // Hide spinner and show the submit button after response
+                spinner.style.display = "none";
+                submitButton.style.display = "inline-block";
+
+                if (xhr.status == 200) {
+                    const referenceId = xhr.responseText; // Receive reference ID from the server
+                    // Show SweetAlert success message with the reference ID
+                    Swal.fire({
+                        title: "Success!",
+                        html: `Cheque Details Added.<br><br><b>Reference ID:</b> ${referenceId}`,
+                        icon: "success",
+                        confirmButtonText: "OK",
+                    }).then(function () {
+                        document.getElementById("chequeForm").reset();
+                        // Reset date to today after form submission
+                        $("#chequeDate").datepicker("setDate", new Date());
+                        // Reset Select2 dropdowns
+                        $('.select2').val(null).trigger('change');
+                    });
+                } else {
+                    // Error handling if the form submission fails
+                    Swal.fire({
+                        title: "Error!",
+                        text: "There was an issue submitting your form. Please try again.",
+                        icon: "error",
+                        confirmButtonText: "OK",
+                    });
+                }
+            };
+            xhr.send(formData);
+        };
+    </script>
+</body>
+</html>
