@@ -177,61 +177,66 @@
         }
 
         function searchData() {
-            let ddoCode = $('#ddoCode').val();
-            let fromDateInput = $('#fromDate').val();
-            let toDateInput = $('#toDate').val();
+    let ddoCode = $('#ddoCode').val();
+    let fromDateInput = $('#fromDate').val();
+    let toDateInput = $('#toDate').val();
 
-            if (!ddoCode || !fromDateInput || !toDateInput) {
-                Swal.fire('Error', 'Please enter all required fields', 'error');
-                return;
-            }
+    if (!ddoCode || !fromDateInput || !toDateInput) {
+        Swal.fire('Error', 'Please enter all required fields', 'error');
+        return;
+    }
 
-            let fromDate = new Date(fromDateInput.split('/').reverse().join('-'));
-            let toDate = new Date(toDateInput.split('/').reverse().join('-'));
-            // Set fromDate to one day before
-            fromDate.setDate(fromDate.getDate() - 1);
-            toDate.setDate(toDate.getDate() + 1);
-            $('.loading').show();
+    // Parse dates without adjusting them
+    let fromDate = parseDate(fromDateInput);
+    let toDate = parseDate(toDateInput);
+    
+    $('.loading').show();
 
-            let sheetId = "1gi7K-jIB9Sf3Of8KTHDKGSmqXlsiaM41dL7choxTack";
-            let apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
-            let range = "DATA!A:L"; // Fetch all relevant columns
-            let url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+    let sheetId = "1gi7K-jIB9Sf3Of8KTHDKGSmqXlsiaM41dL7choxTack";
+    let apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+    let range = "DATA!A:L";
+    let url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    console.log("All data fetched:", data.values); // Debugging
-                    let rows = data.values || [];
-                    rows.shift(); // Remove headers
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            console.log("All data fetched:", data.values);
+            let rows = data.values || [];
+            rows.shift(); // Remove headers
 
-                    let filteredRows = rows.filter(row => {
-                        let rowDDO = row[5]; // Column D (DDO Code)
-                        let rowFromDate = parseDate(row[1]); // Column B (From Date)
-                        let rowToDate = parseDate(row[2]); // Column C (To Date)
+            let filteredRows = rows.filter(row => {
+                let rowDDO = row[6]; // Column G (DDO Code)
+                let rowDate = parseDate(row[9]); // Column J (Cheque Date)
+                
+                // Compare DDO code as strings
+                let ddoMatch = String(rowDDO) === String(ddoCode);
+                
+                // Check if date is within range (inclusive)
+                let dateMatch = rowDate >= fromDate && rowDate <= toDate;
+                
+                return ddoMatch && dateMatch;
+            });
 
-                        console.log("Row DDO:", rowDDO, "Selected DDO:", ddoCode); // Debugging
-                        console.log("Row From Date:", rowFromDate, "Selected From Date:", fromDate); // Debugging
-                        console.log("Row To Date:", rowToDate, "Selected To Date:", toDate); // Debugging
+            console.log("Filtered Rows:", filteredRows);
+            displayResults(filteredRows);
+            $('.loading').hide();
+        })
+        .catch(error => {
+            console.error("Error fetching data: ", error);
+            $('.loading').hide();
+        });
+}
 
-                        return rowDDO === ddoCode && rowFromDate >= fromDate && rowToDate <= toDate;
-                    });
-
-                    console.log("Filtered Rows:", filteredRows); // Debugging
-                    displayResults(filteredRows);
-                    $('.loading').hide();
-                })
-                .catch(error => {
-                    console.error("Error fetching data: ", error);
-                    $('.loading').hide();
-                });
-        }
-
-        function parseDate(dateStr) {
-            if (!dateStr) return new Date(0); // Handle empty dates
-            let parts = dateStr.split('/');
-            return new Date(parts[2], parts[1] - 1, parts[0]); // Convert DD/MM/YYYY to Date
-        }
+function parseDate(dateStr) {
+    if (!dateStr) return new Date(0);
+    // Handle both DD/MM/YYYY and other formats
+    let parts = dateStr.split(/[/-]/);
+    if (parts.length === 3) {
+        // Assume DD/MM/YYYY format
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    return new Date(dateStr); // Fallback to native parsing
+}
 
         function displayResults(data) {
             let tableBody = $("#resultTable tbody");
