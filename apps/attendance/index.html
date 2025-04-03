@@ -307,7 +307,7 @@
             return distance <= 100; // 100 meters radius
         }
         
-      // Replace your markAttendance function with this:
+     // In your markAttendance function, replace with this:
 async function markAttendance() {
     if (!currentUser) {
         Swal.fire({
@@ -331,45 +331,54 @@ async function markAttendance() {
     }
 
     try {
-        const timestamp = new Date().toISOString();
         const locationId = `${userLocation.latitude.toFixed(6)},${userLocation.longitude.toFixed(6)}`;
         
-        // Create a unique URL to bypass CORS caching
-        const uniqueUrl = `${webAppUrl}?origin=${encodeURIComponent(window.location.origin)}&cache=${Date.now()}`;
+        // Create a unique URL to prevent caching
+        const uniqueUrl = `${webAppUrl}?cache=${Date.now()}`;
         
-        // Submit via Google Web App with CORS handling
+        // Submit via Google Web App
         const response = await fetch(uniqueUrl, {
             method: 'POST',
-            mode: 'no-cors', // Important for CORS
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                timestamp: timestamp,
-                attendanceId: currentUser.id,
+                attendanceId: currentUser.id,  // Will be padded to 8 digits in the backend
                 location: locationId
             })
         });
 
-        // Since we're using no-cors, we can't read the response directly
-        // So we'll assume success and verify later
-        Swal.fire({
-            title: 'Attendance Submitted!',
-            html: `
-                <div style="text-align: center;">
-                    ${currentUser.photo ? `<img src="${currentUser.photo}" style="max-width: 200px; max-height: 200px; border-radius: 50%; margin-bottom: 15px;">` : ''}
-                    <h3>${currentUser.name}</h3>
-                    <p>ID: ${currentUser.id}</p>
-                    <p>Time: ${new Date(timestamp).toLocaleString()}</p>
-                    <p>Location: ${locationId}</p>
-                </div>
-            `,
-            icon: 'success'
-        });
-
-        // Alternative: Verify submission by checking the sheet after a delay
-        setTimeout(() => verifyAttendance(currentUser.id, timestamp), 3000);
+        const result = await response.json();
         
+        if (result.status === 'success') {
+            // Get current time for display
+            const now = new Date();
+            const options = { 
+                day: '2-digit', 
+                month: '2-digit', 
+                year: 'numeric',
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true
+            };
+            const formattedTime = now.toLocaleString('en-IN', options);
+            
+            Swal.fire({
+                title: 'Attendance Marked Successfully!',
+                html: `
+                    <div style="text-align: center;">
+                        ${currentUser.photo ? `<img src="${currentUser.photo}" style="max-width: 200px; max-height: 200px; border-radius: 50%; margin-bottom: 15px;">` : ''}
+                        <h3>${currentUser.name}</h3>
+                        <p>ID: ${String(currentUser.id).padStart(8, '0')}</p>
+                        <p>Time: ${formattedTime}</p>
+                        <p>Location: ${locationId}</p>
+                    </div>
+                `,
+                icon: 'success'
+            });
+        } else {
+            throw new Error(result.message || 'Failed to submit attendance');
+        }
     } catch (error) {
         console.error('Error marking attendance:', error);
         Swal.fire({
@@ -379,7 +388,6 @@ async function markAttendance() {
         });
     }
 }
-
 // Optional verification function
 async function verifyAttendance(attendanceId, timestamp) {
     try {
