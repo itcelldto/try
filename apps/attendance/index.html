@@ -56,18 +56,6 @@
             background-color: #cccccc;
             cursor: not-allowed;
         }
-        #location {
-            margin: 15px 0;
-            padding: 10px;
-            background-color: #f0f0f0;
-            border-radius: 4px;
-        }
-        #getLocationBtn {
-            background-color: #2196F3;
-        }
-        #getLocationBtn:hover {
-            background-color: #0b7dda;
-        }
         #userDetails {
             margin: 15px 0;
             padding: 10px;
@@ -81,13 +69,6 @@
             max-height: 150px;
             border-radius: 50%;
             margin-bottom: 10px;
-        }
-        #allowedLocation {
-            margin: 15px 0;
-            padding: 10px;
-            background-color: #f0f0f0;
-            border-radius: 4px;
-            display: none;
         }
     </style>
 </head>
@@ -104,70 +85,48 @@
             <h3 id="userName"></h3>
         </div>
         
-        <button id="getLocationBtn">Get My Location</button>
-        <div id="location">Location not yet retrieved</div>
-        <div id="allowedLocation">Allowed Location: Not loaded yet</div>
-        
         <button id="markAttendanceBtn" disabled>Mark Attendance</button>
     </div>
 
     <script>
-        // Google Sheets configuration
+        // Configuration
         const spreadsheetId = '12LIBVwVqQgDcqZkSSjOty2vLahViuEQOXGMw0bry5ts';
         const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
         const formResponsesSheet = 'Form responses 1';
-        const dataSheet = 'DATA';
-        const settingsSheet = 'settings';
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbzZem51volwvygl4qXnFC_E4IOEbugIC2rtfJQd7GU87huuEUp65grdIMiME-3y9X47Cw/exec';
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbzM_u6seN_hkYjlE0euxHQuItyF-j9c2oXDNWC7879YvmaQbOPG31XafJIlq0H0Dy90vA/exec';
         
         // DOM elements
         const attendanceIdInput = document.getElementById('attendanceId');
         const markAttendanceBtn = document.getElementById('markAttendanceBtn');
-        const getLocationBtn = document.getElementById('getLocationBtn');
-        const locationDisplay = document.getElementById('location');
-        const allowedLocationDisplay = document.getElementById('allowedLocation');
         const userDetailsDiv = document.getElementById('userDetails');
         const userImage = document.getElementById('userImage');
         const userName = document.getElementById('userName');
         
-        // Location variables
-        let userLocation = null;
+        // Variables
+        let currentUser = null;
         let allowedLocation = {
             latitude: null,
             longitude: null
         };
-        let currentUser = null;
         
         // Event listeners
         attendanceIdInput.addEventListener('input', fetchUserDetails);
-        getLocationBtn.addEventListener('click', getLocation);
         markAttendanceBtn.addEventListener('click', markAttendance);
         
         // Initialize the page
         async function initialize() {
             try {
                 // Get allowed location from settings sheet
-                const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${settingsSheet}!B2:B3?key=${apiKey}`;
+                const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/settings!B2:B3?key=${apiKey}`;
                 const settingsResponse = await fetch(settingsUrl);
                 const settingsData = await settingsResponse.json();
                 
                 if (settingsData.values && settingsData.values.length >= 2) {
                     allowedLocation.latitude = parseFloat(settingsData.values[0][0]);
                     allowedLocation.longitude = parseFloat(settingsData.values[1][0]);
-                    
-                    allowedLocationDisplay.style.display = 'block';
-                    allowedLocationDisplay.innerHTML = `
-                        Allowed Location:<br>
-                        Latitude: ${allowedLocation.latitude}<br>
-                        Longitude: ${allowedLocation.longitude}
-                    `;
-                } else {
-                    allowedLocationDisplay.textContent = "Error: Could not load allowed location from settings";
-                    console.error('Could not retrieve allowed location from settings sheet');
                 }
             } catch (error) {
-                console.error('Error initializing:', error);
-                allowedLocationDisplay.textContent = "Error loading allowed location settings";
+                console.error('Error loading allowed location settings:', error);
             }
         }
         
@@ -178,12 +137,11 @@
             if (attendanceId.length !== 8 || !/^\d+$/.test(attendanceId)) {
                 userDetailsDiv.style.display = 'none';
                 currentUser = null;
-                validateForm();
+                markAttendanceBtn.disabled = true;
                 return;
             }
             
             try {
-                // Corrected range to get columns B (ID), C (Name), and E (Photo)
                 const userDetailsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${formResponsesSheet}!B2:E?key=${apiKey}`;
                 const detailsResponse = await fetch(userDetailsUrl);
                 const detailsData = await detailsResponse.json();
@@ -193,86 +151,72 @@
                     if (userRow) {
                         currentUser = {
                             id: userRow[0],      // Column B (Attendance ID)
-                            name: userRow[1],    // Column C (Name) - CORRECTED
-                            photo: userRow[3]    // Column E (Photograph URL)
+                            name: userRow[1],    // Column C (Name)
+                            photo: userRow[3]     // Column E (Photograph URL)
                         };
                         
                         userImage.src = currentUser.photo;
                         userName.textContent = currentUser.name;
                         userDetailsDiv.style.display = 'block';
+                        markAttendanceBtn.disabled = false;
                     } else {
                         userDetailsDiv.style.display = 'none';
                         currentUser = null;
+                        markAttendanceBtn.disabled = true;
                     }
                 } else {
                     userDetailsDiv.style.display = 'none';
                     currentUser = null;
+                    markAttendanceBtn.disabled = true;
                 }
             } catch (error) {
                 console.error('Error fetching user details:', error);
                 userDetailsDiv.style.display = 'none';
                 currentUser = null;
+                markAttendanceBtn.disabled = true;
             }
-            
-            validateForm();
         }
         
         // Get user's current location
         function getLocation() {
-            locationDisplay.textContent = "Retrieving location...";
-            
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        userLocation = {
-                            latitude: position.coords.latitude,
-                            longitude: position.coords.longitude
-                        };
-                        locationDisplay.innerHTML = 
-                            `Your Location:<br>
-                             Latitude: ${userLocation.latitude}<br>
-                             Longitude: ${userLocation.longitude}`;
-                        validateForm();
-                    },
-                    (error) => {
-                        let errorMessage = 'Error retrieving location: ';
-                        switch(error.code) {
-                            case error.PERMISSION_DENIED:
-                                errorMessage += "User denied the request for Geolocation.";
-                                break;
-                            case error.POSITION_UNAVAILABLE:
-                                errorMessage += "Location information is unavailable.";
-                                break;
-                            case error.TIMEOUT:
-                                errorMessage += "The request to get user location timed out.";
-                                break;
-                            case error.UNKNOWN_ERROR:
-                                errorMessage += "An unknown error occurred.";
-                                break;
+            return new Promise((resolve, reject) => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const userLocation = {
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude
+                            };
+                            resolve(userLocation);
+                        },
+                        (error) => {
+                            let errorMessage = 'Error retrieving location: ';
+                            switch(error.code) {
+                                case error.PERMISSION_DENIED:
+                                    errorMessage += "User denied the request for Geolocation.";
+                                    break;
+                                case error.POSITION_UNAVAILABLE:
+                                    errorMessage += "Location information is unavailable.";
+                                    break;
+                                case error.TIMEOUT:
+                                    errorMessage += "The request to get user location timed out.";
+                                    break;
+                                case error.UNKNOWN_ERROR:
+                                    errorMessage += "An unknown error occurred.";
+                                    break;
+                            }
+                            reject(new Error(errorMessage));
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 0
                         }
-                        locationDisplay.textContent = errorMessage;
-                        userLocation = null;
-                        validateForm();
-                    },
-                    {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0
-                    }
-                );
-            } else {
-                locationDisplay.textContent = "Geolocation is not supported by this browser.";
-                userLocation = null;
-                validateForm();
-            }
-        }
-        
-        // Validate form inputs
-        function validateForm() {
-            const idValid = attendanceIdInput.value.length === 8 && /^\d+$/.test(attendanceIdInput.value) && currentUser;
-            const locationValid = userLocation !== null;
-            
-            markAttendanceBtn.disabled = !(idValid && locationValid);
+                    );
+                } else {
+                    reject(new Error("Geolocation is not supported by this browser."));
+                }
+            });
         }
         
         // Calculate distance between two coordinates in meters
@@ -292,9 +236,8 @@
         }
         
         // Check if user is within allowed location
-        function isWithinAllowedLocation() {
+        function isWithinAllowedLocation(userLocation) {
             if (!userLocation || !allowedLocation.latitude || !allowedLocation.longitude) {
-                console.error('Missing location data for verification');
                 return false;
             }
             
@@ -303,115 +246,90 @@
                 allowedLocation.latitude, allowedLocation.longitude
             );
             
-            console.log(`Distance from allowed location: ${distance.toFixed(2)} meters`);
             return distance <= 100; // 100 meters radius
         }
         
-     // In your markAttendance function, replace with this:
-async function markAttendance() {
-    if (!currentUser) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'User details not found.',
-        });
-        return;
-    }
-
-    // First verify location
-    if (!isWithinAllowedLocation()) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Location Error',
-            html: `You are not at the allowed location.<br><br>
-                   Your location: ${userLocation.latitude}, ${userLocation.longitude}<br>
-                   Allowed location: ${allowedLocation.latitude}, ${allowedLocation.longitude}`,
-        });
-        return;
-    }
-
-    try {
-        const locationId = `${userLocation.latitude.toFixed(6)},${userLocation.longitude.toFixed(6)}`;
-        
-        // Create a unique URL to prevent caching
-        const uniqueUrl = `${webAppUrl}?cache=${Date.now()}`;
-        
-        // Submit via Google Web App
-        const response = await fetch(uniqueUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                attendanceId: currentUser.id,  // Will be padded to 8 digits in the backend
-                location: locationId
-            })
-        });
-
-        const result = await response.json();
-        
-        if (result.status === 'success') {
-            // Get current time for display
-            const now = new Date();
-            const options = { 
-                day: '2-digit', 
-                month: '2-digit', 
-                year: 'numeric',
-                hour: '2-digit', 
-                minute: '2-digit',
-                hour12: true
-            };
-            const formattedTime = now.toLocaleString('en-IN', options);
-            
-            Swal.fire({
-                title: 'Attendance Marked Successfully!',
-                html: `
-                    <div style="text-align: center;">
-                        ${currentUser.photo ? `<img src="${currentUser.photo}" style="max-width: 200px; max-height: 200px; border-radius: 50%; margin-bottom: 15px;">` : ''}
-                        <h3>${currentUser.name}</h3>
-                        <p>ID: ${String(currentUser.id).padStart(8, '0')}</p>
-                        <p>Time: ${formattedTime}</p>
-                        <p>Location: ${locationId}</p>
-                    </div>
-                `,
-                icon: 'success'
-            });
-        } else {
-            throw new Error(result.message || 'Failed to submit attendance');
-        }
-    } catch (error) {
-        console.error('Error marking attendance:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An error occurred while marking attendance. Please try again.',
-        });
-    }
-}
-// Optional verification function
-async function verifyAttendance(attendanceId, timestamp) {
-    try {
-        const verificationUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheet}!B2:C?key=${apiKey}`;
-        const response = await fetch(verificationUrl);
-        const data = await response.json();
-        
-        if (data.values) {
-            const record = data.values.find(row => 
-                row[0] === attendanceId && row[1] === timestamp
-            );
-            
-            if (!record) {
+        // Mark attendance using Google Web App
+        async function markAttendance() {
+            if (!currentUser) {
                 Swal.fire({
-                    icon: 'warning',
-                    title: 'Verification Pending',
-                    text: 'Attendance submission is being processed. Please check back later.',
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'User details not found.',
+                });
+                return;
+            }
+
+            try {
+                // Get user location
+                const userLocation = await getLocation();
+                
+                // Verify location
+                if (!isWithinAllowedLocation(userLocation)) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Location Error',
+                        text: 'You are not at the allowed location to mark attendance.',
+                    });
+                    return;
+                }
+                
+                const locationId = `${userLocation.latitude.toFixed(6)},${userLocation.longitude.toFixed(6)}`;
+                
+                // Create a unique URL to prevent caching
+                const uniqueUrl = `${webAppUrl}?cache=${Date.now()}`;
+                
+                // Submit via Google Web App
+                const response = await fetch(uniqueUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        attendanceId: currentUser.id,
+                        location: locationId
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // Get current time for display
+                    const now = new Date();
+                    const options = { 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        year: 'numeric',
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: true
+                    };
+                    const formattedTime = now.toLocaleString('en-IN', options);
+                    
+                    Swal.fire({
+                        title: 'Attendance Marked Successfully!',
+                        html: `
+                            <div style="text-align: center;">
+                                ${currentUser.photo ? `<img src="${currentUser.photo}" style="max-width: 200px; max-height: 200px; border-radius: 50%; margin-bottom: 15px;">` : ''}
+                                <h3>${currentUser.name}</h3>
+                                <p>ID: ${String(currentUser.id).padStart(8, '0')}</p>
+                                <p>Time: ${formattedTime}</p>
+                            </div>
+                        `,
+                        icon: 'success'
+                    });
+                } else {
+                    throw new Error(result.message || 'Failed to submit attendance');
+                }
+            } catch (error) {
+                console.error('Error marking attendance:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message || 'An error occurred while marking attendance. Please try again.',
                 });
             }
         }
-    } catch (error) {
-        console.log('Verification error:', error);
-    }
-}
         
         // Initialize the page when loaded
         window.addEventListener('load', initialize);
