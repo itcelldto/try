@@ -6,7 +6,7 @@
     <title>Attendance Marking System | IT CELL </title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        body {
+       body {
             font-family: Arial, sans-serif;
             max-width: 600px;
             margin: 0 auto;
@@ -92,6 +92,7 @@
     </style>
 </head>
 <body>
+    <!-- Your HTML structure remains unchanged -->
     <div class="container">
         <h1>IT Cell Attendance Marking System</h1>
         <div class="form-group">
@@ -134,7 +135,6 @@
         
         // Location variables
         let userLocation = null;
-        let cutoffTime = null;
         let currentUser = null;
         
         // Location range constants
@@ -151,56 +151,33 @@
         // Initialize the page
         async function initialize() {
             try {
-                // Get cutoff time from settings sheet
-                const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${settingsSheet}!B5?key=${apiKey}`;
-                const settingsResponse = await fetch(settingsUrl);
-                const settingsData = await settingsResponse.json();
-                
-                if (settingsData.values && settingsData.values.length >= 1) {
-                    cutoffTime = settingsData.values[0][0];
-                    allowedLocationDisplay.style.display = 'block';
-                    allowedLocationDisplay.innerHTML = `
-                        Allowed Location Range:<br>
-                        Latitude: ${MIN_LATITUDE} to ${MAX_LATITUDE}<br>
-                        Longitude: ${MIN_LONGITUDE} to ${MAX_LONGITUDE}<br>
-                        Cutoff Time: ${cutoffTime} (IST)<br>
-                        Time Zone: Indian Standard Time (IST)
-                    `;
-                } else {
-                    allowedLocationDisplay.textContent = "Error: Could not load settings";
-                    console.error('Could not retrieve settings from sheet');
-                }
+                allowedLocationDisplay.style.display = 'block';
+                allowedLocationDisplay.innerHTML = `
+                    Allowed Location Range:<br>
+                    Latitude: ${MIN_LATITUDE} to ${MAX_LATITUDE}<br>
+                    Longitude: ${MIN_LONGITUDE} to ${MAX_LONGITUDE}<br>
+                    FN/AN Status: Before 12:00 PM is FN, After is AN<br>
+                `;
             } catch (error) {
                 console.error('Error initializing:', error);
                 allowedLocationDisplay.textContent = "Error loading settings";
             }
         }
         
-        // Convert to IST (UTC+5:30)
-        function toIST(date) {
-            const offset = 5.5 * 60 * 60 * 1000;
-            return new Date(date.getTime() + offset);
+        // Format date as YYYY-MM-DD
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
         
-        // Format time in IST
-       function formatTimeIST(date) {
-    const options = {
-        timeZone: 'Asia/Kolkata',
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    };
-    return date.toLocaleTimeString('en-IN', options);
-}
-        
-        // Format date in IST (DD/MM/YYYY)
-        function formatDateIST(date) {
-            const istDate = toIST(date);
-            const day = String(istDate.getDate()).padStart(2, '0');
-            const month = String(istDate.getMonth() + 1).padStart(2, '0');
-            const year = istDate.getFullYear();
-            return `${day}/${month}/${year}`;
+        // Format time as HH:MM:SS
+        function formatTime(date) {
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            return `${hours}:${minutes}:${seconds}`;
         }
         
         // Fetch user details when ID is entered
@@ -320,21 +297,10 @@
             return latValid && lngValid;
         }
         
-        // Determine FN/AN status based on cutoff time in IST
+        // Determine FN/AN status based on current time (before 12 PM is FN, after is AN)
         function getAttendanceStatus() {
-            if (!cutoffTime) return 'AN';
-            
-            const now = toIST(new Date());
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
-            const [cutoffHour, cutoffMinute] = cutoffTime.split(':').map(Number);
-            
-            if (currentHour < cutoffHour || 
-               (currentHour === cutoffHour && currentMinute < cutoffMinute)) {
-                return 'FN';
-            } else {
-                return 'AN';
-            }
+            const now = new Date();
+            return now.getHours() < 12 ? 'FN' : 'AN';
         }
         
         // Mark attendance using Google Web App
@@ -360,33 +326,29 @@
             }
 
             try {
-        const now = new Date();
-        const istDate = toIST(now); // Convert to IST
-        const dateStr = formatDateIST(now);
-        const timeStr = formatTimeIST(now);
-        const status = getAttendanceStatus();
-        const locationId = `${userLocation.latitude.toFixed(6)},${userLocation.longitude.toFixed(6)}`;
-        
-        // Create a proper IST timestamp string
-        const istTimestamp = `${dateStr} ${timeStr}`;
-        
-        const uniqueUrl = `${webAppUrl}?cache=${Date.now()}`;
-        
-        const response = await fetch(uniqueUrl, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                date: dateStr,
-                timestamp: istTimestamp, // Send IST timestamp instead of UTC
-                attendanceId: currentUser.id,
-                location: locationId,
-                status: status
-            })
-        });
-
+                const now = new Date();
+                const dateStr = formatDate(now);
+                const timeStr = formatTime(now);
+                const status = getAttendanceStatus();
+                const locationId = `${userLocation.latitude.toFixed(6)},${userLocation.longitude.toFixed(6)}`;
+                
+                const uniqueUrl = `${webAppUrl}?cache=${Date.now()}`;
+                
+                const response = await fetch(uniqueUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        date: dateStr,
+                        timestamp: now.toISOString(), // Using UTC timestamp
+                        time: timeStr, // Local time in HH:MM:SS format
+                        attendanceId: currentUser.id,
+                        location: locationId,
+                        status: status
+                    })
+                });
 
                 Swal.fire({
                     title: 'Attendance Submitted!',
@@ -396,7 +358,7 @@
                             <h3>${currentUser.name}</h3>
                             <p>ID: ${String(currentUser.id).padStart(8, '0')}</p>
                             <p>Date: ${dateStr}</p>
-                            <p>Time: ${timeStr} (IST)</p>
+                            <p>Time: ${timeStr}</p>
                             <p>Status: ${status}</p>
                             <p>Location: ${locationId}</p>
                         </div>
