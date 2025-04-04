@@ -132,12 +132,13 @@
         
         // Location variables
         let userLocation = null;
-        let allowedLocation = {
-            latitude: null,
-            longitude: null
-        };
-        let currentUser = null;
         let cutoffTime = null;
+        
+        // Location range constants (8.0000 to 77.0000 for both latitude and longitude)
+        const MIN_LATITUDE = 8.0000;
+        const MAX_LATITUDE = 77.0000;
+        const MIN_LONGITUDE = 8.0000;
+        const MAX_LONGITUDE = 77.0000;
         
         // Event listeners
         attendanceIdInput.addEventListener('input', fetchUserDetails);
@@ -147,21 +148,18 @@
         // Initialize the page
         async function initialize() {
             try {
-                // Get allowed location and cutoff time from settings sheet
-                const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${settingsSheet}!B2:B5?key=${apiKey}`;
+                // Get cutoff time from settings sheet
+                const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${settingsSheet}!B5?key=${apiKey}`;
                 const settingsResponse = await fetch(settingsUrl);
                 const settingsData = await settingsResponse.json();
                 
-                if (settingsData.values && settingsData.values.length >= 4) {
-                    allowedLocation.latitude = parseFloat(settingsData.values[0][0]);
-                    allowedLocation.longitude = parseFloat(settingsData.values[1][0]);
-                    cutoffTime = settingsData.values[3][0]; // B5 cell contains cutoff time
-                    
+                if (settingsData.values && settingsData.values.length >= 1) {
+                    cutoffTime = settingsData.values[0][0]; // B5 cell contains cutoff time
                     allowedLocationDisplay.style.display = 'block';
                     allowedLocationDisplay.innerHTML = `
-                        Allowed Location:<br>
-                        Latitude: ${allowedLocation.latitude}<br>
-                        Longitude: ${allowedLocation.longitude}<br>
+                        Allowed Location Range:<br>
+                        Latitude: ${MIN_LATITUDE} to ${MAX_LATITUDE}<br>
+                        Longitude: ${MIN_LONGITUDE} to ${MAX_LONGITUDE}<br>
                         Cutoff Time: ${cutoffTime}
                     `;
                 } else {
@@ -186,7 +184,7 @@
             }
             
             try {
-                // Corrected range to get columns B (ID), C (Name), and E (Photo)
+                // Get columns B (ID), C (Name), and E (Photo)
                 const userDetailsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${formResponsesSheet}!B2:E?key=${apiKey}`;
                 const detailsResponse = await fetch(userDetailsUrl);
                 const detailsData = await detailsResponse.json();
@@ -196,7 +194,7 @@
                     if (userRow) {
                         currentUser = {
                             id: userRow[0],      // Column B (Attendance ID)
-                            name: userRow[1],    // Column C (Name) - CORRECTED
+                            name: userRow[1],    // Column C (Name)
                             photo: userRow[3]    // Column E (Photograph URL)
                         };
                         
@@ -278,36 +276,24 @@
             markAttendanceBtn.disabled = !(idValid && locationValid);
         }
         
-        // Calculate distance between two coordinates in meters
-        function calculateDistance(lat1, lon1, lat2, lon2) {
-            const R = 6371e3; // Earth radius in meters
-            const φ1 = lat1 * Math.PI/180;
-            const φ2 = lat2 * Math.PI/180;
-            const Δφ = (lat2-lat1) * Math.PI/180;
-            const Δλ = (lon2-lon1) * Math.PI/180;
-            
-            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                      Math.cos(φ1) * Math.cos(φ2) *
-                      Math.sin(Δλ/2) * Math.sin(Δλ/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            
-            return R * c;
-        }
-        
-        // Check if user is within allowed location
+        // Check if user is within allowed location range
         function isWithinAllowedLocation() {
-            if (!userLocation || !allowedLocation.latitude || !allowedLocation.longitude) {
-                console.error('Missing location data for verification');
+            if (!userLocation) {
+                console.error('Missing user location data');
                 return false;
             }
             
-            const distance = calculateDistance(
-                userLocation.latitude, userLocation.longitude,
-                allowedLocation.latitude, allowedLocation.longitude
-            );
+            const { latitude, longitude } = userLocation;
             
-            console.log(`Distance from allowed location: ${distance.toFixed(2)} meters`);
-            return distance <= 100; // 100 meters radius
+            // Check if latitude is within range (8.0000 to 77.0000)
+            const latValid = latitude >= MIN_LATITUDE && latitude <= MAX_LATITUDE;
+            
+            // Check if longitude is within range (8.0000 to 77.0000)
+            const lngValid = longitude >= MIN_LONGITUDE && longitude <= MAX_LONGITUDE;
+            
+            console.log(`Location check - Lat: ${latitude} (${latValid ? 'Valid' : 'Invalid'}), Lng: ${longitude} (${lngValid ? 'Valid' : 'Invalid'})`);
+            
+            return latValid && lngValid;
         }
         
         // Determine FN/AN status based on cutoff time
@@ -353,9 +339,9 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Location Error',
-                    html: `You are not at the allowed location.<br><br>
+                    html: `You are not within the allowed location range.<br><br>
                            Your location: ${userLocation.latitude}, ${userLocation.longitude}<br>
-                           Allowed location: ${allowedLocation.latitude}, ${allowedLocation.longitude}`,
+                           Allowed range: Latitude ${MIN_LATITUDE} to ${MAX_LATITUDE}, Longitude ${MIN_LONGITUDE} to ${MAX_LONGITUDE}`,
                 });
                 return;
             }
