@@ -146,42 +146,42 @@
         markAttendanceBtn.addEventListener('click', markAttendance);
         
         // Initialize the page
-      // Initialize the page
+    // Initialize the page
 async function initialize() {
     try {
-        // Get settings from settings sheet (C2:D3 for location ranges, B5 for cutoff time)
+        // Get all settings at once
         const settingsRange = `${settingsSheet}!B5,C2:D3`;
         const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${settingsRange}?key=${apiKey}`;
         const settingsResponse = await fetch(settingsUrl);
         const settingsData = await settingsResponse.json();
         
-        if (settingsData.values && settingsData.values.length > 0) {
-            // The response structure is different than expected - we need to properly index the values
-            // First row contains cutoff time (B5)
-            cutoffTime = settingsData.values[0] && settingsData.values[0][0];
+        if (settingsData.values && settingsData.values.length >= 3) {
+            // Cutoff time is in the first row (B5)
+            cutoffTime = settingsData.values[0] ? settingsData.values[0][0] : '12:00';
             
             // Second row contains MIN_LATITUDE (C2) and MAX_LATITUDE (D2)
             if (settingsData.values[1]) {
-                MIN_LATITUDE = parseFloat(settingsData.values[1][0]) || 0;
-                MAX_LATITUDE = parseFloat(settingsData.values[1][1]) || 0;
+                MIN_LATITUDE = parseFloat(settingsData.values[1][0]) || 8.0; // Default Kerala values
+                MAX_LATITUDE = parseFloat(settingsData.values[1][1]) || 13.0;
             }
             
             // Third row contains MIN_LONGITUDE (C3) and MAX_LONGITUDE (D3)
             if (settingsData.values[2]) {
-                MIN_LONGITUDE = parseFloat(settingsData.values[2][0]) || 0;
-                MAX_LONGITUDE = parseFloat(settingsData.values[2][1]) || 0;
+                MIN_LONGITUDE = parseFloat(settingsData.values[2][0]) || 74.0;
+                MAX_LONGITUDE = parseFloat(settingsData.values[2][1]) || 78.0;
             }
             
+            // Update UI with loaded values
             allowedLocationDisplay.style.display = 'block';
             allowedLocationDisplay.innerHTML = `
                 Allowed Location Range:<br>
                 Latitude: ${MIN_LATITUDE} to ${MAX_LATITUDE}<br>
                 Longitude: ${MIN_LONGITUDE} to ${MAX_LONGITUDE}<br>
-                Cutoff Time: ${cutoffTime || 'Not set'}<br>
+                Cutoff Time: ${cutoffTime}<br>
                 Time Zone: Indian Standard Time (IST)
             `;
             
-            console.log('Loaded settings:', {
+            console.log('Settings loaded successfully:', {
                 MIN_LATITUDE,
                 MAX_LATITUDE,
                 MIN_LONGITUDE,
@@ -189,21 +189,27 @@ async function initialize() {
                 cutoffTime
             });
         } else {
-            allowedLocationDisplay.textContent = "Error: Could not load settings";
-            console.error('Could not retrieve settings from sheet:', settingsData);
+            throw new Error('Invalid settings data structure');
         }
     } catch (error) {
-        console.error('Error initializing:', error);
-        allowedLocationDisplay.textContent = "Error loading settings";
-        // Set default values if loading fails
+        console.error('Error loading settings:', error);
+        // Set default Kerala values if loading fails
         MIN_LATITUDE = 8.0;
         MAX_LATITUDE = 13.0;
         MIN_LONGITUDE = 74.0;
         MAX_LONGITUDE = 78.0;
         cutoffTime = '12:00';
+        
+        allowedLocationDisplay.style.display = 'block';
+        allowedLocationDisplay.innerHTML = `
+            Using Default Location Range:<br>
+            Latitude: ${MIN_LATITUDE} to ${MAX_LATITUDE}<br>
+            Longitude: ${MIN_LONGITUDE} to ${MAX_LONGITUDE}<br>
+            Cutoff Time: ${cutoffTime}<br>
+            Time Zone: Indian Standard Time (IST)
+        `;
     }
 }
-        
         // Fetch user details when ID is entered
         async function fetchUserDetails() {
             const attendanceId = attendanceIdInput.value;
@@ -308,26 +314,34 @@ async function initialize() {
             markAttendanceBtn.disabled = !(idValid && locationValid);
         }
         
-        // Check if user is within allowed location range
-        function isWithinAllowedLocation() {
-            if (!userLocation) {
-                console.error('Missing user location data');
-                return false;
-            }
-            
-            const { latitude, longitude } = userLocation;
-            
-            // Check if latitude is within range
-            const latValid = latitude >= MIN_LATITUDE && latitude <= MAX_LATITUDE;
-            
-            // Check if longitude is within range
-            const lngValid = longitude >= MIN_LONGITUDE && longitude <= MAX_LONGITUDE;
-            
-            console.log(`Location check - Lat: ${latitude} (${latValid ? 'Valid' : 'Invalid'}), Lng: ${longitude} (${lngValid ? 'Valid' : 'Invalid'})`);
-            
-            return latValid && lngValid;
-        }
-        
+     // Check if user is within allowed location range
+function isWithinAllowedLocation() {
+    if (!userLocation) {
+        console.error('Missing user location data');
+        return false;
+    }
+    
+    const { latitude, longitude } = userLocation;
+    
+    // Validate latitude
+    const latValid = (latitude >= MIN_LATITUDE) && (latitude <= MAX_LATITUDE);
+    
+    // Validate longitude
+    const lngValid = (longitude >= MIN_LONGITUDE) && (longitude <= MAX_LONGITUDE);
+    
+    console.log('Location validation:', {
+        userLocation,
+        allowedRange: {
+            MIN_LATITUDE,
+            MAX_LATITUDE,
+            MIN_LONGITUDE,
+            MAX_LONGITUDE
+        },
+        isValid: latValid && lngValid
+    });
+    
+    return latValid && lngValid;
+}
         // Determine FN/AN status based on cutoff time (using IST)
         function getAttendanceStatus() {
             if (!cutoffTime) return 'AN'; // Default to AN if no cutoff time
@@ -379,85 +393,91 @@ async function initialize() {
         }
         
         // Mark attendance using Google Web App
-        async function markAttendance() {
-            if (!currentUser) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'User details not found.',
-                });
-                return;
+// Mark attendance using Google Web App
+async function markAttendance() {
+    if (!currentUser) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'User details not found.',
+        });
+        return;
+    }
+
+    // Verify location first
+    if (!isWithinAllowedLocation()) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Location Error',
+            html: `You are not within the allowed location range.<br><br>
+                   Your location: ${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)}<br>
+                   Allowed range: Latitude ${MIN_LATITUDE} to ${MAX_LATITUDE}<br>
+                   Longitude ${MIN_LONGITUDE} to ${MAX_LONGITUDE}`,
+        });
+        return;
+    }
+
+    try {
+        const now = new Date();
+        const dateStr = formatDate(now);
+        const timeStr = formatTime(now);
+        const status = getAttendanceStatus();
+        const locationId = `${userLocation.latitude.toFixed(6)},${userLocation.longitude.toFixed(6)}`;
+        
+        // Show loading indicator
+        Swal.fire({
+            title: 'Processing...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
             }
+        });
 
-            // First verify location
-            if (!isWithinAllowedLocation()) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Location Error',
-                    html: `You are not within the allowed location range.<br><br>
-                           Your location: ${userLocation.latitude}, ${userLocation.longitude}<br>
-                           Allowed range: Latitude ${MIN_LATITUDE} to ${MAX_LATITUDE}, Longitude ${MIN_LONGITUDE} to ${MAX_LONGITUDE}`,
-                });
-                return;
-            }
+        // Submit via Google Web App
+        const response = await fetch(webAppUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                date: dateStr,
+                timestamp: now.toISOString(),
+                attendanceId: currentUser.id,
+                location: locationId,
+                status: status
+            })
+        });
 
-            try {
-                const now = new Date();
-                const dateStr = formatDate(now);
-                const timeStr = formatTime(now);
-                const status = getAttendanceStatus();
-                const locationId = `${userLocation.latitude.toFixed(6)},${userLocation.longitude.toFixed(6)}`;
-                
-                // Create a unique URL to bypass CORS caching
-                const uniqueUrl = `${webAppUrl}?cache=${Date.now()}`;
-                
-                // Submit via Google Web App with CORS handling
-                const response = await fetch(uniqueUrl, {
-                    method: 'POST',
-                    mode: 'no-cors', // Important for CORS
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        date: dateStr,
-                        timestamp: now.toISOString(),
-                        attendanceId: currentUser.id,
-                        location: locationId,
-                        status: status
-                    })
-                });
-
-                // Since we're using no-cors, we can't read the response directly
-                // So we'll assume success and verify later
-                Swal.fire({
-                    title: 'Attendance Submitted!',
-                    html: `
-                        <div style="text-align: center;">
-                            ${currentUser.photo ? `<img src="${currentUser.photo}" style="max-width: 200px; max-height: 200px; border-radius: 50%; margin-bottom: 15px;">` : ''}
-                            <h3>${currentUser.name}</h3>
-                            <p>ID: ${String(currentUser.id).padStart(8, '0')}</p>
-                            <p>Date: ${dateStr}</p>
-                            <p>Time: ${timeStr} (IST)</p>
-                            <p>Status: ${status}</p>
-                            <p>Location: ${locationId}</p>
-                        </div>
-                    `,
-                    icon: 'success'
-                });
-
-                // Alternative: Verify submission by checking the sheet after a delay
-                setTimeout(() => verifyAttendance(currentUser.id, now.toISOString()), 3000);
-                
-            } catch (error) {
-                console.error('Error marking attendance:', error);
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'An error occurred while marking attendance. Please try again.',
-                });
-            }
+        const result = await response.json();
+        
+        if (result.success) {
+            Swal.fire({
+                title: 'Attendance Submitted!',
+                html: `
+                    <div style="text-align: center;">
+                        ${currentUser.photo ? `<img src="${currentUser.photo}" style="max-width: 200px; max-height: 200px; border-radius: 50%; margin-bottom: 15px;">` : ''}
+                        <h3>${currentUser.name}</h3>
+                        <p>ID: ${String(currentUser.id).padStart(8, '0')}</p>
+                        <p>Date: ${dateStr}</p>
+                        <p>Time: ${timeStr} (IST)</p>
+                        <p>Status: ${status}</p>
+                        <p>Location: ${locationId}</p>
+                    </div>
+                `,
+                icon: 'success'
+            });
+        } else {
+            throw new Error(result.message || 'Unknown error');
         }
-
+    } catch (error) {
+        console.error('Error marking attendance:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Submission Failed',
+            text: error.message || 'An error occurred while marking attendance. Please try again.',
+        });
+    }
+}
         // Optional verification function
         async function verifyAttendance(attendanceId, timestamp) {
             try {
