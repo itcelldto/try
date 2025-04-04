@@ -183,16 +183,16 @@
         }
         
         // Format time in IST
-        function formatTimeIST(date) {
-            const istDate = toIST(date);
-            return istDate.toLocaleTimeString('en-IN', {
-                timeZone: 'Asia/Kolkata',
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-        }
+       function formatTimeIST(date) {
+    const options = {
+        timeZone: 'Asia/Kolkata',
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    };
+    return date.toLocaleTimeString('en-IN', options);
+}
         
         // Format date in IST (DD/MM/YYYY)
         function formatDateIST(date) {
