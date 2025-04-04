@@ -118,7 +118,7 @@
         const formResponsesSheet = 'Form responses 1';
         const dataSheet = 'DATA';
         const settingsSheet = 'settings';
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbzWsvdDIL3jQj_9NHRrNiP8-JMOYJjlsI7pYlTOQYv87f3gWNVkxe57DwqnjtYbqLE0gQ/exec';
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbwNvZ7KLEfBBDBds6b9zaVT9MdHxrGqeMT0R8Su8zZxc23ZTt1SNpCQiULqyFQ079w9RQ/exec';
         
         // DOM elements
         const attendanceIdInput = document.getElementById('attendanceId');
@@ -396,85 +396,62 @@ function isWithinAllowedLocation() {
 // Mark attendance using Google Web App
 async function markAttendance() {
     if (!currentUser) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'User details not found.',
-        });
+        Swal.fire('Error', 'User details not found.', 'error');
         return;
     }
 
-    // Verify location first
     if (!isWithinAllowedLocation()) {
         Swal.fire({
             icon: 'error',
             title: 'Location Error',
-            html: `You are not within the allowed location range.<br><br>
-                   Your location: ${userLocation.latitude.toFixed(6)}, ${userLocation.longitude.toFixed(6)}<br>
-                   Allowed range: Latitude ${MIN_LATITUDE} to ${MAX_LATITUDE}<br>
-                   Longitude ${MIN_LONGITUDE} to ${MAX_LONGITUDE}`,
+            html: `You're outside the allowed area.<br>
+                   Your location: ${userLocation.latitude}, ${userLocation.longitude}`
         });
         return;
     }
 
     try {
         const now = new Date();
-        const dateStr = formatDate(now);
-        const timeStr = formatTime(now);
-        const status = getAttendanceStatus();
-        const locationId = `${userLocation.latitude.toFixed(6)},${userLocation.longitude.toFixed(6)}`;
-        
-        // Show loading indicator
+        const payload = {
+            date: formatDate(now),
+            timestamp: now.toISOString(),
+            attendanceId: currentUser.id,
+            location: `${userLocation.latitude},${userLocation.longitude}`,
+            status: getAttendanceStatus()
+        };
+
+        // Add debug logging
+        console.log('Submitting:', payload);
+        console.log('WebApp URL:', webAppUrl);
+
         Swal.fire({
             title: 'Processing...',
             allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-            }
+            didOpen: () => Swal.showLoading()
         });
 
-        // Submit via Google Web App
+        // Modified fetch request
         const response = await fetch(webAppUrl, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                date: dateStr,
-                timestamp: now.toISOString(),
-                attendanceId: currentUser.id,
-                location: locationId,
-                status: status
-            })
+            body: JSON.stringify(payload)
         });
 
-        const result = await response.json();
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
-        if (result.success) {
-            Swal.fire({
-                title: 'Attendance Submitted!',
-                html: `
-                    <div style="text-align: center;">
-                        ${currentUser.photo ? `<img src="${currentUser.photo}" style="max-width: 200px; max-height: 200px; border-radius: 50%; margin-bottom: 15px;">` : ''}
-                        <h3>${currentUser.name}</h3>
-                        <p>ID: ${String(currentUser.id).padStart(8, '0')}</p>
-                        <p>Date: ${dateStr}</p>
-                        <p>Time: ${timeStr} (IST)</p>
-                        <p>Status: ${status}</p>
-                        <p>Location: ${locationId}</p>
-                    </div>
-                `,
-                icon: 'success'
-            });
-        } else {
-            throw new Error(result.message || 'Unknown error');
-        }
+        const result = await response.json();
+        Swal.fire('Success!', 'Attendance marked successfully', 'success');
+        
     } catch (error) {
-        console.error('Error marking attendance:', error);
+        console.error('Submission error:', error);
         Swal.fire({
             icon: 'error',
             title: 'Submission Failed',
-            text: error.message || 'An error occurred while marking attendance. Please try again.',
+            html: `Error: ${error.message}<br>
+                  URL: ${webAppUrl}<br>
+                  Please try again.`
         });
     }
 }
