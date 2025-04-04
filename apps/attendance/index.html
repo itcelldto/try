@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IT Cell Attendance Marking System</title>
+    <title>Attendance Marking System | IT CELL </title>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        /* Your existing styles remain the same */
         body {
             font-family: Arial, sans-serif;
             max-width: 600px;
@@ -20,11 +19,79 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
-        /* ... rest of your styles ... */
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #location {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+        }
+        #getLocationBtn {
+            background-color: #2196F3;
+        }
+        #getLocationBtn:hover {
+            background-color: #0b7dda;
+        }
+        #userDetails {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-radius: 4px;
+            display: none;
+            text-align: center;
+        }
+        #userImage {
+            max-width: 150px;
+            max-height: 150px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+        #allowedLocation {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            display: none;
+        }
     </style>
 </head>
 <body>
-    <!-- Your HTML structure remains the same -->
     <div class="container">
         <h1>IT Cell Attendance Marking System</h1>
         <div class="form-group">
@@ -66,6 +133,7 @@
         // Location variables
         let userLocation = null;
         let cutoffTime = null;
+        let currentUser = null;
         
         // Location range constants
         const MIN_LATITUDE = 8.0000;
@@ -87,7 +155,7 @@
                 const settingsData = await settingsResponse.json();
                 
                 if (settingsData.values && settingsData.values.length >= 1) {
-                    cutoffTime = settingsData.values[0][0]; // B5 cell contains cutoff time
+                    cutoffTime = settingsData.values[0][0];
                     allowedLocationDisplay.style.display = 'block';
                     allowedLocationDisplay.innerHTML = `
                         Allowed Location Range:<br>
@@ -108,7 +176,7 @@
         
         // Convert to IST (UTC+5:30)
         function toIST(date) {
-            const offset = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
+            const offset = 5.5 * 60 * 60 * 1000;
             return new Date(date.getTime() + offset);
         }
         
@@ -133,15 +201,130 @@
             return `${day}/${month}/${year}`;
         }
         
+        // Fetch user details when ID is entered
+        async function fetchUserDetails() {
+            const attendanceId = attendanceIdInput.value;
+            
+            if (attendanceId.length !== 8 || !/^\d+$/.test(attendanceId)) {
+                userDetailsDiv.style.display = 'none';
+                currentUser = null;
+                validateForm();
+                return;
+            }
+            
+            try {
+                const userDetailsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${formResponsesSheet}!B2:E?key=${apiKey}`;
+                const detailsResponse = await fetch(userDetailsUrl);
+                const detailsData = await detailsResponse.json();
+                
+                if (detailsData.values) {
+                    const userRow = detailsData.values.find(row => row[0] === attendanceId);
+                    if (userRow) {
+                        currentUser = {
+                            id: userRow[0],
+                            name: userRow[1],
+                            photo: userRow[3]
+                        };
+                        
+                        userImage.src = currentUser.photo;
+                        userName.textContent = currentUser.name;
+                        userDetailsDiv.style.display = 'block';
+                    } else {
+                        userDetailsDiv.style.display = 'none';
+                        currentUser = null;
+                    }
+                } else {
+                    userDetailsDiv.style.display = 'none';
+                    currentUser = null;
+                }
+            } catch (error) {
+                console.error('Error fetching user details:', error);
+                userDetailsDiv.style.display = 'none';
+                currentUser = null;
+            }
+            
+            validateForm();
+        }
+        
+        // Get user's current location
+        function getLocation() {
+            locationDisplay.textContent = "Retrieving location...";
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        };
+                        locationDisplay.innerHTML = 
+                            `Your Location:<br>
+                             Latitude: ${userLocation.latitude}<br>
+                             Longitude: ${userLocation.longitude}`;
+                        validateForm();
+                    },
+                    (error) => {
+                        let errorMessage = 'Error retrieving location: ';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage += "User denied the request for Geolocation.";
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage += "Location information is unavailable.";
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage += "The request to get user location timed out.";
+                                break;
+                            case error.UNKNOWN_ERROR:
+                                errorMessage += "An unknown error occurred.";
+                                break;
+                        }
+                        locationDisplay.textContent = errorMessage;
+                        userLocation = null;
+                        validateForm();
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            } else {
+                locationDisplay.textContent = "Geolocation is not supported by this browser.";
+                userLocation = null;
+                validateForm();
+            }
+        }
+        
+        // Validate form inputs
+        function validateForm() {
+            const idValid = attendanceIdInput.value.length === 8 && /^\d+$/.test(attendanceIdInput.value) && currentUser;
+            const locationValid = userLocation !== null;
+            
+            markAttendanceBtn.disabled = !(idValid && locationValid);
+        }
+        
+        // Check if user is within allowed location range
+        function isWithinAllowedLocation() {
+            if (!userLocation) {
+                console.error('Missing user location data');
+                return false;
+            }
+            
+            const { latitude, longitude } = userLocation;
+            const latValid = latitude >= MIN_LATITUDE && latitude <= MAX_LATITUDE;
+            const lngValid = longitude >= MIN_LONGITUDE && longitude <= MAX_LONGITUDE;
+            
+            return latValid && lngValid;
+        }
+        
         // Determine FN/AN status based on cutoff time in IST
         function getAttendanceStatus() {
-            if (!cutoffTime) return 'AN'; // Default to AN if no cutoff time
+            if (!cutoffTime) return 'AN';
             
             const now = toIST(new Date());
             const currentHour = now.getHours();
             const currentMinute = now.getMinutes();
-            
-            // Parse cutoff time (assuming format HH:MM in 24-hour format)
             const [cutoffHour, cutoffMinute] = cutoffTime.split(':').map(Number);
             
             if (currentHour < cutoffHour || 
@@ -152,9 +335,7 @@
             }
         }
         
-        // Rest of your functions remain the same until markAttendance()
-        
-        // Mark attendance using Google Web App (updated with IST)
+        // Mark attendance using Google Web App
         async function markAttendance() {
             if (!currentUser) {
                 Swal.fire({
@@ -228,9 +409,32 @@
             }
         }
 
-        // Keep all other functions the same (getLocation, validateForm, etc.)
-        // ... [rest of your existing functions remain unchanged] ...
-
+        // Verify attendance submission
+        async function verifyAttendance(attendanceId, timestamp) {
+            try {
+                const verificationUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheet}!B2:E?key=${apiKey}`;
+                const response = await fetch(verificationUrl);
+                const data = await response.json();
+                
+                if (data.values) {
+                    const record = data.values.find(row => 
+                        row[1] === String(attendanceId).padStart(8, '0') && 
+                        row[0] === timestamp
+                    );
+                    
+                    if (!record) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Verification Pending',
+                            text: 'Attendance submission is being processed. Please check back later.',
+                        });
+                    }
+                }
+            } catch (error) {
+                console.log('Verification error:', error);
+            }
+        }
+        
         // Initialize the page when loaded
         window.addEventListener('load', initialize);
     </script>
