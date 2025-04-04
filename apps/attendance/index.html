@@ -138,10 +138,21 @@
         let currentUser = null;
         
         // Location range constants
-        const MIN_LATITUDE = 8.0000;
-        const MAX_LATITUDE = 77.0000;
-        const MIN_LONGITUDE = 8.0000;
-        const MAX_LONGITUDE = 77.0000;
+ 
+    const OFFICE_LAT = 8.5000192;
+    const OFFICE_LNG = 76.955648;
+
+    // 10-meter perimeter calculations
+    const METERS_PER_DEGREE_LAT = 111320;
+    const METERS_PER_DEGREE_LNG = 111320 * Math.cos(OFFICE_LAT * Math.PI / 180);
+    const OFFSET = 10 / METERS_PER_DEGREE_LAT;
+
+    // Location range (10m perimeter)
+    const MIN_LATITUDE = OFFICE_LAT - OFFSET;
+    const MAX_LATITUDE = OFFICE_LAT + OFFSET;
+    const MIN_LONGITUDE = OFFICE_LNG - OFFSET;
+    const MAX_LONGITUDE = OFFICE_LNG + OFFSET;
+    
         
         // Event listeners
         attendanceIdInput.addEventListener('input', fetchUserDetails);
@@ -150,19 +161,20 @@
         
         // Initialize the page
         async function initialize() {
-            try {
-                allowedLocationDisplay.style.display = 'block';
-                allowedLocationDisplay.innerHTML = `
-                    Allowed Location Range:<br>
-                    Latitude: ${MIN_LATITUDE} to ${MAX_LATITUDE}<br>
-                    Longitude: ${MIN_LONGITUDE} to ${MAX_LONGITUDE}<br>
-                    FN/AN Status: Before 12:00 PM is FN, After is AN<br>
-                `;
-            } catch (error) {
-                console.error('Error initializing:', error);
-                allowedLocationDisplay.textContent = "Error loading settings";
-            }
+             try {
+            allowedLocationDisplay.style.display = 'block';
+            allowedLocationDisplay.innerHTML = `
+                Allowed Location Range (10m perimeter):<br>
+                Latitude: ${MIN_LATITUDE.toFixed(7)} to ${MAX_LATITUDE.toFixed(7)}<br>
+                Longitude: ${MIN_LONGITUDE.toFixed(7)} to ${MAX_LONGITUDE.toFixed(7)}<br>
+                FN/AN Status: Before 12:00 PM is FN, After is AN<br>
+                Office Location: ${OFFICE_LAT}, ${OFFICE_LNG}
+            `;
+        } catch (error) {
+            console.error('Error initializing:', error);
+            allowedLocationDisplay.textContent = "Error loading settings";
         }
+    }
         
         // Format date as YYYY-MM-DD
         function formatDate(date) {
