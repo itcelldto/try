@@ -146,43 +146,63 @@
         markAttendanceBtn.addEventListener('click', markAttendance);
         
         // Initialize the page
-        async function initialize() {
-            try {
-                // Get settings from settings sheet (C2:D3 for location ranges, B5 for cutoff time)
-                const settingsRange = `${settingsSheet}!B5,C2:D3`;
-                const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${settingsRange}?key=${apiKey}`;
-                const settingsResponse = await fetch(settingsUrl);
-                const settingsData = await settingsResponse.json();
-                
-                if (settingsData.values && settingsData.values.length >= 3) {
-                    // First row is cutoff time (B5)
-                    cutoffTime = settingsData.values[0][0];
-                    
-                    // Second row is MIN_LATITUDE (C2) and MAX_LATITUDE (D2)
-                    MIN_LATITUDE = parseFloat(settingsData.values[1][0]);
-                    MAX_LATITUDE = parseFloat(settingsData.values[1][1]);
-                    
-                    // Third row is MIN_LONGITUDE (C3) and MAX_LONGITUDE (D3)
-                    MIN_LONGITUDE = parseFloat(settingsData.values[2][0]);
-                    MAX_LONGITUDE = parseFloat(settingsData.values[2][1]);
-                    
-                    allowedLocationDisplay.style.display = 'block';
-                    allowedLocationDisplay.innerHTML = `
-                        Allowed Location Range:<br>
-                        Latitude: ${MIN_LATITUDE} to ${MAX_LATITUDE}<br>
-                        Longitude: ${MIN_LONGITUDE} to ${MAX_LONGITUDE}<br>
-                        Cutoff Time: ${cutoffTime}<br>
-                        Time Zone: Indian Standard Time (IST)
-                    `;
-                } else {
-                    allowedLocationDisplay.textContent = "Error: Could not load settings";
-                    console.error('Could not retrieve settings from sheet');
-                }
-            } catch (error) {
-                console.error('Error initializing:', error);
-                allowedLocationDisplay.textContent = "Error loading settings";
+      // Initialize the page
+async function initialize() {
+    try {
+        // Get settings from settings sheet (C2:D3 for location ranges, B5 for cutoff time)
+        const settingsRange = `${settingsSheet}!B5,C2:D3`;
+        const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${settingsRange}?key=${apiKey}`;
+        const settingsResponse = await fetch(settingsUrl);
+        const settingsData = await settingsResponse.json();
+        
+        if (settingsData.values && settingsData.values.length > 0) {
+            // The response structure is different than expected - we need to properly index the values
+            // First row contains cutoff time (B5)
+            cutoffTime = settingsData.values[0] && settingsData.values[0][0];
+            
+            // Second row contains MIN_LATITUDE (C2) and MAX_LATITUDE (D2)
+            if (settingsData.values[1]) {
+                MIN_LATITUDE = parseFloat(settingsData.values[1][0]) || 0;
+                MAX_LATITUDE = parseFloat(settingsData.values[1][1]) || 0;
             }
+            
+            // Third row contains MIN_LONGITUDE (C3) and MAX_LONGITUDE (D3)
+            if (settingsData.values[2]) {
+                MIN_LONGITUDE = parseFloat(settingsData.values[2][0]) || 0;
+                MAX_LONGITUDE = parseFloat(settingsData.values[2][1]) || 0;
+            }
+            
+            allowedLocationDisplay.style.display = 'block';
+            allowedLocationDisplay.innerHTML = `
+                Allowed Location Range:<br>
+                Latitude: ${MIN_LATITUDE} to ${MAX_LATITUDE}<br>
+                Longitude: ${MIN_LONGITUDE} to ${MAX_LONGITUDE}<br>
+                Cutoff Time: ${cutoffTime || 'Not set'}<br>
+                Time Zone: Indian Standard Time (IST)
+            `;
+            
+            console.log('Loaded settings:', {
+                MIN_LATITUDE,
+                MAX_LATITUDE,
+                MIN_LONGITUDE,
+                MAX_LONGITUDE,
+                cutoffTime
+            });
+        } else {
+            allowedLocationDisplay.textContent = "Error: Could not load settings";
+            console.error('Could not retrieve settings from sheet:', settingsData);
         }
+    } catch (error) {
+        console.error('Error initializing:', error);
+        allowedLocationDisplay.textContent = "Error loading settings";
+        // Set default values if loading fails
+        MIN_LATITUDE = 8.0;
+        MAX_LATITUDE = 13.0;
+        MIN_LONGITUDE = 74.0;
+        MAX_LONGITUDE = 78.0;
+        cutoffTime = '12:00';
+    }
+}
         
         // Fetch user details when ID is entered
         async function fetchUserDetails() {
