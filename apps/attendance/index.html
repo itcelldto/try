@@ -137,21 +137,16 @@
         let userLocation = null;
         let currentUser = null;
         
-        // Location range constants
- 
-    const OFFICE_LAT = 8.5000192;
-    const OFFICE_LNG = 76.955648;
+    // Office coordinates (will be loaded from sheet)
+    let OFFICE_LAT = null;
+    let OFFICE_LNG = null;
+    let MIN_LATITUDE = null;
+    let MAX_LATITUDE = null;
+    let MIN_LONGITUDE = null;
+    let MAX_LONGITUDE = null;
+    
 
-    // 10-meter perimeter calculations
-    const METERS_PER_DEGREE_LAT = 111320;
-    const METERS_PER_DEGREE_LNG = 111320 * Math.cos(OFFICE_LAT * Math.PI / 180);
-    const OFFSET = 10 / METERS_PER_DEGREE_LAT;
 
-    // Location range (10m perimeter)
-    const MIN_LATITUDE = OFFICE_LAT - OFFSET;
-    const MAX_LATITUDE = OFFICE_LAT + OFFSET;
-    const MIN_LONGITUDE = OFFICE_LNG - OFFSET;
-    const MAX_LONGITUDE = OFFICE_LNG + OFFSET;
     
         
         // Event listeners
@@ -161,18 +156,42 @@
         
         // Initialize the page
         async function initialize() {
-             try {
-            allowedLocationDisplay.style.display = 'block';
-            allowedLocationDisplay.innerHTML = `
-                Allowed Location Range (10m perimeter):<br>
-                Latitude: ${MIN_LATITUDE.toFixed(7)} to ${MAX_LATITUDE.toFixed(7)}<br>
-                Longitude: ${MIN_LONGITUDE.toFixed(7)} to ${MAX_LONGITUDE.toFixed(7)}<br>
-                FN/AN Status: Before 12:00 PM is FN, After is AN<br>
-                Office Location: ${OFFICE_LAT}, ${OFFICE_LNG}
-            `;
+            try {
+            // Get office location from settings sheet (B2 = lat, B3 = lng)
+            const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${settingsSheet}!B2:B3?key=${apiKey}`;
+            const settingsResponse = await fetch(settingsUrl);
+            const settingsData = await settingsResponse.json();
+            
+            if (settingsData.values && settingsData.values.length >= 2) {
+                OFFICE_LAT = parseFloat(settingsData.values[0][0]);
+                OFFICE_LNG = parseFloat(settingsData.values[1][0]);
+                
+                // Calculate 10-meter perimeter
+                const METERS_PER_DEGREE_LAT = 111320;
+                const METERS_PER_DEGREE_LNG = 111320 * Math.cos(OFFICE_LAT * Math.PI / 180);
+                const OFFSET = 10 / METERS_PER_DEGREE_LAT;
+                
+                MIN_LATITUDE = OFFICE_LAT - OFFSET;
+                MAX_LATITUDE = OFFICE_LAT + OFFSET;
+                MIN_LONGITUDE = OFFICE_LNG - OFFSET;
+                MAX_LONGITUDE = OFFICE_LNG + OFFSET;
+                
+                allowedLocationDisplay.style.display = 'block';
+                allowedLocationDisplay.innerHTML = `
+                    Allowed Location Range (10m perimeter):<br>
+                    Latitude: ${MIN_LATITUDE.toFixed(7)} to ${MAX_LATITUDE.toFixed(7)}<br>
+                    Longitude: ${MIN_LONGITUDE.toFixed(7)} to ${MAX_LONGITUDE.toFixed(7)}<br>
+                    FN/AN Status: Before 12:00 PM is FN, After is AN<br>
+                    Office Location: ${OFFICE_LAT}, ${OFFICE_LNG}
+                `;
+            } else {
+                throw new Error('Could not load office location from sheet');
+            }
         } catch (error) {
             console.error('Error initializing:', error);
-            allowedLocationDisplay.textContent = "Error loading settings";
+            allowedLocationDisplay.textContent = "Error loading office location settings";
+            // Disable attendance marking if location settings failed to load
+            markAttendanceBtn.disabled = true;
         }
     }
         
