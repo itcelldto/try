@@ -360,28 +360,33 @@
             }
 
             try {
-                const now = new Date();
-                const dateStr = formatDateIST(now);
-                const timeStr = formatTimeIST(now);
-                const status = getAttendanceStatus();
-                const locationId = `${userLocation.latitude.toFixed(6)},${userLocation.longitude.toFixed(6)}`;
-                
-                const uniqueUrl = `${webAppUrl}?cache=${Date.now()}`;
-                
-                const response = await fetch(uniqueUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        date: dateStr,
-                        timestamp: now.toISOString(),
-                        attendanceId: currentUser.id,
-                        location: locationId,
-                        status: status
-                    })
-                });
+        const now = new Date();
+        const istDate = toIST(now); // Convert to IST
+        const dateStr = formatDateIST(now);
+        const timeStr = formatTimeIST(now);
+        const status = getAttendanceStatus();
+        const locationId = `${userLocation.latitude.toFixed(6)},${userLocation.longitude.toFixed(6)}`;
+        
+        // Create a proper IST timestamp string
+        const istTimestamp = `${dateStr} ${timeStr}`;
+        
+        const uniqueUrl = `${webAppUrl}?cache=${Date.now()}`;
+        
+        const response = await fetch(uniqueUrl, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                date: dateStr,
+                timestamp: istTimestamp, // Send IST timestamp instead of UTC
+                attendanceId: currentUser.id,
+                location: locationId,
+                status: status
+            })
+        });
+
 
                 Swal.fire({
                     title: 'Attendance Submitted!',
