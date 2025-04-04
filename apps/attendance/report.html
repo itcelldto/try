@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance Report | IT Cell </title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .input-section {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .input-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: flex-end;
+        }
+        .form-group {
+            flex: 1;
+            min-width: 150px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, button {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4285f4;
+            color: white;
+            cursor: pointer;
+            border: none;
+            padding: 10px 15px;
+            width: auto;
+            min-width: 180px;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        button.pdf-btn {
+            background-color: #d32f2f;
+            margin-left: 10px;
+        }
+        button.pdf-btn:hover {
+            background-color: #b71c1c;
+        }
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .loading {
+            display: none;
+            margin: 20px 0;
+            color: #666;
+        }
+        .error {
+            color: #d32f2f;
+            margin-top: 10px;
+        }
+        .total-hours {
+            font-weight: bold;
+            background-color: #e6f2ff;
+        }
+        .status-A {
+            background-color: #ffebee;
+            color: #d32f2f;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>IT Cell Attendance Report</h1>
+    
+    <div class="input-section">
+        <div class="input-row">
+            <div class="form-group">
+                <label for="attendanceId">Attendance ID</label>
+                <input type="text" id="attendanceId" pattern="\d{8}" maxlength="8" 
+                       placeholder="8 digits" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="month">Month</label>
+                <select id="month" required>
+                    <option value="">Select Month</option>
+                    <option value="01">January</option>
+                    <option value="02">February</option>
+                    <option value="03">March</option>
+                    <option value="04">April</option>
+                    <option value="05">May</option>
+                    <option value="06">June</option>
+                    <option value="07">July</option>
+                    <option value="08">August</option>
+                    <option value="09">September</option>
+                    <option value="10">October</option>
+                    <option value="11">November</option>
+                    <option value="12">December</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="year">Year</label>
+                <input type="number" id="year" min="2000" max="2100" 
+                       placeholder="YYYY" required>
+            </div>
+            
+            <div class="form-group">
+                <button id="fetchData">View</button>
+            </div>
+        </div>
+      <p> <a href="https://itcelldto.github.io/try/apps/attendance/index.html" > Mark Attendance</a></p>
+    </div>
+    
+    <div class="loading" id="loading">Loading data, please wait...</div>
+    <div class="error" id="error"></div>
+    
+    <div id="results">
+        <div class="table-header" id="tableHeader" style="display: none;">
+            <h2 id="userNameDisplay"></h2>
+            <button id="downloadPdf" class="pdf-btn">PDF</button>
+        </div>
+        <table id="attendanceTable">
+            <!-- Table will be populated by JavaScript -->
+        </table>
+    </div>
+
+    <script>
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+        
+        document.getElementById('fetchData').addEventListener('click', fetchAttendanceData);
+        document.getElementById('downloadPdf').addEventListener('click', downloadAsPdf);
+        
+        // Set current year and month as default
+        const now = new Date();
+        document.getElementById('year').value = now.getFullYear();
+        document.getElementById('month').value = (now.getMonth() + 1).toString().padStart(2, '0');
+        
+        let currentUserName = '';
+        let currentAttendanceData = [];
+        
+        function fetchAttendanceData() {
+            const attendanceId = document.getElementById('attendanceId').value;
+            const month = document.getElementById('month').value;
+            const year = document.getElementById('year').value;
+            
+            // Validate inputs
+            if (!attendanceId || !month || !year) {
+                document.getElementById('error').textContent = 'Please fill all fields';
+                return;
+            }
+            
+            if (!/^\d{8}$/.test(attendanceId)) {
+                document.getElementById('error').textContent = 'Attendance ID must be 8 digits';
+                return;
+            }
+            
+            document.getElementById('error').textContent = '';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('attendanceTable').innerHTML = '';
+            document.getElementById('tableHeader').style.display = 'none';
+            
+            // Replace with your actual Google Apps Script Web App URL
+            const scriptUrl = 'https://script.google.com/macros/s/AKfycbzS-J1YpJ19g792BQV95maTsp8lQclxUB-mE5OqvXL2FoatMXfbzi-EAgZ7frk2DX1c/exec';
+            
+            fetch(`${scriptUrl}?attendanceId=${attendanceId}&month=${month}&year=${year}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('loading').style.display = 'none';
+                    if (data.error) {
+                        throw new Error(data.error);
+                    }
+                    
+                    // Store the data for PDF generation
+                    currentAttendanceData = data.attendance || [];
+                    currentUserName = data.userName || '';
+                    
+                    // Show user name if available
+                    if (currentUserName) {
+                        document.getElementById('userNameDisplay').textContent = currentUserName;
+                        document.getElementById('tableHeader').style.display = 'flex';
+                    }
+                    
+                    displayAttendanceData(currentAttendanceData);
+                })
+                .catch(error => {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error').textContent = 'Error fetching data: ' + error.message;
+                    console.error('Error:', error);
+                });
+        }
+        
+        function displayAttendanceData(data) {
+            const table = document.getElementById('attendanceTable');
+            table.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                document.getElementById('error').textContent = 'No attendance records found for the selected criteria';
+                return;
+            }
+            
+            // Create table header
+            const header = table.createTHead();
+            const headerRow = header.insertRow();
+            const headers = ['SL No.', 'Date', 'Attendance ID', 'FN Status', 'AN Status', 'In Time', 'Out Time', 'Working Hours'];
+            
+            headers.forEach(text => {
+                const th = document.createElement('th');
+                th.textContent = text;
+                headerRow.appendChild(th);
+            });
+            
+            // Create table body
+            const tbody = table.createTBody();
+            let totalMinutes = 0;
+            
+            data.forEach((record, index) => {
+                const row = tbody.insertRow();
+                
+                // SL No.
+                const slCell = row.insertCell();
+                slCell.textContent = index + 1;
+                
+                // Date (formatted as DD/MM/YYYY)
+                const dateCell = row.insertCell();
+                const dateObj = new Date(record.date);
+                const formattedDate = formatDate(dateObj);
+                dateCell.textContent = formattedDate;
+                
+                // Attendance ID
+                const idCell = row.insertCell();
+                idCell.textContent = record.attendanceId;
+                
+                // FN Status (with red background if 'A')
+                const fnCell = row.insertCell();
+                fnCell.textContent = record.fnStatus;
+                if (record.fnStatus === 'A') {
+                    fnCell.classList.add('status-A');
+                }
+                
+                // AN Status (with red background if 'A')
+                const anCell = row.insertCell();
+                anCell.textContent = record.anStatus;
+                if (record.anStatus === 'A') {
+                    anCell.classList.add('status-A');
+                }
+                
+                // In Time
+                const inCell = row.insertCell();
+                inCell.textContent = record.inTime;
+                
+                // Out Time
+                const outCell = row.insertCell();
+                outCell.textContent = record.outTime;
+                
+                // Working Hours
+                const hoursCell = row.insertCell();
+                hoursCell.textContent = record.workingHours;
+                
+                // Add to total minutes if working hours are valid
+                if (record.workingHours && record.workingHours !== 'N/A') {
+                    const [hours, minutes] = record.workingHours.split(':').map(Number);
+                    totalMinutes += hours * 60 + minutes;
+                }
+            });
+            
+            // Add total row
+            const totalRow = tbody.insertRow();
+            totalRow.className = 'total-hours';
+            
+            // Empty cells for alignment
+            for (let i = 0; i < 6; i++) {
+                totalRow.insertCell();
+            }
+            
+            // Total label
+            const totalLabelCell = totalRow.insertCell();
+            totalLabelCell.textContent = 'Total Work Hours:';
+            totalLabelCell.colSpan = 1;
+            
+            // Total hours
+            const totalHoursCell = totalRow.insertCell();
+            const totalHours = Math.floor(totalMinutes / 60);
+            const remainingMinutes = totalMinutes % 60;
+            totalHoursCell.textContent = `${totalHours.toString().padStart(2, '0')}:${remainingMinutes.toString().padStart(2, '0')}`;
+        }
+        
+        function formatDate(date) {
+            // Format as DD/MM/YYYY
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+            
+            // Alternative format: Weekday Month Day Year (e.g., "Fri Apr 04 2025")
+            // return date.toDateString();
+        }
+        
+        function downloadAsPdf() {
+            if (!currentAttendanceData.length) {
+                alert('No data available to export');
+                return;
+            }
+            
+            const doc = new jsPDF();
+            
+            // Add title
+            doc.setFontSize(18);
+            doc.text(`Attendance Report - ${currentUserName}`, 14, 15);
+            
+            // Add period information
+            doc.setFontSize(12);
+            const monthSelect = document.getElementById('month');
+            const monthName = monthSelect.options[monthSelect.selectedIndex].text;
+            const year = document.getElementById('year').value;
+            doc.text(`Period: ${monthName} ${year}`, 14, 25);
+            
+            // Prepare table data
+            const headers = [
+                'SL No.', 
+                'Date', 
+                'Attendance ID', 
+                'FN Status', 
+                'AN Status', 
+                'In Time', 
+                'Out Time', 
+                'Working Hours'
+            ];
+            
+            const tableData = currentAttendanceData.map((record, index) => {
+                const dateObj = new Date(record.date);
+                const formattedDate = formatDate(dateObj);
+                
+                return [
+                    index + 1,
+                    formattedDate,
+                    record.attendanceId,
+                    record.fnStatus,
+                    record.anStatus,
+                    record.inTime,
+                    record.outTime,
+                    record.workingHours
+                ];
+            });
+            
+            // Add total hours
+            const totalMinutes = currentAttendanceData.reduce((total, record) => {
+                if (record.workingHours && record.workingHours !== 'N/A') {
+                    const [hours, minutes] = record.workingHours.split(':').map(Number);
+                    return total + hours * 60 + minutes;
+                }
+                return total;
+            }, 0);
+            
+            const totalHours = Math.floor(totalMinutes / 60);
+            const remainingMinutes = totalMinutes % 60;
+            const totalHoursStr = `${totalHours.toString().padStart(2, '0')}:${remainingMinutes.toString().padStart(2, '0')}`;
+            
+            tableData.push([
+                '',
+                '',
+                '',
+                '',
+                '',
+                '',
+                'Total Work Hours:',
+                totalHoursStr
+            ]);
+            
+            // Generate PDF table
+            doc.autoTable({
+                head: [headers],
+                body: tableData,
+                startY: 30,
+                styles: {
+                    cellPadding: 5,
+                    fontSize: 10,
+                    valign: 'middle'
+                },
+                columnStyles: {
+                    0: { cellWidth: 15 }, // SL No
+                    1: { cellWidth: 25 }, // Date
+                    2: { cellWidth: 25 }, // Attendance ID
+                    3: { cellWidth: 20 }, // FN Status
+                    4: { cellWidth: 20 }, // AN Status
+                    5: { cellWidth: 20 }, // In Time
+                    6: { cellWidth: 20 }, // Out Time
+                    7: { cellWidth: 25 }  // Working Hours
+                },
+                didDrawCell: (data) => {
+                    // Highlight 'A' status cells in red
+                    if (data.column.index === 3 || data.column.index === 4) {
+                        if (data.cell.raw === 'A') {
+                            data.doc.setFillColor(255, 235, 238);
+                            data.doc.setDrawColor(255, 235, 238);
+                            data.doc.rect(
+                                data.cell.x, 
+                                data.cell.y, 
+                                data.cell.width, 
+                                data.cell.height, 
+                                'F'
+                            );
+                            data.doc.setTextColor(211, 47, 47);
+                        }
+                    }
+                }
+            });
+            
+            // Save the PDF
+            doc.save(`Attendance_${currentUserName.replace(/\s+/g, '_')}_${monthName}_${year}.pdf`);
+        }
+    </script>
+</body>
+</html>
