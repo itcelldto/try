@@ -134,11 +134,11 @@
         let userLocation = null;
         let cutoffTime = null;
         
-        // Location range constants (8.0000 to 77.0000 for both latitude and longitude)
-        const MIN_LATITUDE = 8.0000;
-        const MAX_LATITUDE = 77.0000;
-        const MIN_LONGITUDE = 8.0000;
-        const MAX_LONGITUDE = 77.0000;
+        // Location range variables (will be loaded from settings sheet)
+        let MIN_LATITUDE = 0;
+        let MAX_LATITUDE = 0;
+        let MIN_LONGITUDE = 0;
+        let MAX_LONGITUDE = 0;
         
         // Event listeners
         attendanceIdInput.addEventListener('input', fetchUserDetails);
@@ -148,19 +148,31 @@
         // Initialize the page
         async function initialize() {
             try {
-                // Get cutoff time from settings sheet
-                const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${settingsSheet}!B5?key=${apiKey}`;
+                // Get settings from settings sheet (C2:D3 for location ranges, B5 for cutoff time)
+                const settingsRange = `${settingsSheet}!B5,C2:D3`;
+                const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${settingsRange}?key=${apiKey}`;
                 const settingsResponse = await fetch(settingsUrl);
                 const settingsData = await settingsResponse.json();
                 
-                if (settingsData.values && settingsData.values.length >= 1) {
-                    cutoffTime = settingsData.values[0][0]; // B5 cell contains cutoff time
+                if (settingsData.values && settingsData.values.length >= 3) {
+                    // First row is cutoff time (B5)
+                    cutoffTime = settingsData.values[0][0];
+                    
+                    // Second row is MIN_LATITUDE (C2) and MAX_LATITUDE (D2)
+                    MIN_LATITUDE = parseFloat(settingsData.values[1][0]);
+                    MAX_LATITUDE = parseFloat(settingsData.values[1][1]);
+                    
+                    // Third row is MIN_LONGITUDE (C3) and MAX_LONGITUDE (D3)
+                    MIN_LONGITUDE = parseFloat(settingsData.values[2][0]);
+                    MAX_LONGITUDE = parseFloat(settingsData.values[2][1]);
+                    
                     allowedLocationDisplay.style.display = 'block';
                     allowedLocationDisplay.innerHTML = `
                         Allowed Location Range:<br>
                         Latitude: ${MIN_LATITUDE} to ${MAX_LATITUDE}<br>
                         Longitude: ${MIN_LONGITUDE} to ${MAX_LONGITUDE}<br>
-                        Cutoff Time: ${cutoffTime}
+                        Cutoff Time: ${cutoffTime}<br>
+                        Time Zone: Indian Standard Time (IST)
                     `;
                 } else {
                     allowedLocationDisplay.textContent = "Error: Could not load settings";
@@ -285,10 +297,10 @@
             
             const { latitude, longitude } = userLocation;
             
-            // Check if latitude is within range (8.0000 to 77.0000)
+            // Check if latitude is within range
             const latValid = latitude >= MIN_LATITUDE && latitude <= MAX_LATITUDE;
             
-            // Check if longitude is within range (8.0000 to 77.0000)
+            // Check if longitude is within range
             const lngValid = longitude >= MIN_LONGITUDE && longitude <= MAX_LONGITUDE;
             
             console.log(`Location check - Lat: ${latitude} (${latValid ? 'Valid' : 'Invalid'}), Lng: ${longitude} (${lngValid ? 'Valid' : 'Invalid'})`);
@@ -296,13 +308,17 @@
             return latValid && lngValid;
         }
         
-        // Determine FN/AN status based on cutoff time
+        // Determine FN/AN status based on cutoff time (using IST)
         function getAttendanceStatus() {
             if (!cutoffTime) return 'AN'; // Default to AN if no cutoff time
             
+            // Get current time in IST (UTC+5:30)
             const now = new Date();
-            const currentHour = now.getHours();
-            const currentMinute = now.getMinutes();
+            const utcOffset = 5.5 * 60 * 60 * 1000; // IST is UTC+5:30
+            const istTime = new Date(now.getTime() + utcOffset);
+            
+            const currentHour = istTime.getHours();
+            const currentMinute = istTime.getMinutes();
             
             // Parse cutoff time (assuming format HH:MM in 24-hour format)
             const [cutoffHour, cutoffMinute] = cutoffTime.split(':').map(Number);
@@ -315,12 +331,31 @@
             }
         }
         
-        // Format date as DD/MM/YYYY
+        // Format date as DD/MM/YYYY (using IST)
         function formatDate(date) {
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
+            // Convert to IST (UTC+5:30)
+            const utcOffset = 5.5 * 60 * 60 * 1000;
+            const istDate = new Date(date.getTime() + utcOffset);
+            
+            const day = String(istDate.getDate()).padStart(2, '0');
+            const month = String(istDate.getMonth() + 1).padStart(2, '0');
+            const year = istDate.getFullYear();
             return `${day}/${month}/${year}`;
+        }
+        
+        // Format time as HH:MM:SS (using IST)
+        function formatTime(date) {
+            // Convert to IST (UTC+5:30)
+            const utcOffset = 5.5 * 60 * 60 * 1000;
+            const istDate = new Date(date.getTime() + utcOffset);
+            
+            return istDate.toLocaleTimeString('en-IN', {
+                timeZone: 'Asia/Kolkata',
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
         }
         
         // Mark attendance using Google Web App
@@ -349,7 +384,7 @@
             try {
                 const now = new Date();
                 const dateStr = formatDate(now);
-                const timeStr = now.toLocaleTimeString();
+                const timeStr = formatTime(now);
                 const status = getAttendanceStatus();
                 const locationId = `${userLocation.latitude.toFixed(6)},${userLocation.longitude.toFixed(6)}`;
                 
@@ -382,7 +417,7 @@
                             <h3>${currentUser.name}</h3>
                             <p>ID: ${String(currentUser.id).padStart(8, '0')}</p>
                             <p>Date: ${dateStr}</p>
-                            <p>Time: ${timeStr}</p>
+                            <p>Time: ${timeStr} (IST)</p>
                             <p>Status: ${status}</p>
                             <p>Location: ${locationId}</p>
                         </div>
