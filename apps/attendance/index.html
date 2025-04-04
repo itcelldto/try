@@ -108,7 +108,7 @@
         <button id="getLocationBtn">Get My Location</button>
         <div id="location">Location not yet retrieved</div>
 
-        <div id="allowedLocation">Allowed Location: Not loaded yet</div>
+        <div id="allowedLocation" stle="display:none;">Allowed Location: Not loaded yet</div>
       
         <button id="markAttendanceBtn" disabled>Mark Attendance</button>
         <p> <a href=" https://docs.google.com/forms/d/e/1FAIpQLSdrckQoEBlUVEha-Ar0Ljo9V9xoZIgN2HZEjUDGTujGmUp2fw/viewform" target="_blank"> New Registration</a></p>
@@ -121,7 +121,7 @@
         const formResponsesSheet = 'Form responses 1';
         const dataSheet = 'DATA';
         const settingsSheet = 'settings';
-        const webAppUrl = 'https://script.google.com/macros/s/AKfycbyiJQk1K2MZt4G0imi_A3pq3M5X4v3xNIcqd0oXsueswE0L_40ZyWS0XHuiJ0xZL5aodQ/exec';
+        const webAppUrl = 'https://script.google.com/macros/s/AKfycbzpZ2D2lfXIze6SDDxm4j5hQ7OiAkIvO1Jjo8lUOeEUwngTslycMVB2UQdh_yUry4fmVA/exec';
         
         // DOM elements
         const attendanceIdInput = document.getElementById('attendanceId');
@@ -169,7 +169,7 @@
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
-            return `${year}-${month}-${day}`;
+            return `${day}/${month}/${year}`;
         }
         
         // Format time as HH:MM:SS
