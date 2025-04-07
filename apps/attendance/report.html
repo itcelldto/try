@@ -162,7 +162,7 @@
     </div>
 
     <script>
-        // Initialize jsPDF
+              // Initialize jsPDF
         const { jsPDF } = window.jspdf;
         
         document.getElementById('fetchData').addEventListener('click', fetchAttendanceData);
@@ -175,6 +175,7 @@
         
         let currentUserName = '';
         let currentAttendanceData = [];
+        let currentFullMonthData = [];
         
         function fetchAttendanceData() {
             const attendanceId = document.getElementById('attendanceId').value;
@@ -223,9 +224,9 @@
                         document.getElementById('tableHeader').style.display = 'flex';
                     }
                     
-                    // Generate full month data with holidays
-                    const fullMonthData = generateFullMonthData(month, year, attendanceId, currentAttendanceData);
-                    displayAttendanceData(fullMonthData);
+                    // Generate full month data with holidays and absent dates
+                    currentFullMonthData = generateFullMonthData(month, year, attendanceId, currentAttendanceData);
+                    displayAttendanceData(currentFullMonthData);
                 })
                 .catch(error => {
                     document.getElementById('loading').style.display = 'none';
@@ -237,6 +238,8 @@
         function generateFullMonthData(month, year, attendanceId, existingData) {
             const daysInMonth = new Date(year, month, 0).getDate();
             const fullMonthData = [];
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
             
             // Create a map of existing data for easy lookup
             const existingDataMap = {};
@@ -266,6 +269,7 @@
                 
                 const isHoliday = isSunday || isSecondSaturday;
                 const dateKey = formatDate(dateObj);
+                const isPastDate = dateObj < today;
                 
                 // Create record for this date
                 let record = existingDataMap[dateKey] || {
@@ -281,8 +285,8 @@
                 // Mark as holiday if applicable
                 record.isHoliday = isHoliday;
                 
-                // For working days with no data, mark as absent
-                if (!isHoliday && !existingDataMap[dateKey]) {
+                // For working days with no data and before today, mark as absent
+                if (!isHoliday && !existingDataMap[dateKey] && isPastDate) {
                     record.fnStatus = 'A';
                     record.anStatus = 'A';
                 }
@@ -408,15 +412,15 @@
         }
         
         function downloadAsPdf() {
-            if (!currentAttendanceData.length) {
+            if (!currentFullMonthData.length) {
                 alert('No data available to export');
                 return;
             }
             
-            const doc = new jsPDF();
+            const doc = new jsPDF('landscape');
             
             // Add title
-            doc.setFontSize(18);
+            doc.setFontSize(16);
             doc.text(`Attendance Report - ${currentUserName}`, 14, 15);
             
             // Add period information
@@ -424,7 +428,7 @@
             const monthSelect = document.getElementById('month');
             const monthName = monthSelect.options[monthSelect.selectedIndex].text;
             const year = document.getElementById('year').value;
-            doc.text(`Period: ${monthName} ${year}`, 14, 25);
+            doc.text(`Period: ${monthName} ${year}`, 14, 22);
             
             // Prepare table data
             const headers = [
@@ -439,7 +443,7 @@
                 'Working Hours'
             ];
             
-            const tableData = currentAttendanceData.map((record, index) => {
+            const tableData = currentFullMonthData.map((record, index) => {
                 const dateObj = new Date(record.date);
                 const formattedDate = formatDate(dateObj);
                 const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -459,7 +463,7 @@
             });
             
             // Add total hours
-            const totalMinutes = currentAttendanceData.reduce((total, record) => {
+            const totalMinutes = currentFullMonthData.reduce((total, record) => {
                 if (!record.isHoliday && record.workingHours && record.workingHours !== 'N/A') {
                     const [hours, minutes] = record.workingHours.split(':').map(Number);
                     return total + hours * 60 + minutes;
@@ -488,53 +492,53 @@
                 head: [headers],
                 body: tableData,
                 startY: 30,
+                margin: { left: 10 },
                 styles: {
-                    cellPadding: 5,
-                    fontSize: 10,
-                    valign: 'middle'
+                    cellPadding: 4,
+                    fontSize: 9,
+                    valign: 'middle',
+                    halign: 'center'
+                },
+                headStyles: {
+                    fillColor: [242, 242, 242],
+                    textColor: [0, 0, 0],
+                    fontStyle: 'bold'
                 },
                 columnStyles: {
-                    0: { cellWidth: 10 }, // SL No
-                    1: { cellWidth: 20 }, // Date
-                    2: { cellWidth: 20 }, // Day
-                    3: { cellWidth: 20 }, // Attendance ID
-                    4: { cellWidth: 15 }, // FN Status
-                    5: { cellWidth: 15 }, // AN Status
-                    6: { cellWidth: 15 }, // In Time
-                    7: { cellWidth: 15 }, // Out Time
-                    8: { cellWidth: 20 }  // Working Hours
+                    0: { cellWidth: 10, halign: 'center' }, // SL No
+                    1: { cellWidth: 20, halign: 'center' }, // Date
+                    2: { cellWidth: 20, halign: 'center' }, // Day
+                    3: { cellWidth: 25, halign: 'center' }, // Attendance ID
+                    4: { cellWidth: 15, halign: 'center' }, // FN Status
+                    5: { cellWidth: 15, halign: 'center' }, // AN Status
+                    6: { cellWidth: 20, halign: 'center' }, // In Time
+                    7: { cellWidth: 20, halign: 'center' }, // Out Time
+                    8: { cellWidth: 25, halign: 'center' }  // Working Hours
                 },
-                didDrawCell: (data) => {
+                didParseCell: function(data) {
                     // Highlight holidays
-                    if (data.row.index < currentAttendanceData.length) {
-                        const record = currentAttendanceData[data.row.index];
+                    if (data.row.index < currentFullMonthData.length) {
+                        const record = currentFullMonthData[data.row.index];
                         if (record.isHoliday) {
-                            data.doc.setFillColor(255, 235, 238);
-                            data.doc.rect(
-                                data.cell.x, 
-                                data.cell.y, 
-                                data.cell.width, 
-                                data.cell.height, 
-                                'F'
-                            );
+                            data.cell.styles.fillColor = [255, 235, 238];
                         }
                     }
                     
                     // Highlight 'A' status cells in red (only for working days)
                     if ((data.column.index === 4 || data.column.index === 5) && 
-                        data.cell.raw === 'A' && 
-                        data.row.index < currentAttendanceData.length && 
-                        !currentAttendanceData[data.row.index].isHoliday) {
-                        data.doc.setFillColor(255, 235, 238);
-                        data.doc.setDrawColor(255, 235, 238);
-                        data.doc.rect(
-                            data.cell.x, 
-                            data.cell.y, 
-                            data.cell.width, 
-                            data.cell.height, 
-                            'F'
-                        );
-                        data.doc.setTextColor(211, 47, 47);
+                        data.row.index < currentFullMonthData.length) {
+                        const record = currentFullMonthData[data.row.index];
+                        if (!record.isHoliday && (data.cell.raw === 'A')) {
+                            data.cell.styles.fillColor = [255, 235, 238];
+                            data.cell.styles.textColor = [211, 47, 47];
+                            data.cell.styles.fontStyle = 'bold';
+                        }
+                    }
+                    
+                    // Style total row
+                    if (data.row.index === tableData.length - 1) {
+                        data.cell.styles.fillColor = [230, 242, 255];
+                        data.cell.styles.fontStyle = 'bold';
                     }
                 }
             });
