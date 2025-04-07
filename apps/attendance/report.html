@@ -82,6 +82,9 @@
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
+        .holiday-row {
+            background-color: #ffebee !important;
+        }
         .loading {
             display: none;
             margin: 20px 0;
@@ -142,7 +145,7 @@
                 <button id="fetchData">View</button>
             </div>
         </div>
-      <p> <a href="https://itcelldto.github.io/try/apps/attendance/index.html" > Mark Attendance</a></p>
+        <p><a href="https://itcelldto.github.io/try/apps/attendance/index.html">Mark Attendance</a></p>
     </div>
     
     <div class="loading" id="loading">Loading data, please wait...</div>
@@ -220,13 +223,74 @@
                         document.getElementById('tableHeader').style.display = 'flex';
                     }
                     
-                    displayAttendanceData(currentAttendanceData);
+                    // Generate full month data with holidays
+                    const fullMonthData = generateFullMonthData(month, year, attendanceId, currentAttendanceData);
+                    displayAttendanceData(fullMonthData);
                 })
                 .catch(error => {
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('error').textContent = 'Error fetching data: ' + error.message;
                     console.error('Error:', error);
                 });
+        }
+        
+        function generateFullMonthData(month, year, attendanceId, existingData) {
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const fullMonthData = [];
+            
+            // Create a map of existing data for easy lookup
+            const existingDataMap = {};
+            existingData.forEach(record => {
+                const dateObj = new Date(record.date);
+                const dateKey = formatDate(dateObj);
+                existingDataMap[dateKey] = record;
+            });
+            
+            // Find all holidays (Sundays and 2nd Saturday)
+            let secondSaturdayFound = false;
+            
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dateObj = new Date(year, month - 1, day);
+                const dayOfWeek = dateObj.getDay(); // 0=Sunday, 6=Saturday
+                const isSunday = dayOfWeek === 0;
+                
+                // Check if this is the 2nd Saturday
+                let isSecondSaturday = false;
+                if (dayOfWeek === 6) { // Saturday
+                    const weekOfMonth = Math.ceil(day / 7);
+                    if (weekOfMonth === 2) {
+                        isSecondSaturday = true;
+                        secondSaturdayFound = true;
+                    }
+                }
+                
+                const isHoliday = isSunday || isSecondSaturday;
+                const dateKey = formatDate(dateObj);
+                
+                // Create record for this date
+                let record = existingDataMap[dateKey] || {
+                    date: dateObj.toISOString(),
+                    attendanceId: attendanceId,
+                    fnStatus: '',
+                    anStatus: '',
+                    inTime: '',
+                    outTime: '',
+                    workingHours: ''
+                };
+                
+                // Mark as holiday if applicable
+                record.isHoliday = isHoliday;
+                
+                // For working days with no data, mark as absent
+                if (!isHoliday && !existingDataMap[dateKey]) {
+                    record.fnStatus = 'A';
+                    record.anStatus = 'A';
+                }
+                
+                fullMonthData.push(record);
+            }
+            
+            return fullMonthData;
         }
         
         function displayAttendanceData(data) {
@@ -241,7 +305,7 @@
             // Create table header
             const header = table.createTHead();
             const headerRow = header.insertRow();
-            const headers = ['SL No.', 'Date', 'Attendance ID', 'FN Status', 'AN Status', 'In Time', 'Out Time', 'Working Hours'];
+            const headers = ['SL No.', 'Date', 'Day', 'Attendance ID', 'FN Status', 'AN Status', 'In Time', 'Out Time', 'Working Hours'];
             
             headers.forEach(text => {
                 const th = document.createElement('th');
@@ -256,6 +320,11 @@
             data.forEach((record, index) => {
                 const row = tbody.insertRow();
                 
+                // Highlight holidays
+                if (record.isHoliday) {
+                    row.classList.add('holiday-row');
+                }
+                
                 // SL No.
                 const slCell = row.insertCell();
                 slCell.textContent = index + 1;
@@ -266,38 +335,44 @@
                 const formattedDate = formatDate(dateObj);
                 dateCell.textContent = formattedDate;
                 
+                // Day
+                const dayCell = row.insertCell();
+                const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const dayName = dayNames[dateObj.getDay()];
+                dayCell.textContent = dayName;
+                
                 // Attendance ID
                 const idCell = row.insertCell();
                 idCell.textContent = record.attendanceId;
                 
-                // FN Status (with red background if 'A')
+                // FN Status (blank for holidays)
                 const fnCell = row.insertCell();
-                fnCell.textContent = record.fnStatus;
-                if (record.fnStatus === 'A') {
+                fnCell.textContent = record.isHoliday ? '' : record.fnStatus;
+                if (record.fnStatus === 'A' && !record.isHoliday) {
                     fnCell.classList.add('status-A');
                 }
                 
-                // AN Status (with red background if 'A')
+                // AN Status (blank for holidays)
                 const anCell = row.insertCell();
-                anCell.textContent = record.anStatus;
-                if (record.anStatus === 'A') {
+                anCell.textContent = record.isHoliday ? '' : record.anStatus;
+                if (record.anStatus === 'A' && !record.isHoliday) {
                     anCell.classList.add('status-A');
                 }
                 
-                // In Time
+                // In Time (blank for holidays)
                 const inCell = row.insertCell();
-                inCell.textContent = record.inTime;
+                inCell.textContent = record.isHoliday ? '' : record.inTime;
                 
-                // Out Time
+                // Out Time (blank for holidays)
                 const outCell = row.insertCell();
-                outCell.textContent = record.outTime;
+                outCell.textContent = record.isHoliday ? '' : record.outTime;
                 
-                // Working Hours
+                // Working Hours (blank for holidays)
                 const hoursCell = row.insertCell();
-                hoursCell.textContent = record.workingHours;
+                hoursCell.textContent = record.isHoliday ? '' : record.workingHours;
                 
-                // Add to total minutes if working hours are valid
-                if (record.workingHours && record.workingHours !== 'N/A') {
+                // Add to total minutes if working hours are valid and not holiday
+                if (!record.isHoliday && record.workingHours && record.workingHours !== 'N/A') {
                     const [hours, minutes] = record.workingHours.split(':').map(Number);
                     totalMinutes += hours * 60 + minutes;
                 }
@@ -308,7 +383,7 @@
             totalRow.className = 'total-hours';
             
             // Empty cells for alignment
-            for (let i = 0; i < 6; i++) {
+            for (let i = 0; i < 7; i++) {
                 totalRow.insertCell();
             }
             
@@ -330,9 +405,6 @@
             const month = (date.getMonth() + 1).toString().padStart(2, '0');
             const year = date.getFullYear();
             return `${day}/${month}/${year}`;
-            
-            // Alternative format: Weekday Month Day Year (e.g., "Fri Apr 04 2025")
-            // return date.toDateString();
         }
         
         function downloadAsPdf() {
@@ -358,6 +430,7 @@
             const headers = [
                 'SL No.', 
                 'Date', 
+                'Day',
                 'Attendance ID', 
                 'FN Status', 
                 'AN Status', 
@@ -369,22 +442,25 @@
             const tableData = currentAttendanceData.map((record, index) => {
                 const dateObj = new Date(record.date);
                 const formattedDate = formatDate(dateObj);
+                const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                const dayName = dayNames[dateObj.getDay()];
                 
                 return [
                     index + 1,
                     formattedDate,
+                    dayName,
                     record.attendanceId,
-                    record.fnStatus,
-                    record.anStatus,
-                    record.inTime,
-                    record.outTime,
-                    record.workingHours
+                    record.isHoliday ? '' : record.fnStatus,
+                    record.isHoliday ? '' : record.anStatus,
+                    record.isHoliday ? '' : record.inTime,
+                    record.isHoliday ? '' : record.outTime,
+                    record.isHoliday ? '' : record.workingHours
                 ];
             });
             
             // Add total hours
             const totalMinutes = currentAttendanceData.reduce((total, record) => {
-                if (record.workingHours && record.workingHours !== 'N/A') {
+                if (!record.isHoliday && record.workingHours && record.workingHours !== 'N/A') {
                     const [hours, minutes] = record.workingHours.split(':').map(Number);
                     return total + hours * 60 + minutes;
                 }
@@ -396,6 +472,7 @@
             const totalHoursStr = `${totalHours.toString().padStart(2, '0')}:${remainingMinutes.toString().padStart(2, '0')}`;
             
             tableData.push([
+                '',
                 '',
                 '',
                 '',
@@ -417,21 +494,22 @@
                     valign: 'middle'
                 },
                 columnStyles: {
-                    0: { cellWidth: 15 }, // SL No
-                    1: { cellWidth: 25 }, // Date
-                    2: { cellWidth: 25 }, // Attendance ID
-                    3: { cellWidth: 20 }, // FN Status
-                    4: { cellWidth: 20 }, // AN Status
-                    5: { cellWidth: 20 }, // In Time
-                    6: { cellWidth: 20 }, // Out Time
-                    7: { cellWidth: 25 }  // Working Hours
+                    0: { cellWidth: 10 }, // SL No
+                    1: { cellWidth: 20 }, // Date
+                    2: { cellWidth: 20 }, // Day
+                    3: { cellWidth: 20 }, // Attendance ID
+                    4: { cellWidth: 15 }, // FN Status
+                    5: { cellWidth: 15 }, // AN Status
+                    6: { cellWidth: 15 }, // In Time
+                    7: { cellWidth: 15 }, // Out Time
+                    8: { cellWidth: 20 }  // Working Hours
                 },
                 didDrawCell: (data) => {
-                    // Highlight 'A' status cells in red
-                    if (data.column.index === 3 || data.column.index === 4) {
-                        if (data.cell.raw === 'A') {
+                    // Highlight holidays
+                    if (data.row.index < currentAttendanceData.length) {
+                        const record = currentAttendanceData[data.row.index];
+                        if (record.isHoliday) {
                             data.doc.setFillColor(255, 235, 238);
-                            data.doc.setDrawColor(255, 235, 238);
                             data.doc.rect(
                                 data.cell.x, 
                                 data.cell.y, 
@@ -439,8 +517,24 @@
                                 data.cell.height, 
                                 'F'
                             );
-                            data.doc.setTextColor(211, 47, 47);
                         }
+                    }
+                    
+                    // Highlight 'A' status cells in red (only for working days)
+                    if ((data.column.index === 4 || data.column.index === 5) && 
+                        data.cell.raw === 'A' && 
+                        data.row.index < currentAttendanceData.length && 
+                        !currentAttendanceData[data.row.index].isHoliday) {
+                        data.doc.setFillColor(255, 235, 238);
+                        data.doc.setDrawColor(255, 235, 238);
+                        data.doc.rect(
+                            data.cell.x, 
+                            data.cell.y, 
+                            data.cell.width, 
+                            data.cell.height, 
+                            'F'
+                        );
+                        data.doc.setTextColor(211, 47, 47);
                     }
                 }
             });
