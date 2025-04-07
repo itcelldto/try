@@ -207,6 +207,7 @@
      <a href="#" class="btn btn-light" onclick="openPopup()">PDF</a>    
             </div>
         </form>
+        <div id="requestIdLabel" style="font-weight: bold; color: red; text-align: center; margin-top: 15px;"></div>
     </div>
        <script>
     function openPopup() {
@@ -265,6 +266,7 @@
                 setTimeout(function() {
                     handleOptionForChange();
                     $('.select2-dropdown').val(null).trigger('change');
+                    document.getElementById('requestIdLabel').textContent = ''; // Clear request ID on reset
                 }, 0);
             });
         });
@@ -492,6 +494,9 @@
                 try {
                     const data = text ? JSON.parse(text) : {};
                     if (data.result === 'success') {
+                        // Update the request ID label
+                        document.getElementById('requestIdLabel').textContent = `Request ID: ${formObject.requestId}`;
+                        
                         Swal.fire({
                             icon: 'success',
                             title: 'Success!',
@@ -505,6 +510,9 @@
                         throw new Error(data.message || 'Failed to submit form');
                     }
                 } catch {
+                    // Update the request ID label
+                    document.getElementById('requestIdLabel').textContent = `Request ID: ${formObject.requestId}`;
+                    
                     Swal.fire({
                         icon: 'success',
                         title: 'Success!',
