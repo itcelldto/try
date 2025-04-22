@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasury Useful Links </title>
+        <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+			background-color: #d7e2ff6e;
+        }
+        h1 {
+            color: #333;
+        }
+        .tab-container {
+		   background-color: #fff;
+           margin: 30px;
+           border: none;
+           border-radius: 5px;
+           box-shadow: 0px 0 30px rgba(1, 41, 112, 0.1);
+        }
+        .tab-buttons {
+            display: flex;
+            
+			 margin-bottom: -1px;
+    /* margin-top: 10px; */
+    padding: 15px 20px 1px;
+    border-bottom: solid 1px #e6ebfa;
+            transition: background-color 0.3s;
+        }
+        .tab-button {
+            padding: 10px 20px;
+            background-color: #fff;
+            border: 1px solid #fff;
+            border-bottom: none;
+            cursor: pointer;
+            font-size: 16px;
+           
+            transition: background-color 0.3s;
+        }
+        .tab-button.active {
+            background-color: #eef2fa !important;
+            border-bottom: solid #133c8d !important;
+            color: #4154f1 !important;
+            font-weight: normal !important;
+        }
+        .tab-button:hover:not(.active) {
+            background-color: #ddd;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-top: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        .view-btn {
+            background-color: #17a2b8;
+            color: white;
+            padding: 8px 12px;
+            border-color: #17a2b8;
+            border-radius: .25rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .view-btn:hover {
+            color: #fff;
+    background-color: #138496;
+    border-color: #117a8b;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,.3);
+            border-radius: 50%;
+            border-top-color: #000;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-container {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .submit-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .submit-btn:hover {
+            background-color: #45a049;
+        }
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+    </style>
+</head>
+<body>
+    <h3>Treasury Useful Links</h3>
+    
+    <div class="tab-container">
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="openTab(event, 'viewTab')">View</button>
+            <button class="tab-button" onclick="openTab(event, 'addTab')">Add</button>
+        </div>
+        
+        <div id="viewTab" class="tab-content active">
+            <div id="loading" class="loading-container">
+                <div class="loading"></div>
+                <span>Loading data...</span>
+            </div>
+            <table id="linksTable">
+                <thead>
+                    <tr>
+                        <th>SL No</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <!-- Data will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div id="addTab" class="tab-content">
+            <form id="addForm" action="https://script.google.com/macros/s/AKfycbx65p-ko-UpRGAe-mh52bLdK_7kq8_n3-Ha1OFuRfKYNEMfdPqRCy4CzNzj3xaoQEAf/exec" method="POST">
+                <div class="form-group">
+                    <label for="slNo">SL No:</label>
+                    <input type="text" id="slNo" name="slNo" required>
+                </div>
+                <div class="form-group">
+                    <label for="title">Title:</label>
+                    <input type="text" id="title" name="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <textarea id="description" name="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="url">URL:</label>
+                    <input type="text" id="url" name="url" required>
+                </div>
+                <button type="submit" class="submit-btn">Add to Sheet</button>
+            </form>
+            <div id="message" class="message"></div>
+        </div>
+    </div>
+
+    <script>
+        // Tab functionality
+        function openTab(evt, tabName) {
+            const tabContents = document.getElementsByClassName("tab-content");
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove("active");
+            }
+            
+            const tabButtons = document.getElementsByClassName("tab-button");
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove("active");
+            }
+            
+            document.getElementById(tabName).classList.add("active");
+            evt.currentTarget.classList.add("active");
+        }
+
+        // Google Sheets configuration for viewing
+        const spreadsheetId = '1CvkcY8Ez740LmncUG0w1-C2IuvV0jUl1I2M6EPVHFgk';
+        const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+        const sheetName = 'Useful Links';
+        const range = 'A:D';
+
+        // Fetch data from Google Sheets for View tab
+        function fetchData() {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!${range}?key=${apiKey}`;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const loadingElement = document.getElementById('loading');
+                    loadingElement.style.display = 'none';
+                    
+                    const tableBody = document.getElementById('tableBody');
+                    tableBody.innerHTML = '';
+                    const rows = data.values;
+                    
+                    // Skip header row if it exists
+                    const startRow = rows.length > 0 && rows[0][0] === 'SL No' ? 1 : 0;
+                    
+                    for (let i = startRow; i < rows.length; i++) {
+                        const row = rows[i];
+                        const slNo = row[0] || '';
+                        const title = row[1] || '';
+                        const description = row[2] || '';
+                        const url = row[3] || '';
+                        
+                        const tr = document.createElement('tr');
+                        
+                        tr.innerHTML = `
+                            <td>${slNo}</td>
+                            <td>${title}</td>
+                            <td>${description}</td>
+                            <td><a href="${url}" target="_blank" rel="noopener noreferrer" class="view-btn">View</a></td>
+                        `;
+                        
+                        tableBody.appendChild(tr);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    document.getElementById('loading').innerHTML = '<p>Error loading data. Please try again later.</p>';
+                });
+        }
+
+        // Handle form submission
+        document.getElementById('addForm').addEventListener('submit', function(e) {
+            // Let the form submit normally to the Google Apps Script
+            // We'll handle the response in a hidden iframe
+            const messageElement = document.getElementById('message');
+            messageElement.style.display = 'none';
+            
+            // Create a hidden iframe to handle the response
+            const iframe = document.createElement('iframe');
+            iframe.name = 'hiddenFrame';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            // Set form target to the iframe
+            this.target = 'hiddenFrame';
+            
+            // Check for success after submission
+            iframe.onload = function() {
+                try {
+                    const response = iframe.contentDocument.body.textContent;
+                    if (response && response.trim() !== '') {
+                        showMessage('Data added successfully!', 'success');
+                        document.getElementById('addForm').reset();
+                        fetchData(); // Refresh the View tab
+                    } else {
+                        showMessage('Data submitted, but no response received', 'error');
+                    }
+                } catch (error) {
+                    showMessage('Data may have been submitted successfully', 'success');
+                    document.getElementById('addForm').reset();
+                    fetchData(); // Refresh the View tab
+                }
+                document.body.removeChild(iframe);
+            };
+        });
+
+        function showMessage(message, type) {
+            const messageElement = document.getElementById('message');
+            messageElement.textContent = message;
+            messageElement.className = 'message ' + type;
+            messageElement.style.display = 'block';
+        }
+
+        // Initialize the page
+        fetchData();
+    </script>
+</body>
+</html>
