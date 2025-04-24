@@ -140,6 +140,57 @@
         .hidden {
             display: none !important;
         }
+        
+        /* Forgot password link */
+        .forgot-password {
+            text-align: center;
+            margin-top: 10px;
+        }
+        
+        .forgot-password a {
+            color: #666;
+            cursor: pointer;
+        }
+        
+        .forgot-password a:hover {
+            color: #3c8dbc;
+            text-decoration: underline;
+        }
+        
+        /* Modal styles */
+        .modal-content {
+            border-radius: 3px;
+        }
+        
+        .modal-header {
+            background-color: #3c8dbc;
+            color: white;
+            border-radius: 3px 3px 0 0;
+        }
+        
+        .modal-title {
+            font-weight: bold;
+        }
+        
+        .step {
+            display: none;
+        }
+        
+        .step.active {
+            display: block;
+        }
+        
+        /* Treasury name in sidebar */
+        .treasury-name {
+          padding: 10px;
+          text-align: left;
+          font-weight: 400;
+          font-size: 12px;
+          color: #b8c7ce;
+          background-color: #0000005e;
+          border-bottom: 1px solid #3c8dbc5e;
+          overflow: hidden;
+        }
     </style>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
@@ -167,9 +218,14 @@
                     </div>
                     <div id="login-error" class="text-center">Invalid User ID or Password</div>
                 </form>
+                <div class="forgot-password">
+                    <a id="forgot-password-link">Forgot Password?</a>
+                </div>
             </div>
         </div>
     </div>
+
+   
 
     <!-- Main Content (hidden initially) -->
     <div class="wrapper">
@@ -192,6 +248,9 @@
         </header>
         <!-- Left side column. contains the logo and sidebar -->
         <aside class="main-sidebar">
+            <!-- Treasury Name Display -->
+            <div class="treasury-name" id="treasury-name-display"></div>
+            
             <!-- sidebar: style can be found in sidebar.less -->
             <section class="sidebar">
                 <!-- Sidebar Menu -->
@@ -275,6 +334,12 @@
             // Initialize AdminLTE (required for sidebar functionality)
             $('[data-widget="tree"]').tree();
             
+            // Current step in forgot password process
+            let currentStep = 1;
+            let otp = '';
+            let treasuryRow = -1;
+            let treasurySettings = [];
+            
             // Handle login form submission
             $('#login-form').submit(function(e) {
                 e.preventDefault();
@@ -283,19 +348,34 @@
                 const password = $('#password').val().trim();
                 
                 // Fetch credentials from Google Sheet
-                const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!B2:B3?key=${apiKey}`;
+                const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
                 
                 $.get(settingsUrl, function(data) {
-                    const storedUserId = data.values[0][0]; // B2
-                    const storedPassword = data.values[1][0]; // B3
+                    treasurySettings = data.values;
+                    let loginSuccessful = false;
+                    let treasuryName = '';
                     
-                    if (userId === storedUserId && password === storedPassword) {
+                    // Check each row for matching credentials
+                    for (let i = 0; i < treasurySettings.length; i++) {
+                        const row = treasurySettings[i];
+                        if (row[1] === userId && row[2] === password) {
+                            loginSuccessful = true;
+                            treasuryName = row[0]; // A column - Treasury name
+                            treasuryRow = i; // Store the row index for later use
+                            break;
+                        }
+                    }
+                    
+                    if (loginSuccessful) {
                         // Successful login
                         $('#login-error').hide();
                         $('#login-overlay').hide();
                         
-                        // Initialize the main application
-                        initializeApplication();
+                        // Display treasury name in sidebar
+                        $('#treasury-name-display').text(treasuryName);
+                        
+                        // Initialize the main application with the menu sheet name from column F
+                        initializeApplication(treasurySettings[treasuryRow][5] || 'nav-links');
                     } else {
                         // Failed login
                         $('#login-error').show();
@@ -305,14 +385,15 @@
                 });
             });
             
+           
+            
             // Function to initialize the application after successful login
-            function initializeApplication() {
+            function initializeApplication(menuSheetName) {
                 // Start updating date and time
                 updateDateTime();
                 setInterval(updateDateTime, 1000);
                 
                 // Fetch data for the sidebar menu
-                const menuSheetName = 'nav-links';
                 const menuUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${menuSheetName}?key=${apiKey}`;
 
                 // Fetch data for the running text
