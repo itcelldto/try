@@ -110,6 +110,36 @@
             margin-top: 10px;
             display: none;
         }
+        
+        /* Loading spinner styles */
+        .loading-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 100px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f8f9fa;
+        }
+        
+        .loading-content {
+            text-align: center;
+        }
+        
+        .loading-content img {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .loading-content p {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
@@ -181,6 +211,14 @@
 
             <!-- Main Content -->
             <section class="content">
+                <!-- Loading Spinner -->
+                <div class="loading-container" id="loading-spinner">
+                    <div class="loading-content">
+                        <img src="https://itcelldto.github.io/try/Spinner-3.gif" alt="Loading...">
+                        <p>Loading. Please wait...</p>
+                    </div>
+                </div>
+                
                 <iframe id="main-iframe" src="" style="width: 100%; height: calc(100vh - 100px); border: none;"></iframe>
             </section>
         </div>
@@ -328,6 +366,8 @@
                         if (subMenu && subMenuLink) {
                             const subMenuLi = $('<li>').append($('<a>').attr('href', '#').text(subMenu).click(function(e) {
                                 e.preventDefault();
+                                // Show loading spinner when iframe src changes
+                                $('#loading-spinner').removeClass('hidden');
                                 $('#main-iframe').attr('src', subMenuLink);
                             }));
                             subMenuUl.append(subMenuLi);
@@ -336,6 +376,11 @@
                     
                     // Reinitialize the tree after adding new elements
                     $('[data-widget="tree"]').tree();
+                });
+                
+                // Hide loading spinner when iframe is loaded
+                $('#main-iframe').on('load', function() {
+                    $('#loading-spinner').addClass('hidden');
                 });
             }
         });
