@@ -115,7 +115,7 @@
         .loading-container {
             position: relative;
             width: 100%;
-            height: calc(100vh - 100px);
+            height: calc(100vh - 1px);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -157,28 +157,7 @@
             text-decoration: underline;
         }
         
-        /* Modal styles */
-        .modal-content {
-            border-radius: 3px;
-        }
         
-        .modal-header {
-            background-color: #3c8dbc;
-            color: white;
-            border-radius: 3px 3px 0 0;
-        }
-        
-        .modal-title {
-            font-weight: bold;
-        }
-        
-        .step {
-            display: none;
-        }
-        
-        .step.active {
-            display: block;
-        }
         
         /* Treasury name in sidebar */
         .treasury-name {
@@ -201,6 +180,7 @@
                 <a href="#"><b>IT Cell</b> Help Desk</a>
             </div>
             <div class="login-box-body">
+			<h3 style="text-align: center;color: #c5c5c5;font-weight: 600;">eAdmin- Dashboard </h3>
                 <p class="login-box-msg">Sign in to start your session</p>
                 <form id="login-form">
                     <div class="form-group has-feedback">
@@ -219,7 +199,7 @@
                     <div id="login-error" class="text-center">Invalid User ID or Password</div>
                 </form>
                 <div class="forgot-password">
-                    <a id="forgot-password-link">Forgot Password?</a>
+                    <a id="forgot-password-link" target="_blank" href="https://script.google.com/macros/s/AKfycbxM1Bxbd2YvMuKA6l5BWRFL7Uv-z917M4i_338L2bIBZcN59RpTMKmvMmRMXpFE5ZMBHg/exec">Forgot Password?</a>
                 </div>
             </div>
         </div>
@@ -256,7 +236,12 @@
                 <!-- Sidebar Menu -->
                 <ul class="sidebar-menu" data-widget="tree" id="sidebar-menu">
                     <!-- Menu items will be dynamically populated here -->
+					
+					
                 </ul>
+				<ul class="sidebar-menu" data-widget="tree" >
+				<li class="treeview"><a href="#" onclick="window.location.reload(); return false;"><i class="glyphicon glyphicon-log-out"></i> Logout</a>></li>
+				</ul>
                 <!-- /.sidebar-menu -->
             </section>
             <!-- /.sidebar -->
@@ -278,7 +263,7 @@
                     </div>
                 </div>
                 
-                <iframe id="main-iframe" src="" style="width: 100%; height: calc(100vh - 100px); border: none;"></iframe>
+                <iframe id="main-iframe" src="about:Dashboard" style="width: 100%; height: calc(100vh - 100px); border: none;"></iframe>
             </section>
         </div>
 
@@ -457,6 +442,7 @@
                     
                     // Reinitialize the tree after adding new elements
                     $('[data-widget="tree"]').tree();
+					$('#loading-spinner').addClass('hidden');
                 });
                 
                 // Hide loading spinner when iframe is loaded
