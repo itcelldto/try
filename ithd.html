@@ -17,6 +17,14 @@
     <!-- AdminLTE Skins -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/css/skins/_all-skins.min.css">
     <style>
+	.skin-blue .main-header .logo {
+  background-color: #1fadffb2;
+  color: #fff;
+  border-bottom: 0 solid transparent;
+}
+	.skin-blue .main-header .navbar {
+  background-color: #1fadff;
+}
         #current-date-time {
             font-family: Arial, sans-serif;
             font-weight: bold;
@@ -283,7 +291,7 @@ function openForgotPasswordPopup() {
                     </div>
                 </div>
                 
-                <iframe id="main-iframe" src="about:Dashboard" style="width: 100%; height: calc(100vh - 100px); border: none;"></iframe>
+                <iframe id="main-iframe" src="https://itcelldto.github.io/try/dashboard2.html" style="width: 100%; height: calc(100vh - 100px); border: none;"></iframe>
             </section>
         </div>
 
@@ -291,7 +299,7 @@ function openForgotPasswordPopup() {
         <!-- Main Footer -->
         <footer class="main-footer">
             <div class="pull-right hidden-xs">
-                Version 1
+                Version 1 
             </div>
             <strong>Copyright &copy; 2025 <a href="#">IT Cell Treasury</a>.</strong> All rights reserved.
         </footer>
@@ -305,6 +313,40 @@ function openForgotPasswordPopup() {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/js/adminlte.min.js"></script>
 
     <script>
+	// Set expiration time to 5 minutes (300,000 milliseconds)
+const EXPIRATION_TIME = 5 * 60 * 1000;
+
+// Store the initial load time in localStorage
+if (!localStorage.getItem('pageLoadTime')) {
+    localStorage.setItem('pageLoadTime', Date.now());
+}
+
+// Function to check if page has expired
+function checkExpiration() {
+    const loadTime = parseInt(localStorage.getItem('pageLoadTime'));
+    const currentTime = Date.now();
+    
+    if (currentTime - loadTime > EXPIRATION_TIME) {
+        // Clear the stored time and reload
+        localStorage.removeItem('pageLoadTime');
+        window.location.reload(true); // Force reload from server
+    }
+}
+
+// Check expiration every minute
+const expirationCheckInterval = setInterval(checkExpiration, 60 * 1000);
+
+// Also check when the page becomes visible again
+document.addEventListener('visibilitychange', function() {
+    if (!document.hidden) {
+        checkExpiration();
+    }
+});
+
+// Initial check when page loads
+window.addEventListener('load', checkExpiration);
+
+
         // Update date and time function
         function updateDateTime() {
             const now = new Date();
@@ -471,7 +513,7 @@ function openForgotPasswordPopup() {
                 });
             }
         });
-	
+		
     </script>
 </body>
 </html>
