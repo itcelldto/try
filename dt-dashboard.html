@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Job Statistics Dashboard</title>
+    <!-- AdminLTE 2 CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.18/css/AdminLTE.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.18/css/skins/_all-skins.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
+    <style>
+        .dashboard-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+        }
+        .small-box {
+            width: 250px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 18px;
+        }
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body >
+   
+        <!-- Content Wrapper. Contains page content -->
+       
+            <!-- Main content -->
+            <section class="content">
+                <div class="dashboard-container" id="dashboard-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading job statistics...
+                    </div>
+                </div>
+            </section>
+     
+
+
+    <script>
+        // Google Sheets configuration
+        const API_KEY = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+        const SPREADSHEET_ID = '11wvVQ2G41ke3g6RdfYX8AJAl0w-fnf2NQ_Agufz0wXY';
+        const SHEET_NAME = 'statistics';
+        const RANGE = 'A:B'; // Columns A and B
+        
+        // Construct the API URL
+        const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!${RANGE}?key=${API_KEY}`;
+        
+        // Color and icon options
+        const colors = ['aqua', 'green', 'yellow', 'red'];
+        const icons = [
+            'ion ion-bag', 
+            'ion ion-stats-bars', 
+            'ion ion-person-add', 
+            'ion ion-pie-graph',
+            'ion ion-document-text',
+            'ion ion-ios-gear'
+        ];
+        
+        // Fetch data from Google Sheets and create dashboard
+        async function loadDashboard() {
+            const dashboardContainer = document.getElementById('dashboard-container');
+            
+            try {
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const rows = data.values;
+                
+                // Remove header row if exists
+                if (rows.length > 0 && rows[0][0] === 'Job pending') {
+                    rows.shift();
+                }
+                
+                dashboardContainer.innerHTML = '';
+                
+                if (rows.length === 0) {
+                    dashboardContainer.innerHTML = `
+                        <div class="alert alert-warning">
+                            No data found in the spreadsheet.
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let colorIndex = 0;
+                let boxesCreated = 0;
+                
+                rows.forEach(row => {
+                    const jobType = row[0];
+                    const count = row[1];
+                    
+                    // Only create box if count exists and is not zero, and jobType exists
+                    if (count && count !== '0' && jobType) {
+                        const color = colors[colorIndex % colors.length];
+                        const icon = icons[colorIndex % icons.length];
+                        
+                        const boxHtml = `
+                            <div class="small-box bg-${color}">
+                                <div class="inner">
+                                    <h3>${count}</h3>
+                                    <p>${jobType}</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="${icon}"></i>
+                                </div>
+                                <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+                            </div>
+                        `;
+                        
+                        dashboardContainer.innerHTML += boxHtml;
+                        colorIndex++;
+                        boxesCreated++;
+                    }
+                });
+                
+                if (boxesCreated === 0) {
+                    dashboardContainer.innerHTML = `
+                        <div class="alert alert-info">
+                            All job counts are currently zero.
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                dashboardContainer.innerHTML = `
+                    <div class="alert alert-danger">
+                        Error loading data: ${error.message}<br><br>
+                        Please check:<br>
+                        1. Your API key is valid<br>
+                        2. The spreadsheet is shared publicly<br>
+                        3. The sheet name and range are correct
+                    </div>
+                `;
+            }
+        }
+        
+        // Load the dashboard when the page loads
+        document.addEventListener('DOMContentLoaded', loadDashboard);
+    </script>
+    
+    <!-- jQuery -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <!-- AdminLTE 2 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.18/js/adminlte.min.js"></script>
+</body>
+</html>
