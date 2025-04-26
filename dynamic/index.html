@@ -340,38 +340,49 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/js/adminlte.min.js"></script>
 
     <script>
-	      // Set expiration time to 5 minutes (300,000 milliseconds)
-const EXPIRATION_TIME = 5 * 60 * 1000;
+	   // Set inactivity timeout to 15 minutes (900,000 milliseconds)
+const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
+let inactivityTimer;
 
-// Store the initial load time in localStorage
-if (!localStorage.getItem('pageLoadTime')) {
-    localStorage.setItem('pageLoadTime', Date.now());
+// Function to reset the inactivity timer
+function resetInactivityTimer() {
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(reloadPage, INACTIVITY_TIMEOUT);
 }
 
-// Function to check if page has expired
-function checkExpiration() {
-    const loadTime = parseInt(localStorage.getItem('pageLoadTime'));
-    const currentTime = Date.now();
-    
-    if (currentTime - loadTime > EXPIRATION_TIME) {
-        // Clear the stored time and reload
-        localStorage.removeItem('pageLoadTime');
-        window.location.reload(true); // Force reload from server
-    }
+// Function to reload the page
+function reloadPage() {
+    window.location.reload(true); // Force reload from server
 }
 
-// Check expiration every minute
-const expirationCheckInterval = setInterval(checkExpiration, 60 * 1000);
+// Event listeners to detect activity
+function setupActivityListeners() {
+    // Mouse movement
+    document.addEventListener('mousemove', resetInactivityTimer);
+    // Mouse clicks
+    document.addEventListener('click', resetInactivityTimer);
+    // Keyboard input
+    document.addEventListener('keydown', resetInactivityTimer);
+    // Touch events for mobile
+    document.addEventListener('touchstart', resetInactivityTimer);
+    document.addEventListener('touchmove', resetInactivityTimer);
+}
 
-// Also check when the page becomes visible again
+// Initialize the timer and event listeners
+function initInactivityTimer() {
+    setupActivityListeners();
+    resetInactivityTimer(); // Start the initial timer
+}
+
+// Start the inactivity monitoring when page loads
+window.addEventListener('load', initInactivityTimer);
+
+// Also restart timer when page becomes visible again
 document.addEventListener('visibilitychange', function() {
     if (!document.hidden) {
-        checkExpiration();
+        resetInactivityTimer();
     }
 });
-
-// Initial check when page loads
-window.addEventListener('load', checkExpiration);
 
         // Update date and time function
         function updateDateTime() {
