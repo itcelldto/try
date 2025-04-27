@@ -220,7 +220,16 @@
             employeeSpreadsheetId: '1pOhA7N0HufnqmwD7KBCW8xhDKCh-gxZ-tOeZ2-4qq7k',
             apiKey: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
         };
-
+     // Initialize date pickers with DD/MM/YYYY format
+        const fromDatePicker = flatpickr("#fromDate", {
+            dateFormat: "d/m/Y",
+            allowInput: true
+        });
+        
+        const toDatePicker = flatpickr("#toDate", {
+            dateFormat: "d/m/Y",
+            allowInput: true
+        });
         // Utility Functions
         function formatDate(date) {
             const day = date.getDate().toString().padStart(2, '0');
