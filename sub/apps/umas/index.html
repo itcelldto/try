@@ -341,8 +341,168 @@
             }
         }
 
-        // Rest of your existing JavaScript functions remain the same...
-        // [Keep all other existing functions unchanged]
+       function populateDropdown(id, items) {
+            const $dropdown = $(`#${id}`);
+            $dropdown.empty().append('<option value=""></option>');
+            
+            if (items && items.length) {
+                const uniqueItems = [...new Set(items)]; // Remove duplicates
+                uniqueItems.forEach(item => {
+                    if (item) $dropdown.append($('<option>').val(item).text(item));
+                });
+            }
+            $dropdown.trigger('change');
+        }
+
+        // Setup PEN number autofill functionality
+        function setupPENAutofill() {
+            // From PEN autofill
+            $('#fromPEN').on('change', async function() {
+                const pen = $(this).val();
+                if (pen) {
+                    await autofillEmployeeDetails(pen, 'from');
+                    // If Option For is "User Activation", copy to to employee details
+                    if ($('#optionFor').val() === "User Activation") {
+                        $('#toPEN').val(pen);
+                        $('#toName').val($('#fromName').val());
+                        $('#toDesignation').val($('#fromDesignation').val()).trigger('change');
+                        $('#toRole').val($('#fromRole').val()).trigger('change');
+                    }
+                }
+            });
+            
+            // To PEN autofill (only when not User Activation)
+            $('#toPEN').on('change', async function() {
+                if ($('#optionFor').val() !== "User Activation") {
+                    const pen = $(this).val();
+                    if (pen) {
+                        await autofillEmployeeDetails(pen, 'to');
+                    }
+                }
+            });
+        }
+
+        // Autofill employee details based on PEN
+        async function autofillEmployeeDetails(pen, prefix) {
+            try {
+                // Fetch all employee data
+                const employeeData = await fetchSheetData(CONFIG.employeeSpreadsheetId, 'A2:E', 'employee');
+                
+                // Find employee with matching PEN
+                const employee = employeeData.find(row => row[2] === pen);
+                
+                if (employee) {
+                    // Update form fields
+                    $(`#${prefix}Name`).val(employee[1]);
+                    $(`#${prefix}Designation`).val(employee[3]).trigger('change');
+                    $(`#${prefix}Role`).val(employee[4]).trigger('change');
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Employee Not Found',
+                        text: `No employee found with PEN: ${pen}`,
+                        timer: 2000
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching employee data:', error);
+                Swal.fire('Error', 'Failed to fetch employee details', 'error');
+            }
+        }
+
+        document.getElementById('treasuryForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Show loading state
+            const submitButton = this.querySelector('button[type="submit"]');
+            const originalText = submitButton.textContent;
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+            
+            // Get form data
+            const formData = new FormData(this);
+            const formObject = {};
+            formData.forEach((value, key) => {
+                formObject[key] = value;
+            });
+            
+            // Generate request ID, formatted timestamp, and set status
+            formObject.requestId = generateRequestId();
+            formObject.timestamp = formatTimestamp(new Date());
+            formObject.status = "Pending"; // Always set status to "Pending"
+            
+            // For User Activation, ensure to employee details match from employee details
+            if (formObject.optionFor === "User Activation") {
+                formObject.toPEN = formObject.fromPEN;
+                formObject.toName = formObject.fromName;
+                formObject.toDesignation = formObject.fromDesignation;
+                formObject.toRole = formObject.fromRole;
+            }
+            
+            // Create URL with parameters to use GET instead of POST
+            const url = new URL('https://script.google.com/macros/s/AKfycbwXvCX8W0iMUxR5mvLXW5TbaoRvb0gdOYpJZrPFkVzdgtAByIH6YQNXyqwtF4QtJzS63A/exec');
+            Object.keys(formObject).forEach(key => {
+                url.searchParams.append(key, formObject[key]);
+            });
+            
+            // Send data to Google Apps Script using GET
+            fetch(url, {
+                method: 'GET',
+                redirect: 'follow'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.text();
+            })
+            .then(text => {
+                try {
+                    const data = text ? JSON.parse(text) : {};
+                    if (data.result === 'success') {
+                        // Update the request ID label
+                        document.getElementById('requestIdLabel').textContent = `Request ID: ${formObject.requestId}`;
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: 'Form submitted successfully!',
+                            footer: `Request ID: ${formObject.requestId}<br>Timestamp: ${formObject.timestamp}`
+                        });
+                        document.getElementById('treasuryForm').reset();
+                        $('.select2-dropdown').val(null).trigger('change');
+                        handleOptionForChange(); // Reset visibility
+                    } else {
+                        throw new Error(data.message || 'Failed to submit form');
+                    }
+                } catch {
+                    // Update the request ID label
+                    document.getElementById('requestIdLabel').textContent = `Request ID: ${formObject.requestId}`;
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: 'Form submitted successfully!',
+                        footer: `Request ID: ${formObject.requestId}<br>Timestamp: ${formObject.timestamp}`
+                    });
+                    document.getElementById('treasuryForm').reset();
+                    $('.select2-dropdown').val(null).trigger('change');
+                    handleOptionForChange(); // Reset visibility
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: error.message,
+                });
+                console.error('Error:', error);
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
+            });
+        });
         
     </script>
 </body>
