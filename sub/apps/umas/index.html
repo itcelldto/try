@@ -30,7 +30,6 @@
             text-align: center;
             margin-bottom: 30px;
         }
-     
         .form-group {
             margin-bottom: 20px;
         }
@@ -73,7 +72,6 @@
         .btn-group .btn {
             width: 50%;
         }
-        
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             line-height: 20px;
         }
@@ -96,8 +94,6 @@
         .hidden-section {
             display: none;
         }
-        
-        /* Add this new style for read-only treasury field */
         #treasury.select2-selection--single {
             background-color: #f8f9fa;
             pointer-events: none;
@@ -110,7 +106,7 @@
         <h3>UMAS Data Change Form</h3>
         
         <form id="treasuryForm">
-                 <div class="form-group">
+            <div class="form-group">
                 <label for="optionFor">Option For*</label>
                 <select id="optionFor" name="optionFor" class="form-control select2-dropdown" required>
                     <option value="">Select Option</option>
@@ -211,24 +207,12 @@
             <div style="text-align:center">
                 <button type="submit" class="btn btn-primary">Submit</button>
                 <button type="reset" class="btn btn-secondary">Reset</button>
-              
-     <a href="#" class="btn btn-light" onclick="openPopup()">PDF</a>    
+                <a href="#" class="btn btn-light" onclick="openPopup()">PDF</a>    
             </div>
         </form>
         <div id="requestIdLabel" style="font-weight: bold; color: red; text-align: center; margin-top: 15px;"></div>
     </div>
-       <script>
-    function openPopup() {
-    const url = "https://script.google.com/macros/s/AKfycbzywjcUltvzofjDglUovicJfcWWN1oe0jFZCRwhCgA/dev";
-    const windowFeatures = "width=600,height=400,resizable=yes,scrollbars=yes";
-    const popup = window.open(url, "PopupWindow", windowFeatures);
 
-    if (!popup || popup.closed || typeof popup.closed === "undefined") {
-        // Pop-up blocked, open in the same tab
-        window.location.href = url;
-    }
-}
-</script>
     <script>
         // Configuration
         const CONFIG = {
@@ -237,102 +221,59 @@
             apiKey: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
         };
 
-        // Initialize date pickers with DD/MM/YYYY format
-        const fromDatePicker = flatpickr("#fromDate", {
-            dateFormat: "d/m/Y",
-            allowInput: true
-        });
-        
-        const toDatePicker = flatpickr("#toDate", {
-            dateFormat: "d/m/Y",
-            allowInput: true
-        });
+        // Utility Functions
+        function formatDate(date) {
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
 
-        // Initialize Select2 dropdowns
-        $(document).ready(function() {
-            // First, try to get treasury name from URL or session storage
-            const urlParams = new URLSearchParams(window.location.search);
-            let treasuryName = urlParams.get('treasury');
-            
-            if (!treasuryName) {
-                try {
-                    treasuryName = sessionStorage.getItem('treasuryName');
-                } catch (e) {
-                    console.log("Couldn't access parent session storage");
-                }
-            }
-            
-            // If we have a treasury name, populate the select dropdown
-            if (treasuryName) {
-                const treasurySelect = document.getElementById('treasury');
-                treasurySelect.innerHTML = ''; // Clear any existing options
-                const option = document.createElement('option');
-                option.value = treasuryName;
-                option.textContent = treasuryName;
-                option.selected = true;
-                treasurySelect.appendChild(option);
-            }
-            
-            // Initialize other Select2 dropdowns
-            $('.select2-dropdown').select2({
-                width: '100%',
-                placeholder: function() {
-                    return $(this).data('placeholder') || 'Select an option';
-                }
-            });
-            
-            // Make treasury field read-only
-            $('#treasury').next('.select2-container').find('.select2-selection').css({
-                'background-color': '#f8f9fa',
-                'pointer-events': 'none',
-                'cursor': 'not-allowed'
-            });
-            
-            // Load other dropdown data when page loads
-            loadDropdownData();
-            
-            // Setup PEN input event listeners
-            setupPENAutofill();
-            
-            // Handle Option For change
-            $('#optionFor').on('change', handleOptionForChange);
-            
-            // Set initial state
-            handleOptionForChange();
-            
-            // Reset form handler
-            $('button[type="reset"]').on('click', function() {
-                setTimeout(function() {
-                    handleOptionForChange();
-                    $('.select2-dropdown').val(null).trigger('change');
-                    // Keep treasury value on reset
-                    if (treasuryName) {
-                        $('#treasury').val(treasuryName).trigger('change');
-                    }
-                    document.getElementById('requestIdLabel').textContent = ''; // Clear request ID on reset
-                }, 0);
-            });
-        });
+        function formatTimestamp(date) {
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const seconds = date.getSeconds().toString().padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+        }
+
+        function generateRequestId() {
+            const now = new Date();
+            return [
+                now.getFullYear().toString().slice(-2),
+                (now.getMonth() + 1).toString().padStart(2, '0'),
+                now.getDate().toString().padStart(2, '0'),
+                now.getHours().toString().padStart(2, '0'),
+                now.getMinutes().toString().padStart(2, '0'),
+                now.getSeconds().toString().padStart(2, '0')
+            ].join('');
+        }
+
+        // Data Fetching Functions
+        async function fetchSheetData(spreadsheetId, range, sheetName) {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!${range}?key=${CONFIG.apiKey}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            return data.values || [];
+        }
 
         async function loadDropdownData() {
             try {
-                // Load data from Settings sheet - no longer loading treasury codes
                 const [designations, roles, optionsFor] = await Promise.all([
                     fetchSheetData(CONFIG.mainSpreadsheetId, 'B2:B', 'settings'),
                     fetchSheetData(CONFIG.mainSpreadsheetId, 'C2:C', 'settings'),
                     fetchSheetData(CONFIG.mainSpreadsheetId, 'D2:D', 'settings')
                 ]);
                 
-                // Populate dropdowns
                 populateDropdown('fromDesignation', designations.flat());
                 populateDropdown('toDesignation', designations.flat());
                 populateDropdown('fromRole', roles.flat());
                 populateDropdown('toRole', roles.flat());
                 populateDropdown('optionFor', optionsFor.flat());
                 
-                // Set default value for Option For
                 $('#optionFor').val('Charge Arrangement').trigger('change');
-                
                 return true;
             } catch (error) {
                 console.error('Error loading dropdown data:', error);
@@ -341,12 +282,12 @@
             }
         }
 
-       function populateDropdown(id, items) {
+        function populateDropdown(id, items) {
             const $dropdown = $(`#${id}`);
             $dropdown.empty().append('<option value=""></option>');
             
             if (items && items.length) {
-                const uniqueItems = [...new Set(items)]; // Remove duplicates
+                const uniqueItems = [...new Set(items)];
                 uniqueItems.forEach(item => {
                     if (item) $dropdown.append($('<option>').val(item).text(item));
                 });
@@ -354,14 +295,12 @@
             $dropdown.trigger('change');
         }
 
-        // Setup PEN number autofill functionality
+        // Form Handling Functions
         function setupPENAutofill() {
-            // From PEN autofill
             $('#fromPEN').on('change', async function() {
                 const pen = $(this).val();
                 if (pen) {
                     await autofillEmployeeDetails(pen, 'from');
-                    // If Option For is "User Activation", copy to to employee details
                     if ($('#optionFor').val() === "User Activation") {
                         $('#toPEN').val(pen);
                         $('#toName').val($('#fromName').val());
@@ -371,7 +310,6 @@
                 }
             });
             
-            // To PEN autofill (only when not User Activation)
             $('#toPEN').on('change', async function() {
                 if ($('#optionFor').val() !== "User Activation") {
                     const pen = $(this).val();
@@ -382,17 +320,12 @@
             });
         }
 
-        // Autofill employee details based on PEN
         async function autofillEmployeeDetails(pen, prefix) {
             try {
-                // Fetch all employee data
                 const employeeData = await fetchSheetData(CONFIG.employeeSpreadsheetId, 'A2:E', 'employee');
-                
-                // Find employee with matching PEN
                 const employee = employeeData.find(row => row[2] === pen);
                 
                 if (employee) {
-                    // Update form fields
                     $(`#${prefix}Name`).val(employee[1]);
                     $(`#${prefix}Designation`).val(employee[3]).trigger('change');
                     $(`#${prefix}Role`).val(employee[4]).trigger('change');
@@ -410,100 +343,203 @@
             }
         }
 
-        document.getElementById('treasuryForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        function handleOptionForChange() {
+            const optionFor = $('#optionFor').val();
+            const today = new Date();
+            const todayFormatted = formatDate(today);
             
-            // Show loading state
-            const submitButton = this.querySelector('button[type="submit"]');
-            const originalText = submitButton.textContent;
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+            if (optionFor === "User Activation") {
+                fromDatePicker.setDate(today, true);
+                toDatePicker.setDate(today, true);
+                $('#toPEN').val($('#fromPEN').val());
+                $('#toName').val($('#fromName').val());
+                $('#toDesignation').val($('#fromDesignation').val()).trigger('change');
+                $('#toRole').val($('#fromRole').val()).trigger('change');
+                $('.to-employee-section, .date-range-section').addClass('hidden-section');
+            } else {
+                $('.to-employee-section, .date-range-section').removeClass('hidden-section');
+                $('#toPEN').val('');
+                $('#toName').val('');
+                $('#toDesignation').val(null).trigger('change');
+                $('#toRole').val(null).trigger('change');
+                fromDatePicker.clear();
+                toDatePicker.clear();
+            }
+        }
+
+        // Initialize Application
+        function initApplication() {
+            // Get treasury name from URL or session storage
+            const urlParams = new URLSearchParams(window.location.search);
+            let treasuryName = urlParams.get('treasury');
             
-            // Get form data
-            const formData = new FormData(this);
-            const formObject = {};
-            formData.forEach((value, key) => {
-                formObject[key] = value;
-            });
-            
-            // Generate request ID, formatted timestamp, and set status
-            formObject.requestId = generateRequestId();
-            formObject.timestamp = formatTimestamp(new Date());
-            formObject.status = "Pending"; // Always set status to "Pending"
-            
-            // For User Activation, ensure to employee details match from employee details
-            if (formObject.optionFor === "User Activation") {
-                formObject.toPEN = formObject.fromPEN;
-                formObject.toName = formObject.fromName;
-                formObject.toDesignation = formObject.fromDesignation;
-                formObject.toRole = formObject.fromRole;
+            if (!treasuryName) {
+                try {
+                    treasuryName = sessionStorage.getItem('treasuryName');
+                } catch (e) {
+                    console.log("Couldn't access parent session storage");
+                }
             }
             
-            // Create URL with parameters to use GET instead of POST
-            const url = new URL('https://script.google.com/macros/s/AKfycbwXvCX8W0iMUxR5mvLXW5TbaoRvb0gdOYpJZrPFkVzdgtAByIH6YQNXyqwtF4QtJzS63A/exec');
-            Object.keys(formObject).forEach(key => {
-                url.searchParams.append(key, formObject[key]);
+            // Set treasury field if name exists
+            if (treasuryName) {
+                const treasurySelect = document.getElementById('treasury');
+                treasurySelect.innerHTML = '';
+                const option = document.createElement('option');
+                option.value = treasuryName;
+                option.textContent = treasuryName;
+                option.selected = true;
+                treasurySelect.appendChild(option);
+            }
+            
+            // Initialize date pickers
+            const fromDatePicker = flatpickr("#fromDate", {
+                dateFormat: "d/m/Y",
+                allowInput: true
             });
             
-            // Send data to Google Apps Script using GET
-            fetch(url, {
-                method: 'GET',
-                redirect: 'follow'
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+            const toDatePicker = flatpickr("#toDate", {
+                dateFormat: "d/m/Y",
+                allowInput: true
+            });
+            
+            // Initialize Select2 dropdowns
+            $('.select2-dropdown').select2({
+                width: '100%',
+                placeholder: function() {
+                    return $(this).data('placeholder') || 'Select an option';
                 }
-                return response.text();
-            })
-            .then(text => {
-                try {
-                    const data = text ? JSON.parse(text) : {};
-                    if (data.result === 'success') {
-                        // Update the request ID label
+            });
+            
+            // Make treasury field read-only
+            $('#treasury').next('.select2-container').find('.select2-selection').css({
+                'background-color': '#f8f9fa',
+                'pointer-events': 'none',
+                'cursor': 'not-allowed'
+            });
+            
+            // Load dropdown data
+            loadDropdownData();
+            
+            // Setup event handlers
+            setupPENAutofill();
+            $('#optionFor').on('change', handleOptionForChange);
+            handleOptionForChange();
+            
+            $('button[type="reset"]').on('click', function() {
+                setTimeout(function() {
+                    handleOptionForChange();
+                    $('.select2-dropdown').not('#treasury').val(null).trigger('change');
+                    if (treasuryName) {
+                        $('#treasury').val(treasuryName).trigger('change');
+                    }
+                    document.getElementById('requestIdLabel').textContent = '';
+                }, 0);
+            });
+            
+            // Form submission
+            document.getElementById('treasuryForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const submitButton = this.querySelector('button[type="submit"]');
+                const originalText = submitButton.textContent;
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Submitting...';
+                
+                const formData = new FormData(this);
+                const formObject = {};
+                formData.forEach((value, key) => {
+                    formObject[key] = value;
+                });
+                
+                formObject.requestId = generateRequestId();
+                formObject.timestamp = formatTimestamp(new Date());
+                formObject.status = "Pending";
+                
+                if (formObject.optionFor === "User Activation") {
+                    formObject.toPEN = formObject.fromPEN;
+                    formObject.toName = formObject.fromName;
+                    formObject.toDesignation = formObject.fromDesignation;
+                    formObject.toRole = formObject.fromRole;
+                }
+                
+                const url = new URL('https://script.google.com/macros/s/AKfycbwXvCX8W0iMUxR5mvLXW5TbaoRvb0gdOYpJZrPFkVzdgtAByIH6YQNXyqwtF4QtJzS63A/exec');
+                Object.keys(formObject).forEach(key => {
+                    url.searchParams.append(key, formObject[key]);
+                });
+                
+                fetch(url, {
+                    method: 'GET',
+                    redirect: 'follow'
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
+                .then(text => {
+                    try {
+                        const data = text ? JSON.parse(text) : {};
+                        if (data.result === 'success') {
+                            document.getElementById('requestIdLabel').textContent = `Request ID: ${formObject.requestId}`;
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: 'Form submitted successfully!',
+                                footer: `Request ID: ${formObject.requestId}<br>Timestamp: ${formObject.timestamp}`
+                            });
+                            this.reset();
+                            $('.select2-dropdown').not('#treasury').val(null).trigger('change');
+                            if (treasuryName) {
+                                $('#treasury').val(treasuryName).trigger('change');
+                            }
+                            handleOptionForChange();
+                        } else {
+                            throw new Error(data.message || 'Failed to submit form');
+                        }
+                    } catch {
                         document.getElementById('requestIdLabel').textContent = `Request ID: ${formObject.requestId}`;
-                        
                         Swal.fire({
                             icon: 'success',
                             title: 'Success!',
                             text: 'Form submitted successfully!',
                             footer: `Request ID: ${formObject.requestId}<br>Timestamp: ${formObject.timestamp}`
                         });
-                        document.getElementById('treasuryForm').reset();
-                        $('.select2-dropdown').val(null).trigger('change');
-                        handleOptionForChange(); // Reset visibility
-                    } else {
-                        throw new Error(data.message || 'Failed to submit form');
+                        this.reset();
+                        $('.select2-dropdown').not('#treasury').val(null).trigger('change');
+                        if (treasuryName) {
+                            $('#treasury').val(treasuryName).trigger('change');
+                        }
+                        handleOptionForChange();
                     }
-                } catch {
-                    // Update the request ID label
-                    document.getElementById('requestIdLabel').textContent = `Request ID: ${formObject.requestId}`;
-                    
+                })
+                .catch(error => {
                     Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: 'Form submitted successfully!',
-                        footer: `Request ID: ${formObject.requestId}<br>Timestamp: ${formObject.timestamp}`
+                        icon: 'error',
+                        title: 'Error',
+                        text: error.message,
                     });
-                    document.getElementById('treasuryForm').reset();
-                    $('.select2-dropdown').val(null).trigger('change');
-                    handleOptionForChange(); // Reset visibility
-                }
-            })
-            .catch(error => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: error.message,
+                    console.error('Error:', error);
+                })
+                .finally(() => {
+                    submitButton.disabled = false;
+                    submitButton.textContent = originalText;
                 });
-                console.error('Error:', error);
-            })
-            .finally(() => {
-                submitButton.disabled = false;
-                submitButton.textContent = originalText;
             });
-        });
-        
+        }
+
+        // Popup function
+        function openPopup() {
+            const url = "https://script.google.com/macros/s/AKfycbzywjcUltvzofjDglUovicJfcWWN1oe0jFZCRwhCgA/dev";
+            const windowFeatures = "width=600,height=400,resizable=yes,scrollbars=yes";
+            const popup = window.open(url, "PopupWindow", windowFeatures);
+
+            if (!popup || popup.closed || typeof popup.closed === "undefined") {
+                window.location.href = url;
+            }
+        }
+
+        // Start the application when DOM is loaded
+        $(document).ready(initApplication);
     </script>
 </body>
 </html>
