@@ -112,19 +112,6 @@
             background-color: #f39c12;
         }
         
-        /* Office Pills */
-        .office-pill {
-            display: inline-block;
-            padding: 4px 10px;
-            margin: 2px;
-            background-color: #3c8dbc;
-            color: white;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-            line-height: 1;
-        }
-        
         /* Form Elements */
         .input-group {
             position: relative;
@@ -373,14 +360,6 @@
                 const linkUrl = row[3] || '#';
                 const lastDate = row[4] || '';
                 const status = row[5] || 'Pending';
-                const officesAssigned = row[6] || '';
-                
-                // Format offices as pills
-                const officesPills = officesAssigned.split(',')
-                    .map(office => office.trim())
-                    .filter(office => office !== '')
-                    .map(office => `<span class="office-pill">${office}</span>`)
-                    .join(' ');
                 
                 // Determine status label class
                 let statusClass = 'label-danger';
@@ -403,7 +382,6 @@
                             </a>
                         </td>
                         <td><span class="label ${statusClass}">${status}</span></td>
-                        <td>${officesPills || '-'}</td>
                     </tr>
                 `;
             });
@@ -433,7 +411,6 @@
                                     <th>Last Date</th>
                                     <th>Action</th>
                                     <th>Status</th>
-                              
                                 </tr>
                             </thead>
                             <tbody>
