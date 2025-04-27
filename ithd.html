@@ -511,16 +511,17 @@ document.addEventListener('visibilitychange', function() {
                                 // Show loading spinner when iframe src changes
                                 $('#loading-spinner').removeClass('hidden');
                                 // Append treasury name as query parameter if it's not already there
+                                // Append treasury name as query parameter if it's not already there
                                 let url = subMenuLink;
-                                const treasuryName = sessionStorage.getItem('treasuryName');
+                                 const treasuryName = sessionStorage.getItem('treasuryName');
                                 if (treasuryName) {
-                                    const urlObj = new URL(url, window.location.href);
-                                    if (!urlObj.searchParams.has('treasury')) {
-                                        urlObj.searchParams.append('treasury', treasuryName);
-                                        url = urlObj.toString();
-                                    }
-                                }
-                                $('#main-iframe').attr('src', url);
+                                const urlObj = new URL(url, window.location.href);
+                                  if (!urlObj.searchParams.has('treasury')) {
+                                   urlObj.searchParams.append('treasury', treasuryName);
+                            url = urlObj.toString();
+                          }
+                       }
+                     $('#main-iframe').attr('src', url);
                             }));
                             subMenuUl.append(subMenuLi);
                         }
