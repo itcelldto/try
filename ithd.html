@@ -312,8 +312,8 @@ function openForgotPasswordPopup() {
     <!-- AdminLTE App -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/js/adminlte.min.js"></script>
 
-    <script>
-	// Set inactivity timeout to 15 minutes (900,000 milliseconds)
+   <script>
+// Set inactivity timeout to 15 minutes (900,000 milliseconds)
 const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
 let inactivityTimer;
 
@@ -432,6 +432,9 @@ document.addEventListener('visibilitychange', function() {
                         // Display treasury name in sidebar
                         $('#treasury-name-display').text(treasuryName);
                         
+                        // Store treasury name in session storage
+                        sessionStorage.setItem('treasuryName', treasuryName);
+                        
                         // Initialize the main application with the menu sheet name from column F
                         initializeApplication(treasurySettings[treasuryRow][5] || 'nav-links');
                     } else {
@@ -507,7 +510,17 @@ document.addEventListener('visibilitychange', function() {
                                 e.preventDefault();
                                 // Show loading spinner when iframe src changes
                                 $('#loading-spinner').removeClass('hidden');
-                                $('#main-iframe').attr('src', subMenuLink);
+                                // Append treasury name as query parameter if it's not already there
+                                let url = subMenuLink;
+                                const treasuryName = sessionStorage.getItem('treasuryName');
+                                if (treasuryName) {
+                                    const urlObj = new URL(url, window.location.href);
+                                    if (!urlObj.searchParams.has('treasury')) {
+                                        urlObj.searchParams.append('treasury', treasuryName);
+                                        url = urlObj.toString();
+                                    }
+                                }
+                                $('#main-iframe').attr('src', url);
                             }));
                             subMenuUl.append(subMenuLi);
                         }
@@ -515,7 +528,7 @@ document.addEventListener('visibilitychange', function() {
                     
                     // Reinitialize the tree after adding new elements
                     $('[data-widget="tree"]').tree();
-					$('#loading-spinner').addClass('hidden');
+                    $('#loading-spinner').addClass('hidden');
                 });
                 
                 // Hide loading spinner when iframe is loaded
