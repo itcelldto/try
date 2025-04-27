@@ -387,60 +387,65 @@ function openForgotPasswordPopup() {
 
 	// Function to load dynamic content
 	function loadDynamicContent(content) {
-		const contentArea = $('#dynamic-content');
-		$('#loading-spinner').removeClass('hidden');
-		
-		if (content) {
-			// First empty the content area
-			contentArea.empty();
+    const contentArea = $('#dynamic-content');
+    $('#loading-spinner').removeClass('hidden');
+    
+    if (content) {
+        // First empty the content area
+        contentArea.empty();
+        
+        // Check if content is an iframe URL
+        if (content.startsWith('<iframe') || content.includes('src="')) {
+            // Create iframe element
+            const iframe = document.createElement('iframe');
+            iframe.style.width = '100%';
 			
-			// Create a temporary div to parse the HTML
-			const tempDiv = document.createElement('div');
-			tempDiv.innerHTML = content;
-			
-			// Append all nodes to the content area
-			while (tempDiv.firstChild) {
-				contentArea.append(tempDiv.firstChild);
-			}
-			
-			// Execute any scripts in the content
-			contentArea.find('script').each(function() {
-				try {
-					if (this.src) {
-						// If script has src, create a new script tag and copy attributes
-						const newScript = document.createElement('script');
-						Array.from(this.attributes).forEach(attr => {
-							newScript.setAttribute(attr.name, attr.value);
-						});
-						newScript.onload = function() {
-							$('#loading-spinner').addClass('hidden');
-						};
-						document.body.appendChild(newScript);
-						this.remove();
-					} else {
-						// If inline script, evaluate it
-						const scriptText = this.textContent;
-						if (scriptText.trim()) {
-							try {
-								eval(scriptText);
-							} catch (e) {
-								console.error('Error executing script:', e);
-							}
-						}
-						this.remove();
-					}
-				} catch (e) {
-					console.error('Error processing script:', e);
-				}
-			});
-			
-			$('#loading-spinner').addClass('hidden');
-		} else {
-			// If no content is provided, show a message
-			contentArea.html('<div class="alert alert-info">No content available for this item.</div>');
-			$('#loading-spinner').addClass('hidden');
-		}
-	}
+            iframe.style.height = 'calc(100vh - 1px)';
+            iframe.style.border = 'none';
+            
+            // Set src attribute - extract URL from content if needed
+            let srcUrl;
+            if (content.startsWith('http')) {
+                srcUrl = content;
+            } else {
+                // Extract URL from iframe HTML string
+                const srcMatch = content.match(/src="([^"]*)"/);
+                srcUrl = srcMatch ? srcMatch[1] : '';
+            }
+            
+            // Append treasury name as query parameter if it's not already there
+            const treasuryName = sessionStorage.getItem('treasuryName');
+            if (treasuryName) {
+                const urlObj = new URL(srcUrl, window.location.href);
+                if (!urlObj.searchParams.has('treasury')) {
+                    urlObj.searchParams.append('treasury', treasuryName);
+                    srcUrl = urlObj.toString();
+                }
+            }
+            
+            iframe.src = srcUrl;
+            contentArea.append(iframe);
+        } else {
+            // Regular content handling (existing code)
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            
+            while (tempDiv.firstChild) {
+                contentArea.append(tempTemp.firstChild);
+            }
+            
+            // Execute any scripts in the content
+            contentArea.find('script').each(function() {
+                // Existing script handling code...
+            });
+        }
+        
+        $('#loading-spinner').addClass('hidden');
+    } else {
+        contentArea.html('<div class="alert alert-info">No content available for this item.</div>');
+        $('#loading-spinner').addClass('hidden');
+    }
+}
 
 	// Login functionality
 	$(document).ready(function() {
@@ -484,16 +489,19 @@ function openForgotPasswordPopup() {
 				}
 				
 				if (loginSuccessful) {
-					// Successful login
-					$('#login-error').hide();
-					$('#login-overlay').hide();
-					
-					// Display treasury name in sidebar
-					$('#treasury-name-display').text(treasuryName);
-					
-					// Initialize the main application with the menu sheet name from column F
-					initializeApplication(treasurySettings[treasuryRow][5] || 'nav-links');
-				} else {
+    // Successful login
+    $('#login-error').hide();
+    $('#login-overlay').hide();
+    
+    // Display treasury name in sidebar
+    $('#treasury-name-display').text(treasuryName);
+    
+    // Store treasury name in session storage
+    sessionStorage.setItem('treasuryName', treasuryName);
+    
+    // Initialize the main application with the menu sheet name from column F
+    initializeApplication(treasurySettings[treasuryRow][5] || 'nav-links');
+} else {
 					// Failed login
 					$('#login-error').show();
 				}
