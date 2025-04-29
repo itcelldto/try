@@ -3,147 +3,196 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asset Management System</title>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <title>Asset Distribution System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
     <style>
-        .form-section {
-            margin: 20px auto;
-            padding: 20px;
-            max-width: 900px;
-            background-color: #fff;
-            border-radius: 5px;
-            box-shadow: 0px 0 30px rgba(1, 41, 112, 0.1);
+        .card {
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        #seatNotListedInput {
-            display: none;
-            margin-top: 10px;
-        }
-        .success-message {
-            color: green;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        .error-message {
-            color: red;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-        .form-label {
-            font-weight: 500;
+        .card-header {
+            background-color: #0d6efd;
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
         }
         .select2-container .select2-selection--single {
             height: 38px;
             padding-top: 4px;
         }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px;
+        }
+        #seatNotListedInput {
+            display: none;
+            margin-top: 10px;
+        }
+        .form-label {
+            font-weight: 500;
+        }
+        .status-message {
+            font-weight: 500;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+        .success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #842029;
+        }
     </style>
 </head>
 <body style=" background-color: #d7e2ff6e;">
-    <div class="container mt-4">
-        <h4 class="text-center mb-4">Asset Distribution System</h4>
-        
-        <div class="form-section">
-            <h5 class="mb-4">Add Asset Distribution</h5>
-            <form id="distributionForm" onsubmit="handleDistributionSubmit(event)">
-                <input type="hidden" name="formType" value="distribution">
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="treasuryName" class="form-label">Treasury Name</label>
-                        <select class="form-select select2" id="treasuryName" name="treasuryName" required>
-                            <option value="">Select Treasury</option>
-                        </select>
+    <div class="container py-4"style="min-width: 100%;">
+        <div class="row justify-content-center">
+            <div class="col-lg-10"style="min-width: 100%;">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 class="mb-0"><i class="bi bi-box-seam"></i> Asset Distribution Form</h4>
                     </div>
-                    <div class="col-md-6">
-                        <label for="treasuryCode" class="form-label">Treasury Code</label>
-                        <input type="text" class="form-control" id="treasuryCode" name="treasuryCode" readonly>
+                    <div class="card-body">
+                        <form id="distributionForm" onsubmit="handleDistributionSubmit(event)">
+                            <input type="hidden" name="formType" value="distribution">
+                            
+                            <!-- Treasury Section -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-secondary text-white py-2">
+                                    <h5 class="mb-0">Treasury Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="treasuryName" class="form-label">Treasury Name</label>
+                                            <select class="form-select select2" id="treasuryName" name="treasuryName" required>
+                                                <option value="">Select Treasury</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="treasuryCode" class="form-label">Treasury Code</label>
+                                            <input type="text" class="form-control" id="treasuryCode" name="treasuryCode" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Asset Information Section -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-secondary text-white py-2">
+                                    <h5 class="mb-0">Asset Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="product" class="form-label">Product Type</label>
+                                            <select class="form-select select2" id="product" name="product" required>
+                                                <option value="">Select Product</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="assetId" class="form-label">Asset ID</label>
+                                            <select class="form-select select2" id="assetId" name="assetId" required disabled>
+                                                <option value="">Select Product First</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Employee Information Section -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-secondary text-white py-2">
+                                    <h5 class="mb-0">Employee Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label for="empName" class="form-label">Employee Name</label>
+                                            <input type="text" class="form-control" id="empName" name="empName" required oninput="this.value = this.value.toUpperCase()">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="empNumber" class="form-label">Employee Number</label>
+                                            <input type="text" class="form-control" id="empNumber" name="empNumber" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="seatName" class="form-label">Seat/Position</label>
+                                            <select class="form-select select2" id="seatName" name="seatName">
+                                                <option value="">Select Seat Name</option>
+                                            </select>
+                                            <div class="form-check mt-2">
+                                                <input class="form-check-input" type="checkbox" id="seatNotListed" name="seatNotListed">
+                                                <label class="form-check-label" for="seatNotListed">Seat not listed</label>
+                                            </div>
+                                            <input type="text" class="form-control mt-2" id="seatNotListedInput" name="seatNotListedInput" placeholder="Enter seat name">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="ipAssigned" class="form-label">IP Address (if applicable)</label>
+                                            <input type="text" class="form-control" id="ipAssigned" name="ipAssigned" placeholder="192.168.1.1">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Issue Confirmation Section -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-secondary text-white py-2">
+                                    <h5 class="mb-0">Issue Confirmation</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Confirm Issue?</label>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="issueConfirmed" id="issueYes" value="Yes" required>
+                                                <label class="form-check-label" for="issueYes">Yes, issue this asset</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="radio" name="issueConfirmed" id="issueNo" value="No">
+                                                <label class="form-check-label" for="issueNo">No, cancel issue</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="issueTime" class="form-label">Issue Date & Time</label>
+                                            <input type="datetime-local" class="form-control" id="issueTime" name="issueTime" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <span id="submitText">Submit Distribution</span>
+                                    <span id="submitSpinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+                                </button>
+                            </div>
+                            <div id="statusMessage" class="status-message mt-3 d-none"></div>
+                        </form>
                     </div>
                 </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="assetId" class="form-label">Asset ID</label>
-                        <select class="form-select select2" id="assetId" name="assetId" required>
-                            <option value="">Select Asset ID</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="product" class="form-label">Product</label>
-                        <select class="form-select select2" id="product" name="product" required>
-                            <option value="">Select Product</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="empName" class="form-label">Issued to Employee Name</label>
-                        <input type="text" class="form-control" id="empName" name="empName" required oninput="this.value = this.value.toUpperCase()">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="empNumber" class="form-label">Employee PEN</label>
-                        <input type="text" class="form-control" id="empNumber" name="empNumber" required>
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="seatName" class="form-label">Seat Assigned</label>
-                        <select class="form-select select2" id="seatName" name="seatName">
-                            <option value="">Select Seat Name</option>
-                        </select>
-                        <div class="form-check mt-2">
-                            <input class="form-check-input" type="checkbox" id="seatNotListed" name="seatNotListed">
-                            <label class="form-check-label" for="seatNotListed">Seat not listed</label>
-                        </div>
-                        <input type="text" class="form-control mt-2" id="seatNotListedInput" name="seatNotListedInput" placeholder="Enter seat name">
-                    </div>
-                    <div class="col-md-6">
-                        <label for="ipAssigned" class="form-label">IP Assigned to Employee </label>
-                        <input type="text" class="form-control" id="ipAssigned" name="ipAssigned" placeholder="e.g., 192.168.1.1">
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Asset Issue Confirmed?</label>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="issueConfirmed" id="issueYes" value="Yes" required>
-                            <label class="form-check-label" for="issueYes">Yes</label>
-                        </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="radio" name="issueConfirmed" id="issueNo" value="No">
-                            <label class="form-check-label" for="issueNo">No</label>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="issueTime" class="form-label">Issue Time</label>
-                        <input type="datetime-local" class="form-control" id="issueTime" name="issueTime" readonly>
-                    </div>
-                </div>
-                
-                <div class="d-grid gap-2">
-                    <button type="submit" class="btn btn-primary">Save Distribution</button>
-                </div>
-                <div id="distributionMessage" class="mt-3"></div>
-            </form>
+            </div>
         </div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         // Replace with your deployed web app URL
-        const scriptUrl = 'https://script.google.com/macros/s/AKfycbxIEKL9L_19sctqkhRAuYDKrGC68eKxwMh_eS50CW9st2zlWmcXfi01_Q5yFxsffn5zZw/exec';
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbzc13HCkp84FakdFwweA_QSZ5_WMg1AVp19ruiumLj2IuvXBu2DvAnFg8xpOqtEIJIsdQ/exec';
+        let assetData = []; // Store all asset data for filtering
         
         $(document).ready(function() {
-            $('.select2').select2();
+            // Initialize Select2
+            $('.select2').select2({
+                width: '100%'
+            });
             
             // Load initial data
             loadTreasuryNames();
-            loadAssetIds();
-            loadProducts();
+            loadAllAssets(); // Load all assets for filtering
             loadSeatNames();
             
             // Event listeners
@@ -151,6 +200,10 @@
                 const selectedOption = $(this).find('option:selected');
                 const treasuryCode = selectedOption.text().substring(0, 4);
                 $('#treasuryCode').val(treasuryCode);
+            });
+            
+            $('#product').change(function() {
+                updateAssetIdDropdown();
             });
             
             $('#seatNotListed').change(function() {
@@ -174,62 +227,54 @@
             });
         });
         
-        // Form submission handler
-        function handleDistributionSubmit(event) {
-            event.preventDefault();
-            const form = event.target;
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
+        function updateAssetIdDropdown() {
+            const selectedProduct = $('#product').val();
+            const assetDropdown = $('#assetId');
             
-            // Handle seat name logic
-            if (data.seatNotListed === 'on') {
-                data.seatName = data.seatNotListedInput;
+            assetDropdown.empty();
+            
+            if (!selectedProduct) {
+                assetDropdown.append('<option value="">Select Product First</option>');
+                assetDropdown.prop('disabled', true);
+            } else {
+                assetDropdown.prop('disabled', false);
+                assetDropdown.append('<option value="">Select Asset ID</option>');
+                
+                // Filter assets by selected product
+                const filteredAssets = assetData.filter(asset => asset.product === selectedProduct);
+                
+                if (filteredAssets.length === 0) {
+                    assetDropdown.append('<option value="">No assets available for this product</option>');
+                } else {
+                    filteredAssets.forEach(asset => {
+                        assetDropdown.append(`<option value="${asset.id}">${asset.id}</option>`);
+                    });
+                }
             }
             
-            // Show loading state
-            const submitBtn = form.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
-            
-            fetch(scriptUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.status === 'success') {
-                    showMessage('distributionMessage', result.message, 'success');
-                    form.reset();
-                    $('#treasuryCode').val('');
-                } else {
-                    showMessage('distributionMessage', result.message, 'error');
-                }
-            })
-            .catch(error => {
-                showMessage('distributionMessage', 'Error saving distribution: ' + error.message, 'error');
-            })
-            .finally(() => {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Save Distribution';
-            });
+            assetDropdown.trigger('change');
         }
         
-        function showMessage(elementId, message, type) {
-            const element = document.getElementById(elementId);
-            element.textContent = message;
-            element.className = type === 'success' ? 'success-message' : 'error-message';
-            
-            // Auto-hide message after 5 seconds
-            setTimeout(() => {
-                element.textContent = '';
-                element.className = '';
-            }, 5000);
+        function loadAllAssets() {
+            fetch(`${scriptUrl}?action=getAllAssets`)
+                .then(response => response.json())
+                .then(data => {
+                    assetData = data;
+                    
+                    // Populate product dropdown with unique products
+                    const productDropdown = $('#product');
+                    const uniqueProducts = [...new Set(data.map(asset => asset.product))];
+                    
+                    uniqueProducts.forEach(product => {
+                        productDropdown.append(`<option value="${product}">${product}</option>`);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading assets:', error);
+                    showStatusMessage('Error loading asset data', 'error');
+                });
         }
         
-        // Data loading functions
         function loadTreasuryNames() {
             fetch(`${scriptUrl}?action=getTreasuryNames`)
                 .then(response => response.json())
@@ -242,36 +287,7 @@
                 })
                 .catch(error => {
                     console.error('Error loading treasury names:', error);
-                });
-        }
-        
-        function loadAssetIds() {
-            fetch(`${scriptUrl}?action=getAssetIds`)
-                .then(response => response.json())
-                .then(data => {
-                    const select = $('#assetId');
-                    select.empty().append('<option value="">Select Asset ID</option>');
-                    data.forEach(item => {
-                        select.append(`<option value="${item}">${item}</option>`);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading asset IDs:', error);
-                });
-        }
-        
-        function loadProducts() {
-            fetch(`${scriptUrl}?action=getProducts`)
-                .then(response => response.json())
-                .then(data => {
-                    const select = $('#product');
-                    select.empty().append('<option value="">Select Product</option>');
-                    data.forEach(item => {
-                        select.append(`<option value="${item}">${item}</option>`);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading products:', error);
+                    showStatusMessage('Error loading treasury data', 'error');
                 });
         }
         
@@ -288,6 +304,64 @@
                 .catch(error => {
                     console.error('Error loading seat names:', error);
                 });
+        }
+        
+        function handleDistributionSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Handle seat name logic
+            if (data.seatNotListed === 'on') {
+                data.seatName = data.seatNotListedInput;
+            }
+            
+            // Show loading state
+            const submitBtn = $('#distributionForm button[type="submit"]');
+            const submitText = $('#submitText');
+            const submitSpinner = $('#submitSpinner');
+            
+            submitText.addClass('d-none');
+            submitSpinner.removeClass('d-none');
+            
+            fetch(scriptUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'success') {
+                    showStatusMessage(result.message, 'success');
+                    form.reset();
+                    $('#treasuryCode').val('');
+                    $('#assetId').val('').trigger('change');
+                } else {
+                    showStatusMessage(result.message, 'error');
+                }
+            })
+            .catch(error => {
+                showStatusMessage('Error saving distribution: ' + error.message, 'error');
+            })
+            .finally(() => {
+                submitText.removeClass('d-none');
+                submitSpinner.addClass('d-none');
+            });
+        }
+        
+        function showStatusMessage(message, type) {
+            const statusElement = $('#statusMessage');
+            statusElement.text(message)
+                        .removeClass('d-none success error')
+                        .addClass(type);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => {
+                statusElement.addClass('d-none');
+            }, 5000);
         }
     </script>
 </body>
