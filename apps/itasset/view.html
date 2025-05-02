@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FMS Asset Data Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            background-color: #0d6efd;
+            color: white;
+            font-weight: bold;
+        }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        #pdfExportBtn {
+            margin-left: 10px;
+        }
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        .form-select {
+            padding: 2px 8px !important;
+        }
+        .asset-id-link {
+            color: #0d6efd;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .tooltip-inner {
+            max-width: 300px;
+            padding: 10px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <!-- Your existing HTML remains the same until the script section -->
+    
+    <script>
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+        const SPREADSHEET_ID = "1uLkxG7dmVDo5YVPX5XDphwc7Yy6p1Bq00p3vW43tTs4";
+        const API_KEY = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+        const ASSET_SHEET_NAME = "FMS Asset Data";
+        const DISTRIBUTION_SHEET_NAME = "Asset Distribution Data";
+        
+        // Store asset distribution data for tooltips
+        let assetDistributionData = {};
+        
+        $(document).ready(function() {
+            // Initialize tooltips
+            $(document).tooltip({
+                selector: '[data-bs-toggle="tooltip"]',
+                html: true
+            });
+            
+            // Initialize Select2 dropdowns
+            $('.select2').select2();
+            
+            // Load initial data
+            loadTreasuryCodes();
+            loadAssetProducts();
+            loadAssetDistributionData(); // Load data for tooltips
+            
+            // Search button click handler
+            $('#searchAssets').click(function() {
+                generateAssetReport();
+            });
+            
+            // PDF Export button
+            $('#assetPdfExportBtn').click(function() {
+                exportAssetToPDF();
+            });
+        });
+        
+        async function loadAssetDistributionData() {
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${DISTRIBUTION_SHEET_NAME}!A1:K?key=${API_KEY}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.values) {
+                    const headers = data.values[0];
+                    const rows = data.values.slice(1);
+                    
+                    // Map headers to column indexes
+                    const headerMap = {};
+                    headers.forEach((header, index) => {
+                        headerMap[header.trim()] = index;
+                    });
+                    
+                    // Store the data by Asset ID
+                    rows.forEach(row => {
+                        const assetId = row[headerMap["Asset_ID"]];
+                        if (assetId) {
+                            assetDistributionData[assetId] = {
+                                employeeName: row[headerMap["Issued to Emp name"]] || 'Not assigned',
+                                seat: row[headerMap["Seat"]] || 'Not assigned'
+                            };
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to load asset distribution data for tooltips:", error);
+            }
+        }
+        
+        function getTooltipContent(assetId) {
+            const distributionInfo = assetDistributionData[assetId];
+            if (distributionInfo) {
+                return `
+                    <div>
+                        <strong>Employee:</strong> ${distributionInfo.employeeName}<br>
+                        <strong>Seat:</strong> ${distributionInfo.seat}
+                    </div>
+                `;
+            }
+            return "No assignment information available";
+        }
+        
+        // Modify the displayAssetReportResults function to include tooltips
+        function displayAssetReportResults(data, treasuryCode, product) {
+            const $results = $('#assetResults');
+            const $table = $('#assetTable').DataTable({
+                destroy: true,
+                data: data,
+                columns: [
+                    { data: 'treasuryCode' },
+                    { 
+                        data: 'assetId',
+                        render: function(data, type, row) {
+                            if (type === 'display') {
+                                const tooltipContent = getTooltipContent(data);
+                                return `
+                                    <span class="asset-id-link" 
+                                          data-bs-toggle="tooltip" 
+                                          title="${tooltipContent.replace(/"/g, '&quot;')}"
+                                          data-bs-html="true">
+                                        ${data}
+                                    </span>
+                                `;
+                            }
+                            return data;
+                        }
+                    },
+                    { data: 'product' },
+                    { data: 'assetDescription' },
+                    { data: 'make' },
+                    { data: 'model' },
+                    { data: 'serialNumber' },
+                    { data: 'installationDate' },
+                    { data: 'warrantyUpto' },
+                    { data: 'contractStatus' },
+                    { data: 'poNumber' },
+                    { data: 'vendorName' },
+                    { data: 'primaryOwner' },
+                    { data: 'secondaryOwner' }
+                ],
+                pageLength: 10,
+                dom: '<"top"f>rt<"bottom"lip>',
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search report...",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "No entries found",
+                    infoFiltered: "(filtered from _MAX_ total entries)"
+                },
+                createdRow: function(row, data, dataIndex) {
+                    // Initialize tooltips for each row
+                    $('[data-bs-toggle="tooltip"]', row).tooltip();
+                }
+            });
+            
+            // Set report title
+            let title = "Asset Details";
+            if (treasuryCode) title += ` for Treasury Code: ${treasuryCode}`;
+            if (product) title += treasuryCode ? ` and Product: ${product}` : ` for Product: ${product}`;
+            if (!treasuryCode && !product) title = "All Asset Details";
+            
+            $('#assetReportTitle').html(title);
+            
+            // Show results section
+            $results.removeClass('d-none');
+        }
+        
+        // Rest of your existing functions remain the same...
+    </script>
+    
+    <!-- Add Bootstrap JS bundle (needed for tooltips) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
