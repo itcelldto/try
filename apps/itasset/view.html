@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
     <style>
-        body {
+       body {
             padding: 20px;
             background-color: #f8f9fa;
         }
@@ -140,7 +140,7 @@
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     
     <script>
-        // Initialize jsPDF
+             // Initialize jsPDF
         const { jsPDF } = window.jspdf;
         const SPREADSHEET_ID = "1uLkxG7dmVDo5YVPX5XDphwc7Yy6p1Bq00p3vW43tTs4";
         const API_KEY = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
@@ -164,6 +164,141 @@
             loadTreasuryCodes();
             loadAssetProducts();
             loadAssetDistributionData(); // Load data for tooltips
+            
+            // Search button click handler
+            $('#searchAssets').click(function() {
+                generateAssetReport();
+            });
+            
+            // PDF Export button
+            $('#assetPdfExportBtn').click(function() {
+                exportAssetToPDF();
+            });
+        });
+        
+        async function loadAssetDistributionData() {
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${DISTRIBUTION_SHEET_NAME}!A1:K?key=${API_KEY}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.values) {
+                    const headers = data.values[0];
+                    const rows = data.values.slice(1);
+                    
+                    // Map headers to column indexes
+                    const headerMap = {};
+                    headers.forEach((header, index) => {
+                        headerMap[header.trim()] = index;
+                    });
+                    
+                    // Store the data by Asset ID
+                    rows.forEach(row => {
+                        const assetId = row[headerMap["Asset_ID"]];
+                        if (assetId) {
+                            assetDistributionData[assetId] = {
+                                employeeName: row[headerMap["Issued to Emp name"]] || 'Not assigned',
+                                seat: row[headerMap["Seat"]] || 'Not assigned'
+                            };
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to load asset distribution data for tooltips:", error);
+            }
+        }
+        
+        function getTooltipContent(assetId) {
+            const distributionInfo = assetDistributionData[assetId];
+            if (distributionInfo) {
+                return `
+                    <div>
+                        <strong>Employee:</strong> ${distributionInfo.employeeName}<br>
+                        <strong>Seat:</strong> ${distributionInfo.seat}
+                    </div>
+                `;
+            }
+            return "No assignment information available";
+        }
+        
+        // Modify the displayAssetReportResults function to include tooltips
+        function displayAssetReportResults(data, treasuryCode, product) {
+            const $results = $('#assetResults');
+            const $table = $('#assetTable').DataTable({
+                destroy: true,
+                data: data,
+                columns: [
+                    { data: 'treasuryCode' },
+                    { 
+                        data: 'assetId',
+                        render: function(data, type, row) {
+                            if (type === 'display') {
+                                const tooltipContent = getTooltipContent(data);
+                                return `
+                                    <span class="asset-id-link" 
+                                          data-bs-toggle="tooltip" 
+                                          title="${tooltipContent.replace(/"/g, '&quot;')}"
+                                          data-bs-html="true">
+                                        ${data}
+                                    </span>
+                                `;
+                            }
+                            return data;
+                        }
+                    },
+                    { data: 'product' },
+                    { data: 'assetDescription' },
+                    { data: 'make' },
+                    { data: 'model' },
+                    { data: 'serialNumber' },
+                    { data: 'installationDate' },
+                    { data: 'warrantyUpto' },
+                    { data: 'contractStatus' },
+                    { data: 'poNumber' },
+                    { data: 'vendorName' },
+                    { data: 'primaryOwner' },
+                    { data: 'secondaryOwner' }
+                ],
+                pageLength: 10,
+                dom: '<"top"f>rt<"bottom"lip>',
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search report...",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "No entries found",
+                    infoFiltered: "(filtered from _MAX_ total entries)"
+                },
+                createdRow: function(row, data, dataIndex) {
+                    // Initialize tooltips for each row
+                    $('[data-bs-toggle="tooltip"]', row).tooltip();
+                }
+            });
+            
+            // Set report title
+            let title = "Asset Details";
+            if (treasuryCode) title += ` for Treasury Code: ${treasuryCode}`;
+            if (product) title += treasuryCode ? ` and Product: ${product}` : ` for Product: ${product}`;
+            if (!treasuryCode && !product) title = "All Asset Details";
+            
+            $('#assetReportTitle').html(title);
+            
+            // Show results section
+            $results.removeClass('d-none');
+        }
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+        const SPREADSHEET_ID = "1uLkxG7dmVDo5YVPX5XDphwc7Yy6p1Bq00p3vW43tTs4";
+        const API_KEY = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+        const ASSET_SHEET_NAME = "FMS Asset Data";
+        
+        $(document).ready(function() {
+            // Initialize Select2 dropdowns
+            $('.select2').select2();
+            
+            // Load initial data
+            loadTreasuryCodes();
+            loadAssetProducts();
             
             // Search button click handler
             $('#searchAssets').click(function() {
@@ -220,51 +355,6 @@
             } finally {
                 hideLoading();
             }
-        }
-        
-        async function loadAssetDistributionData() {
-            try {
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${DISTRIBUTION_SHEET_NAME}!A1:K?key=${API_KEY}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (data.values) {
-                    const headers = data.values[0];
-                    const rows = data.values.slice(1);
-                    
-                    // Map headers to column indexes
-                    const headerMap = {};
-                    headers.forEach((header, index) => {
-                        headerMap[header.trim()] = index;
-                    });
-                    
-                    // Store the data by Asset ID
-                    rows.forEach(row => {
-                        const assetId = row[headerMap["Asset_ID"]];
-                        if (assetId) {
-                            assetDistributionData[assetId] = {
-                                employeeName: row[headerMap["Issued to Emp name"]] || 'Not assigned',
-                                seat: row[headerMap["Seat"]] || 'Not assigned'
-                            };
-                        }
-                    });
-                }
-            } catch (error) {
-                console.error("Failed to load asset distribution data for tooltips:", error);
-            }
-        }
-        
-        function getTooltipContent(assetId) {
-            const distributionInfo = assetDistributionData[assetId];
-            if (distributionInfo) {
-                return `
-                    <div>
-                        <strong>Employee:</strong> ${distributionInfo.employeeName}<br>
-                        <strong>Seat:</strong> ${distributionInfo.seat}
-                    </div>
-                `;
-            }
-            return "No assignment information available";
         }
         
         async function generateAssetReport() {
@@ -336,23 +426,7 @@
                 data: data,
                 columns: [
                     { data: 'treasuryCode' },
-                    { 
-                        data: 'assetId',
-                        render: function(data, type, row) {
-                            if (type === 'display') {
-                                const tooltipContent = getTooltipContent(data);
-                                return `
-                                    <span class="asset-id-link" 
-                                          data-bs-toggle="tooltip" 
-                                          title="${tooltipContent.replace(/"/g, '&quot;')}"
-                                          data-bs-html="true">
-                                        ${data}
-                                    </span>
-                                `;
-                            }
-                            return data;
-                        }
-                    },
+                    { data: 'assetId' },
                     { data: 'product' },
                     { data: 'assetDescription' },
                     { data: 'make' },
@@ -375,10 +449,6 @@
                     info: "Showing _START_ to _END_ of _TOTAL_ entries",
                     infoEmpty: "No entries found",
                     infoFiltered: "(filtered from _MAX_ total entries)"
-                },
-                createdRow: function(row, data, dataIndex) {
-                    // Initialize tooltips for each row
-                    $('[data-bs-toggle="tooltip"]', row).tooltip();
                 }
             });
             
