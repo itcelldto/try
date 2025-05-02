@@ -116,6 +116,8 @@
                                     <th>IP Assigned</th>
                                     <th>Issue Confirmed</th>
                                     <th>Return Confirmed</th>
+			            <th>Remarks</th>
+                                    <th>Call Details</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -259,7 +261,9 @@
                         seat: row[headerMap["Seat"]] || '',
                         ipAssigned: row[headerMap["IP Assigned"]] || '',
                         issueConfirmed: row[headerMap["Issue Confirmed ?"]] || '',
-                        returnConfirmed: row[headerMap["Return Confirmed?"]] || ''
+                        returnConfirmed: row[headerMap["Return Confirmed?"]] || '',
+			remarks: row[headerMap["Remarks"]] || '',       // Add this line
+                        callDetails: row[headerMap["Call Details"]] || ''  // Add this line
                     };
                 });
                 
@@ -278,16 +282,18 @@
             const $table = $('#reportTable').DataTable({
                 destroy: true,
                 data: data,
-                columns: [
-                    { data: 'assetId' },
-                    { data: 'employeeName' },
-                    { data: 'product' },
-                    { data: 'pen' },
-                    { data: 'seat' },
-                    { data: 'ipAssigned' },
-                    { data: 'issueConfirmed' },
-                    { data: 'returnConfirmed' }
-                ],
+               columns: [
+    { data: 'assetId' },
+    { data: 'employeeName' },
+    { data: 'product' },
+    { data: 'pen' },
+    { data: 'seat' },
+    { data: 'ipAssigned' },
+    { data: 'issueConfirmed' },
+    { data: 'returnConfirmed' },
+    { data: 'remarks' },       // Add this line
+    { data: 'callDetails' }    // Add this line
+],
                 pageLength: 10,
                 dom: '<"top"f>rt<"bottom"lip>',
                 language: {
