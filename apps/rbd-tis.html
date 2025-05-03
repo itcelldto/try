@@ -77,8 +77,10 @@
             font-weight: bold;
             font-size: 18px;
             margin: 10px 0;
+            background: #e7f3fe;
+            border-left: 6px solid #2196F3;
             padding: 10px;
-            background-color: #f2f2f2;
+            margin-bottom: 20px;
             border-radius: 4px;
         }
     </style>
@@ -94,7 +96,7 @@
         <label for="fileInput" class="upload-btn">Choose File</label>
         <input type="file" id="fileInput" accept=".csv,.txt" />
         <span id="fileName">No file chosen</span>
-        <button id="parseBtn" class="upload-btn" disabled>View</button>
+        <button id="parseBtn" class="upload-btn" disabled> View </button>
     </div>
     
     <div id="error" class="error"></div>
@@ -229,14 +231,14 @@
                 
                 // Define our fixed headers
                 const fixedHeaders = [
-                    'Reference', 'ID', '<no title>', 'code', 'Amount',
+                    'Reference', 'ID', '', 'code', 'Amount',
                     'Date', 'Dep.Code', 'Eprocurement', 'Office01',
                     'Office02', 'TRY.Code'
                 ];
                 
                 // Find the index of the Amount column and Date column
                 const amountColumnIndex = fixedHeaders.indexOf('Amount');
-                const dateColumnIndex = fixedHeaders.indexOf('date');
+                const dateColumnIndex = fixedHeaders.indexOf('Date');
                 
                 // Create header row with our fixed headers
                 const headerRow = document.createElement('tr');
