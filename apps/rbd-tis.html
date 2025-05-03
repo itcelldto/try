@@ -34,6 +34,19 @@
             cursor: pointer;
             font-size: 16px;
         }
+        .download-btn {
+            background: #af4c4d;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .download-btn:hover {
+            background:  #8a4041;
+        }
+       
         .upload-btn:hover {
             background: #45a049;
         }
@@ -93,7 +106,7 @@
     </div>
     
     <div class="upload-container">
-        <label for="fileInput" class="upload-btn">Choose File</label>
+        <label for="fileInput" class="upload-btn">Choose txt file</label>
         <input type="file" id="fileInput" accept=".csv,.txt" />
         <span id="fileName">No file chosen</span>
         <button id="parseBtn" class="upload-btn" disabled> View </button>
@@ -197,8 +210,8 @@
                 
                 // Create download button
                 const downloadBtn = document.createElement('button');
-                downloadBtn.textContent = 'Download';
-                downloadBtn.className = 'upload-btn';
+                downloadBtn.textContent = 'Download eProcurement File';
+                downloadBtn.className = 'download-btn';
                 downloadBtn.style.marginLeft = '10px';
                 
                 downloadBtn.addEventListener('click', function() {
