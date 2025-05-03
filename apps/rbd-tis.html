@@ -1,14 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV/TXT File Parser</title>
+    <title>TISMIS/eProcurement File Validation</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            
             margin: 0 auto;
             padding: 20px;
             line-height: 1.6;
@@ -78,7 +76,7 @@
     </style>
 </head>
 <body>
-    <h1>CSV/TXT File Parser</h1>
+    <h3>TISMIS/eProcurement File Validation</h3>
     
     <div class="instructions">
         <p>Upload a CSV or TXT file to display its contents as a table. The parser automatically detects delimiters (comma, tab, semicolon).</p>
@@ -96,215 +94,212 @@
     <div id="results"></div>
 
     <script>
-       
-	   document.addEventListener('DOMContentLoaded', function() {
-    const fileInput = document.getElementById('fileInput');
-    const parseBtn = document.getElementById('parseBtn');
-    const fileName = document.getElementById('fileName');
-    const resultsDiv = document.getElementById('results');
-    const errorDiv = document.getElementById('error');
-    
-    fileInput.addEventListener('change', function(e) {
-        if (e.target.files.length > 0) {
-            fileName.textContent = e.target.files[0].name;
-            parseBtn.disabled = false;
-        } else {
-            fileName.textContent = 'No file chosen';
-            parseBtn.disabled = true;
-        }
-        errorDiv.textContent = '';
-        resultsDiv.innerHTML = '';
-    });
-    
-    parseBtn.addEventListener('click', function() {
-        const file = fileInput.files[0];
-        if (!file) return;
-        
-        errorDiv.textContent = '';
-        resultsDiv.innerHTML = '';
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const content = e.target.result;
-                const { table } = parseCSV(content, file, resultsDiv);
-                resultsDiv.appendChild(table);
-            } catch (err) {
-                errorDiv.textContent = 'Error parsing file: ' + err.message;
-            }
-        };
-        reader.onerror = function() {
-            errorDiv.textContent = 'Error reading file';
-        };
-        reader.readAsText(file);
-    });
-    
-    function parseCSV(content, file, resultsDiv) {
-        // Detect delimiter
-        const delimiters = [',', '\t', ';', '|'];
-        let delimiter = ',';
-        
-        // Check which delimiter appears first in the first line
-        const firstLine = content.split('\n')[0];
-        for (const d of delimiters) {
-            if (firstLine.includes(d)) {
-                delimiter = d;
-                break;
-            }
-        }
-        
-        // Parse lines
-        const lines = content.split('\n').filter(line => line.trim() !== '');
-        if (lines.length === 0) {
-            throw new Error('File is empty');
-        }
-        
-        // Create container for date input and download button
-        const controlContainer = document.createElement('div');
-        controlContainer.style.margin = '10px 0';
-        controlContainer.style.display = 'flex';
-        controlContainer.style.alignItems = 'center';
-        controlContainer.style.gap = '10px';
-        
-        const dateContainer = document.createElement('div');
-        dateContainer.style.display = 'flex';
-        dateContainer.style.alignItems = 'center';
-        
-        const dateLabel = document.createElement('label');
-        dateLabel.textContent = 'Date: ';
-        dateLabel.style.marginRight = '10px';
-        
-        const dateInput = document.createElement('input');
-        dateInput.type = 'text';
-       
-        dateInput.style.padding = '5px';
-        
-        dateContainer.appendChild(dateLabel);
-        dateContainer.appendChild(dateInput);
-        
-        // Create download button
-        const downloadBtn = document.createElement('button');
-        downloadBtn.textContent = 'Download';
-        downloadBtn.className = 'upload-btn';
-        downloadBtn.style.marginLeft = '10px';
-        
-        downloadBtn.addEventListener('click', function() {
-            if (!dateInput.value) {
-                alert('Please wait for date to be processed');
-                return;
-            }
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput');
+            const parseBtn = document.getElementById('parseBtn');
+            const fileName = document.getElementById('fileName');
+            const resultsDiv = document.getElementById('results');
+            const errorDiv = document.getElementById('error');
             
-            const filename = `kerala_epayment_scroll_70252_${dateInput.value}.txt`;
-            const blob = new Blob([content], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        });
-        
-        controlContainer.appendChild(dateContainer);
-        controlContainer.appendChild(downloadBtn);
-        resultsDiv.appendChild(controlContainer);
-        
-        // Create table
-        const table = document.createElement('table');
-        const thead = document.createElement('thead');
-        const tbody = document.createElement('tbody');
-        const tfoot = document.createElement('tfoot');
-        
-        // Define our fixed headers
-        const fixedHeaders = [
-            'Reference', 'ID', '<no title>', 'code', 'Amount',
-            'date', 'Dep.Code', 'Eprocurement', 'Office01',
-            'Office02', 'TRY.Code'
-        ];
-        
-        // Find the index of the Amount column and Date column
-        const amountColumnIndex = fixedHeaders.indexOf('Amount');
-        const dateColumnIndex = fixedHeaders.indexOf('date');
-        
-        // Create header row with our fixed headers
-        const headerRow = document.createElement('tr');
-        fixedHeaders.forEach(header => {
-            const th = document.createElement('th');
-            th.textContent = header;
-            headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-        
-        let totalAmount = 0;
-        let formattedDate = '';
-        
-        // Process data rows
-        for (let i = 1; i < lines.length; i++) {
-            const dataCells = lines[i].split(delimiter);
-            const dataRow = document.createElement('tr');
-            
-            // Create cells for each of our fixed headers
-            fixedHeaders.forEach((_, index) => {
-                const td = document.createElement('td');
-                // Use the data from the corresponding column if available
-                const cellValue = index < dataCells.length ? dataCells[index].trim() : '';
-                td.textContent = cellValue;
-                
-                // If this is the Amount column, add to total
-                if (index === amountColumnIndex) {
-                    const amount = parseFloat(cellValue.replace(/[^0-9.-]/g, '')) || 0;
-                    totalAmount += amount;
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    fileName.textContent = e.target.files[0].name;
+                    parseBtn.disabled = false;
+                } else {
+                    fileName.textContent = 'No file chosen';
+                    parseBtn.disabled = true;
                 }
+                errorDiv.textContent = '';
+                resultsDiv.innerHTML = '';
+            });
+            
+            parseBtn.addEventListener('click', function() {
+                const file = fileInput.files[0];
+                if (!file) return;
                 
-                // If this is the first row and Date column, format the date
-                if (i === 1 && index === dateColumnIndex && cellValue) {
+                errorDiv.textContent = '';
+                resultsDiv.innerHTML = '';
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
                     try {
-                        const dateParts = cellValue.split('/');
-                        if (dateParts.length === 3) {
-                            const month = dateParts[0];
-                            const day = dateParts[1];
-                            const year = dateParts[2].length === 4 ? dateParts[2].substring(2) : dateParts[2];
-                            formattedDate = `${day}${month}${year}`;
-                            dateInput.value = formattedDate;
-                        }
-                    } catch (e) {
-                        console.error('Error formatting date:', e);
+                        const content = e.target.result;
+                        const { table } = parseCSV(content, file, resultsDiv);
+                        resultsDiv.appendChild(table);
+                    } catch (err) {
+                        errorDiv.textContent = 'Error parsing file: ' + err.message;
+                    }
+                };
+                reader.onerror = function() {
+                    errorDiv.textContent = 'Error reading file';
+                };
+                reader.readAsText(file);
+            });
+            
+            function parseCSV(content, file, resultsDiv) {
+                // Detect delimiter
+                const delimiters = [',', '\t', ';', '|'];
+                let delimiter = ',';
+                
+                // Check which delimiter appears first in the first line
+                const firstLine = content.split('\n')[0];
+                for (const d of delimiters) {
+                    if (firstLine.includes(d)) {
+                        delimiter = d;
+                        break;
                     }
                 }
                 
-                dataRow.appendChild(td);
-            });
-            
-            tbody.appendChild(dataRow);
-        }
-        table.appendChild(tbody);
-        
-        // Create footer row with total amount
-        if (amountColumnIndex >= 0) {
-            const footerRow = document.createElement('tr');
-            footerRow.style.fontWeight = 'bold';
-            footerRow.style.backgroundColor = '#f2f2f2';
-            
-            fixedHeaders.forEach((_, index) => {
-                const td = document.createElement('td');
-                if (index === amountColumnIndex) {
-                    td.textContent = totalAmount.toFixed(2);
-                } else if (index === 0) {
-                    td.textContent = 'Total:';
+                // Parse lines
+                const lines = content.split('\n').filter(line => line.trim() !== '');
+                if (lines.length === 0) {
+                    throw new Error('File is empty');
                 }
-                footerRow.appendChild(td);
-            });
-            
-            tfoot.appendChild(footerRow);
-            table.appendChild(tfoot);
-        }
-        
-        return { table };
-    }
-});
-
+                
+                // Create container for date input and download button
+                const controlContainer = document.createElement('div');
+                controlContainer.style.margin = '10px 0';
+                controlContainer.style.display = 'flex';
+                controlContainer.style.alignItems = 'center';
+                controlContainer.style.gap = '10px';
+                
+                const dateContainer = document.createElement('div');
+                dateContainer.style.display = 'flex';
+                dateContainer.style.alignItems = 'center';
+                
+                const dateLabel = document.createElement('label');
+                dateLabel.textContent = 'Date: ';
+                dateLabel.style.marginRight = '10px';
+                
+                const dateInput = document.createElement('input');
+                dateInput.type = 'text';
+                dateInput.style.padding = '5px';
+                
+                dateContainer.appendChild(dateLabel);
+                dateContainer.appendChild(dateInput);
+                
+                // Create download button
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'Download';
+                downloadBtn.className = 'upload-btn';
+                downloadBtn.style.marginLeft = '10px';
+                
+                downloadBtn.addEventListener('click', function() {
+                    if (!dateInput.value) {
+                        alert('Please wait for date to be processed');
+                        return;
+                    }
+                    
+                    const filename = `kerala_epayment_scroll_70252_${dateInput.value}.txt`;
+                    const blob = new Blob([content], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                });
+                
+                controlContainer.appendChild(dateContainer);
+                controlContainer.appendChild(downloadBtn);
+                resultsDiv.appendChild(controlContainer);
+                
+                // Create table
+                const table = document.createElement('table');
+                const thead = document.createElement('thead');
+                const tbody = document.createElement('tbody');
+                const tfoot = document.createElement('tfoot');
+                
+                // Define our fixed headers
+                const fixedHeaders = [
+                    'Reference', 'ID', '<no title>', 'code', 'Amount',
+                    'date', 'Dep.Code', 'Eprocurement', 'Office01',
+                    'Office02', 'TRY.Code'
+                ];
+                
+                // Find the index of the Amount column and Date column
+                const amountColumnIndex = fixedHeaders.indexOf('Amount');
+                const dateColumnIndex = fixedHeaders.indexOf('date');
+                
+                // Create header row with our fixed headers
+                const headerRow = document.createElement('tr');
+                fixedHeaders.forEach(header => {
+                    const th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+                
+                let totalAmount = 0;
+                let formattedDate = '';
+                
+                // Process all data rows (starting from 0 since we're using fixed headers)
+                for (let i = 0; i < lines.length; i++) {
+                    const dataCells = lines[i].split(delimiter);
+                    const dataRow = document.createElement('tr');
+                    
+                    // Create cells for each of our fixed headers
+                    fixedHeaders.forEach((_, index) => {
+                        const td = document.createElement('td');
+                        // Use the data from the corresponding column if available
+                        const cellValue = index < dataCells.length ? dataCells[index].trim() : '';
+                        td.textContent = cellValue;
+                        
+                        // If this is the Amount column, add to total
+                        if (index === amountColumnIndex) {
+                            const amount = parseFloat(cellValue.replace(/[^0-9.-]/g, '')) || 0;
+                            totalAmount += amount;
+                        }
+                        
+                        // If this is the first row and Date column, format the date
+                        if (i === 0 && index === dateColumnIndex && cellValue) {
+                            try {
+                                const dateParts = cellValue.split('/');
+                                if (dateParts.length === 3) {
+                                    const month = dateParts[0];
+                                    const day = dateParts[1];
+                                    const year = dateParts[2].length === 4 ? dateParts[2].substring(2) : dateParts[2];
+                                    formattedDate = `${day}${month}${year}`;
+                                    dateInput.value = formattedDate;
+                                }
+                            } catch (e) {
+                                console.error('Error formatting date:', e);
+                            }
+                        }
+                        
+                        dataRow.appendChild(td);
+                    });
+                    
+                    tbody.appendChild(dataRow);
+                }
+                table.appendChild(tbody);
+                
+                // Create footer row with total amount
+                if (amountColumnIndex >= 0) {
+                    const footerRow = document.createElement('tr');
+                    footerRow.style.fontWeight = 'bold';
+                    footerRow.style.backgroundColor = '#f2f2f2';
+                    
+                    fixedHeaders.forEach((_, index) => {
+                        const td = document.createElement('td');
+                        if (index === amountColumnIndex) {
+                            td.textContent = totalAmount.toFixed(2);
+                        } else if (index === 0) {
+                            td.textContent = 'Total:';
+                        }
+                        footerRow.appendChild(td);
+                    });
+                    
+                    tfoot.appendChild(footerRow);
+                    table.appendChild(tfoot);
+                }
+                
+                return { table };
+            }
+        });
     </script>
 </body>
 </html>
