@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TISMIS/eProcurement File Validation</title>
     <style>
-        body {
+       body {
             font-family: Arial, sans-serif;
             margin: 0 auto;
             padding: 20px;
@@ -73,10 +73,18 @@
             padding: 10px;
             margin-bottom: 20px;
         }
+        .total-display {
+            font-weight: bold;
+            font-size: 18px;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f2f2f2;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
-    <h3>TISMIS/eProcurement File Validation</h3>
+    <h3>CSV/TXT File Parser</h3>
     
     <div class="instructions">
         <p>Upload a CSV or TXT file to display its contents as a table. The parser automatically detects delimiters (comma, tab, semicolon).</p>
@@ -124,7 +132,14 @@
                 reader.onload = function(e) {
                     try {
                         const content = e.target.result;
-                        const { table } = parseCSV(content, file, resultsDiv);
+                        const { table, totalAmount } = parseCSV(content, file, resultsDiv);
+                        
+                        // Create and display total amount above the table
+                        const totalDisplay = document.createElement('div');
+                        totalDisplay.className = 'total-display';
+                        totalDisplay.textContent = `Total Amount: ${totalAmount.toFixed(2)}`;
+                        resultsDiv.appendChild(totalDisplay);
+                        
                         resultsDiv.appendChild(table);
                     } catch (err) {
                         errorDiv.textContent = 'Error parsing file: ' + err.message;
@@ -297,7 +312,7 @@
                     table.appendChild(tfoot);
                 }
                 
-                return { table };
+                return { table, totalAmount };
             }
         });
     </script>
