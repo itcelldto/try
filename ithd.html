@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Help Desk | IT Cell Treasury </title>
-   <!-- Favicons -->
+    <!-- Favicons -->
     <link href="https://itcelltreasury.github.io/admin2/favicon.jpg" rel="icon">
     <link href="https://itcelltreasury.github.io/admin2/favicon.jpg" rel="apple-touch-icon">
     <!-- Tell the browser to be responsive -->
@@ -69,19 +69,31 @@
             display: flex;
             align-items: center;
             justify-content: center;
+	    background: url('https://itcelldto.github.io/try/img/bg1.jpg') transparent;
+            background-size: cover;
+           
         }
         
         .login-box {
             width: 360px;
         }
+	    .btn.btn-flat {
+  border-radius: 16px;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  border-width: 1px;
+  background-color: #0aa5ff;
+}
         
         .login-box-body {
-            background: #fff;
+           background: rgba(255, 255, 255, 0.80);
+           backdrop-filter: blur(7.5px);
             padding: 20px;
             border-top: 0;
             color: #666;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-radius: 3px;
+            border-radius: 15px;
         }
         
         .login-logo {
@@ -168,8 +180,6 @@
             text-decoration: underline;
         }
         
-        
-        
         /* Treasury name in sidebar */
         .treasury-name {
           padding: 10px;
@@ -181,6 +191,14 @@
           border-bottom: 1px solid #3c8dbc5e;
           overflow: hidden;
         }
+        
+        /* Dynamic content area */
+        #dynamic-content {
+            width: 100%;
+            min-height: calc(100vh - 100px);
+          /*  padding: 15px;*/
+            overflow: auto;
+        }
     </style>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
@@ -191,7 +209,7 @@
                 <a href="#"><b>IT Cell</b> Help Desk</a>
             </div>
             <div class="login-box-body">
-			<h3 style="text-align: center;color: #c5c5c5;font-weight: 600;">eAdmin- Dashboard </h3>
+			<h3 style="text-align: center;color: #06002c9c;font-weight: 600;">eAdmin- Dashboard </h3>
                 <p class="login-box-msg">Sign in to start your session</p>
                 <form id="login-form">
                     <div class="form-group has-feedback">
@@ -236,8 +254,6 @@ function openForgotPasswordPopup() {
         </div>
     </div>
 
-   
-
     <!-- Main Content (hidden initially) -->
     <div class="wrapper">
         <!-- Main Header -->
@@ -253,11 +269,11 @@ function openForgotPasswordPopup() {
                 <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
                     <span class="sr-only">Toggle navigation</span>
                 </a>
-		    <div class="pull-left">
+		     <div class="pull-left">
               <h4 style="font-size: 25px;color: #ecf0f5;font-weight: bold;text-shadow: 2px 2px #262626;">eAdmin</h4>
             </div>
                 <!-- Current Date and Time -->
-                <span id="current-date-time" style="float: right; padding: 15px; font-size: 16px; color: #fff;"></span>
+                <span id="current-date-time" style="float: right; padding: 15px;  color: #fff;"></span>
             </nav>
         </header>
         <!-- Left side column. contains the logo and sidebar -->
@@ -270,8 +286,6 @@ function openForgotPasswordPopup() {
                 <!-- Sidebar Menu -->
                 <ul class="sidebar-menu" data-widget="tree" id="sidebar-menu">
                     <!-- Menu items will be dynamically populated here -->
-					
-					
                 </ul>
 				<ul class="sidebar-menu" data-widget="tree" >
 				<li class="treeview"><a href="#" onclick="window.location.reload(); return false;"><i class="glyphicon glyphicon-log-out"></i> Logout</a>></li>
@@ -297,7 +311,8 @@ function openForgotPasswordPopup() {
                     </div>
                 </div>
                 
-                <iframe id="main-iframe" src="https://itcelldto.github.io/try/dashboard2.html" style="width: 100%; height: calc(100vh - 1px); border: none;"></iframe>
+                <!-- Dynamic Content Area -->
+                <div id="dynamic-content"></div>
             </section>
         </div>
 
@@ -318,233 +333,289 @@ function openForgotPasswordPopup() {
     <!-- AdminLTE App -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/js/adminlte.min.js"></script>
 
-   <script>
-// Set inactivity timeout to 15 minutes (900,000 milliseconds)
-const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
-let inactivityTimer;
+    <script>
+	// Set inactivity timeout to 15 minutes (900,000 milliseconds)
+	const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
+	let inactivityTimer;
 
-// Function to reset the inactivity timer
-function resetInactivityTimer() {
-    clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(reloadPage, INACTIVITY_TIMEOUT);
-}
+	// Function to reset the inactivity timer
+	function resetInactivityTimer() {
+		clearTimeout(inactivityTimer);
+		inactivityTimer = setTimeout(reloadPage, INACTIVITY_TIMEOUT);
+	}
 
-// Function to reload the page
-function reloadPage() {
-    window.location.reload(true); // Force reload from server
-}
+	// Function to reload the page
+	function reloadPage() {
+		window.location.reload(true); // Force reload from server
+	}
 
-// Event listeners to detect activity
-function setupActivityListeners() {
-    // Mouse movement
-    document.addEventListener('mousemove', resetInactivityTimer);
-    // Mouse clicks
-    document.addEventListener('click', resetInactivityTimer);
-    // Keyboard input
-    document.addEventListener('keydown', resetInactivityTimer);
-    // Touch events for mobile
-    document.addEventListener('touchstart', resetInactivityTimer);
-    document.addEventListener('touchmove', resetInactivityTimer);
-}
+	// Event listeners to detect activity
+	function setupActivityListeners() {
+		// Mouse movement
+		document.addEventListener('mousemove', resetInactivityTimer);
+		// Mouse clicks
+		document.addEventListener('click', resetInactivityTimer);
+		// Keyboard input
+		document.addEventListener('keydown', resetInactivityTimer);
+		// Touch events for mobile
+		document.addEventListener('touchstart', resetInactivityTimer);
+		document.addEventListener('touchmove', resetInactivityTimer);
+	}
 
-// Initialize the timer and event listeners
-function initInactivityTimer() {
-    setupActivityListeners();
-    resetInactivityTimer(); // Start the initial timer
-}
+	// Initialize the timer and event listeners
+	function initInactivityTimer() {
+		setupActivityListeners();
+		resetInactivityTimer(); // Start the initial timer
+	}
 
-// Start the inactivity monitoring when page loads
-window.addEventListener('load', initInactivityTimer);
+	// Start the inactivity monitoring when page loads
+	window.addEventListener('load', initInactivityTimer);
 
-// Also restart timer when page becomes visible again
-document.addEventListener('visibilitychange', function() {
-    if (!document.hidden) {
-        resetInactivityTimer();
-    }
-});
+	// Also restart timer when page becomes visible again
+	document.addEventListener('visibilitychange', function() {
+		if (!document.hidden) {
+			resetInactivityTimer();
+		}
+	});
 
+	// Update date and time function
+	function updateDateTime() {
+		const now = new Date();
 
-        // Update date and time function
-        function updateDateTime() {
-            const now = new Date();
+		// Format date as dd-mm-yyyy
+		const day = String(now.getDate()).padStart(2, '0');
+		const month = String(now.getMonth() + 1).padStart(2, '0');
+		const year = now.getFullYear();
+		const dateString = `${day}-${month}-${year}`;
 
-            // Format date as dd-mm-yyyy
-            const day = String(now.getDate()).padStart(2, '0');
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const year = now.getFullYear();
-            const dateString = `${day}-${month}-${year}`;
+		// Format time in 12-hour base with AM/PM
+		let hours = now.getHours();
+		const minutes = String(now.getMinutes()).padStart(2, '0');
+		const seconds = String(now.getSeconds()).padStart(2, '0');
+		const ampm = hours >= 12 ? 'PM' : 'AM';
+		hours = hours % 12 || 12;
+		const timeString = `${hours}:${minutes}:${seconds} ${ampm}`;
 
-            // Format time in 12-hour base with AM/PM
-            let hours = now.getHours();
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const ampm = hours >= 12 ? 'PM' : 'AM';
-            hours = hours % 12 || 12;
-            const timeString = `${hours}:${minutes}:${seconds} ${ampm}`;
+		// Combine date and time
+		const dateTimeString = `${dateString} ${timeString}`;
 
-            // Combine date and time
-            const dateTimeString = `${dateString} ${timeString}`;
+		// Update the date and time in the navbar
+		document.getElementById('current-date-time').textContent = dateTimeString;
+	}
 
-            // Update the date and time in the navbar
-            document.getElementById('current-date-time').textContent = dateTimeString;
-        }
-
-        // Login functionality
-        $(document).ready(function() {
-            const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
-            const sheetId = '11wvVQ2G41ke3g6RdfYX8AJAl0w-fnf2NQ_Agufz0wXY';
-            const settingsSheetName = 'settings';
+	// Function to load dynamic content
+	function loadDynamicContent(content) {
+    const contentArea = $('#dynamic-content');
+    $('#loading-spinner').removeClass('hidden');
+    
+    if (content) {
+        // First empty the content area
+        contentArea.empty();
+        
+        // Check if content is an iframe URL
+        if (content.startsWith('<iframe') || content.includes('src="')) {
+            // Create iframe element
+            const iframe = document.createElement('iframe');
+            iframe.style.width = '100%';
+			
+            iframe.style.height = 'calc(100vh - 1px)';
+            iframe.style.border = 'none';
             
-            // Initialize AdminLTE (required for sidebar functionality)
-            $('[data-widget="tree"]').tree();
-            
-            // Current step in forgot password process
-            let currentStep = 1;
-            let otp = '';
-            let treasuryRow = -1;
-            let treasurySettings = [];
-            
-            // Handle login form submission
-            $('#login-form').submit(function(e) {
-                e.preventDefault();
-                
-                const userId = $('#userid').val().trim();
-                const password = $('#password').val().trim();
-                
-                // Fetch credentials from Google Sheet
-                const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
-                
-                $.get(settingsUrl, function(data) {
-                    treasurySettings = data.values;
-                    let loginSuccessful = false;
-                    let treasuryName = '';
-                    
-                    // Check each row for matching credentials
-                    for (let i = 0; i < treasurySettings.length; i++) {
-                        const row = treasurySettings[i];
-                        if (row[1] === userId && row[2] === password) {
-                            loginSuccessful = true;
-                            treasuryName = row[0]; // A column - Treasury name
-                            treasuryRow = i; // Store the row index for later use
-                            break;
-                        }
-                    }
-                    
-                    if (loginSuccessful) {
-                        // Successful login
-                        $('#login-error').hide();
-                        $('#login-overlay').hide();
-                        
-                        // Display treasury name in sidebar
-                        $('#treasury-name-display').text(treasuryName);
-                        
-                        // Store treasury name in session storage
-                        sessionStorage.setItem('treasuryName', treasuryName);
-                        
-                        // Initialize the main application with the menu sheet name from column F
-                        initializeApplication(treasurySettings[treasuryRow][5] || 'nav-links');
-                    } else {
-                        // Failed login
-                        $('#login-error').show();
-                    }
-                }).fail(function() {
-                    $('#login-error').text('Error connecting to server').show();
-                });
-            });
-            
-           
-            
-            // Function to initialize the application after successful login
-            function initializeApplication(menuSheetName) {
-                // Start updating date and time
-                updateDateTime();
-                setInterval(updateDateTime, 1000);
-                
-                // Fetch data for the sidebar menu
-                const menuUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${menuSheetName}?key=${apiKey}`;
-
-                // Fetch data for the running text
-                const reelSheetName = 'Scroll-reel';
-                const reelUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${reelSheetName}?key=${apiKey}`;
-
-                // Fetch and populate the running text
-                $.get(reelUrl, function(data) {
-                    const rows = data.values;
-                    let runningText = '';
-
-                    // Combine all text from column A2:A into a single string
-                    rows.slice(1).forEach(row => {
-                        if (row[0]) {
-                            runningText += row[0] + ' • '; // Add a separator between items
-                        }
-                    });
-
-                    // Set the running text content
-                    $('#news-reel').text(runningText);
-                });
-
-                // Fetch and populate the sidebar menu
-                $.get(menuUrl, function(data) {
-                    const rows = data.values;
-                    let currentMainMenu = '';
-                    let mainMenuLi = null;
-                    let subMenuUl = null;
-
-                    rows.slice(1).forEach(row => {
-                        const mainMenu = row[0];
-                        const subMenu = row[1];
-                        const subMenuLink = row[2];
-
-                        if (mainMenu !== currentMainMenu) {
-                            currentMainMenu = mainMenu;
-                            mainMenuLi = $('<li>').addClass('treeview');
-                            subMenuUl = $('<ul>').addClass('treeview-menu');
-
-                            // Add glyphicon-plus icon before the main menu text
-                            const mainMenuLink = $('<a>')
-                                .append($('<i>').addClass('glyphicon glyphicon-plus'))
-                                .append(' ' + mainMenu)
-                                .append($('<i>').addClass('fa fa-angle-left pull-right'));
-
-                            mainMenuLi.append(mainMenuLink);
-                            mainMenuLi.append(subMenuUl);
-                            $('#sidebar-menu').append(mainMenuLi);
-                        }
-
-                        if (subMenu && subMenuLink) {
-                            const subMenuLi = $('<li>').append($('<a>').attr('href', '#').text(subMenu).click(function(e) {
-                                e.preventDefault();
-                                // Show loading spinner when iframe src changes
-                                $('#loading-spinner').removeClass('hidden');
-                                // Append treasury name as query parameter if it's not already there
-                                // Append treasury name as query parameter if it's not already there
-                                let url = subMenuLink;
-                                 const treasuryName = sessionStorage.getItem('treasuryName');
-                                if (treasuryName) {
-                                const urlObj = new URL(url, window.location.href);
-                                  if (!urlObj.searchParams.has('treasury')) {
-                                   urlObj.searchParams.append('treasury', treasuryName);
-                            url = urlObj.toString();
-                          }
-                       }
-                     $('#main-iframe').attr('src', url);
-                            }));
-                            subMenuUl.append(subMenuLi);
-                        }
-                    });
-                    
-                    // Reinitialize the tree after adding new elements
-                    $('[data-widget="tree"]').tree();
-                    $('#loading-spinner').addClass('hidden');
-                });
-                
-                // Hide loading spinner when iframe is loaded
-                $('#main-iframe').on('load', function() {
-                    $('#loading-spinner').addClass('hidden');
-                });
+            // Set src attribute - extract URL from content if needed
+            let srcUrl;
+            if (content.startsWith('http')) {
+                srcUrl = content;
+            } else {
+                // Extract URL from iframe HTML string
+                const srcMatch = content.match(/src="([^"]*)"/);
+                srcUrl = srcMatch ? srcMatch[1] : '';
             }
-        });
+            
+            // Append treasury name as query parameter if it's not already there
+            const treasuryName = sessionStorage.getItem('treasuryName');
+            if (treasuryName) {
+                const urlObj = new URL(srcUrl, window.location.href);
+                if (!urlObj.searchParams.has('treasury')) {
+                    urlObj.searchParams.append('treasury', treasuryName);
+                    srcUrl = urlObj.toString();
+                }
+            }
+            
+            iframe.src = srcUrl;
+            contentArea.append(iframe);
+        } else {
+            // Regular content handling (existing code)
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            
+            while (tempDiv.firstChild) {
+                contentArea.append(tempTemp.firstChild);
+            }
+            
+            // Execute any scripts in the content
+            contentArea.find('script').each(function() {
+                // Existing script handling code...
+            });
+        }
+        
+        $('#loading-spinner').addClass('hidden');
+    } else {
+        contentArea.html('<div class="alert alert-info">No content available for this item.</div>');
+        $('#loading-spinner').addClass('hidden');
+    }
+}
+
+	// Login functionality
+	$(document).ready(function() {
+		const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+		const sheetId = '11wvVQ2G41ke3g6RdfYX8AJAl0w-fnf2NQ_Agufz0wXY';
+		const settingsSheetName = 'settings';
 		
+		// Initialize AdminLTE (required for sidebar functionality)
+		$('[data-widget="tree"]').tree();
+		
+		// Current step in forgot password process
+		let currentStep = 1;
+		let otp = '';
+		let treasuryRow = -1;
+		let treasurySettings = [];
+		
+		// Handle login form submission
+		$('#login-form').submit(function(e) {
+			e.preventDefault();
+			
+			const userId = $('#userid').val().trim();
+			const password = $('#password').val().trim();
+			
+			// Fetch credentials from Google Sheet
+			const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
+			
+			$.get(settingsUrl, function(data) {
+				treasurySettings = data.values;
+				let loginSuccessful = false;
+				let treasuryName = '';
+				
+				// Check each row for matching credentials
+				for (let i = 0; i < treasurySettings.length; i++) {
+					const row = treasurySettings[i];
+					if (row[1] === userId && row[2] === password) {
+						loginSuccessful = true;
+						treasuryName = row[0]; // A column - Treasury name
+						treasuryRow = i; // Store the row index for later use
+						break;
+					}
+				}
+				
+				if (loginSuccessful) {
+    // Successful login
+    $('#login-error').hide();
+    $('#login-overlay').hide();
+    
+    // Display treasury name in sidebar
+    $('#treasury-name-display').text(treasuryName);
+    
+    // Store treasury name in session storage
+    sessionStorage.setItem('treasuryName', treasuryName);
+    
+    // Initialize the main application with the menu sheet name from column F
+    initializeApplication(treasurySettings[treasuryRow][5] || 'nav-links');
+} else {
+					// Failed login
+					$('#login-error').show();
+				}
+			}).fail(function() {
+				$('#login-error').text('Error connecting to server').show();
+			});
+		});
+		
+		// Function to initialize the application after successful login
+		function initializeApplication(menuSheetName) {
+			// Start updating date and time
+			updateDateTime();
+			setInterval(updateDateTime, 1000);
+			
+			// Fetch data for the sidebar menu
+			const menuUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${menuSheetName}?key=${apiKey}`;
+
+			// Fetch data for the running text
+			const reelSheetName = 'Scroll-reel';
+			const reelUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${reelSheetName}?key=${apiKey}`;
+
+			// Fetch and populate the running text
+			$.get(reelUrl, function(data) {
+				const rows = data.values;
+				let runningText = '';
+
+				// Combine all text from column A2:A into a single string
+				rows.slice(1).forEach(row => {
+					if (row[0]) {
+						runningText += row[0] + ' • '; // Add a separator between items
+					}
+				});
+
+				// Set the running text content
+				$('#news-reel').text(runningText);
+			});
+
+			// Fetch and populate the sidebar menu
+			$.get(menuUrl, function(data) {
+				const rows = data.values;
+				let currentMainMenu = '';
+				let mainMenuLi = null;
+				let subMenuUl = null;
+				let firstSubmenuItem = null;
+
+				rows.slice(1).forEach((row, index) => {
+					const mainMenu = row[0];
+					const subMenu = row[1];
+					const subMenuLink = row[2];
+					const dynamicContent = row[3]; // Content from column D
+
+					if (mainMenu !== currentMainMenu) {
+						currentMainMenu = mainMenu;
+						mainMenuLi = $('<li>').addClass('treeview');
+						subMenuUl = $('<ul>').addClass('treeview-menu');
+
+						// Add glyphicon-plus icon before the main menu text
+						const mainMenuLink = $('<a>')
+							.append($('<i>').addClass('glyphicon glyphicon-plus'))
+							.append(' ' + mainMenu)
+							.append($('<i>').addClass('fa fa-angle-left pull-right'));
+
+						mainMenuLi.append(mainMenuLink);
+						mainMenuLi.append(subMenuUl);
+						$('#sidebar-menu').append(mainMenuLi);
+					}
+
+					if (subMenu && subMenuLink) {
+						const subMenuLi = $('<li>').append(
+							$('<a>').attr('href', '#').text(subMenu).click(function(e) {
+								e.preventDefault();
+								loadDynamicContent(dynamicContent);
+							})
+						);
+						subMenuUl.append(subMenuLi);
+						
+						// Store the first submenu item to load its content automatically
+						if (!firstSubmenuItem && dynamicContent) {
+							firstSubmenuItem = dynamicContent;
+						}
+					}
+				});
+				
+				// Reinitialize the tree after adding new elements
+				$('[data-widget="tree"]').tree();
+				$('#loading-spinner').addClass('hidden');
+				
+				// Load the first submenu item's content automatically
+				if (firstSubmenuItem) {
+					loadDynamicContent(firstSubmenuItem);
+				} else {
+					$('#dynamic-content').html('<div class="alert alert-info">Select a menu item to view content</div>');
+				}
+			});
+		}
+	});
     </script>
 </body>
 </html>
