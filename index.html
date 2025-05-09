@@ -65,7 +65,7 @@
             right: 0;
             bottom: 0;
             background-color: rgb(199 199 199);
-            z-index: 9999;
+            z-index: 99999;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -230,6 +230,11 @@
         #login-button.loading .loading-spinner {
             display: flex !important;
         }
+        
+        /* Hide main content initially */
+        .wrapper {
+            display: none;
+        }
     </style>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
@@ -289,7 +294,7 @@ function openForgotPasswordPopup() {
     </div>
 
     <!-- Main Content (hidden initially) -->
-    <div class="wrapper">
+    <div class="wrapper" id="main-wrapper">
         <!-- Main Header -->
         <header class="main-header">
             <!-- Logo -->
@@ -565,6 +570,9 @@ function openForgotPasswordPopup() {
 						
 						// Store treasury name in session storage
 						sessionStorage.setItem('treasuryName', treasuryName);
+						
+						// Show the main content wrapper
+						$('#main-wrapper').show();
 						
 						// Initialize the main application with the menu sheet name from column F
 						initializeApplication(treasurySettings[treasuryRow][5] || 'nav-links');
