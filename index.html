@@ -52,10 +52,14 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        #news-reel {
-            font-weight: normal;
-            color: #333;
-        }
+       #news-reel {
+    font-weight: normal;
+    color: #333;
+    white-space: nowrap; /* Prevent text wrapping */
+    display: block; /* Ensure it's block level */
+    width: 100%; /* Full width */
+    overflow: hidden; /* Hide overflow */
+}
         
         /* Login overlay styles */
         .login-overlay {
