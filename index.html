@@ -20,35 +20,6 @@
     <!-- AdminLTE Skins -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/css/skins/_all-skins.min.css">
     <style>
-	    /* Loading spinner for button */
-#login-button {
-    position: relative;
-}
-
-#login-button .loading-spinner {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #3c8dbc;
-    border-radius: 16px;
-}
-
-#login-button .button-text {
-    visibility: visible;
-}
-
-#login-button.loading .button-text {
-    visibility: hidden;
-}
-
-#login-button.loading .loading-spinner {
-    display: flex !important;
-}
 	.skin-blue .main-header .logo {
   background-color: #1fadffb2;
   color: #fff;
@@ -57,7 +28,7 @@
 	.skin-blue .main-header .navbar {
   background-color: #1fadff;
 }
-#current-date-time {
+        #current-date-time {
             font-family: Arial, sans-serif;
             font-weight: bold;
             margin-right: 20px;
@@ -229,6 +200,36 @@
           /*  padding: 15px;*/
             overflow: auto;
         }
+
+        /* Button loading spinner styles */
+        #login-button {
+            position: relative;
+        }
+
+        #login-button .loading-spinner {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #3c8dbc;
+            border-radius: 16px;
+        }
+
+        #login-button .button-text {
+            visibility: visible;
+        }
+
+        #login-button.loading .button-text {
+            visibility: hidden;
+        }
+
+        #login-button.loading .loading-spinner {
+            display: flex !important;
+        }
     </style>
 </head>
 <body class="hold-transition skin-blue sidebar-mini">
@@ -252,10 +253,10 @@
                     </div>
                     <div class="row">
                         <div class="col-xs-12">
-                            <button type="submit" class="btn btn-primary btn-block btn-flat">
-				     <span class="button-text">Sign In</span>
-                                     <span class="loading-spinner hidden"><i class="fa fa-spinner fa-spin"></i> Processing...</span>
-			    </button>
+                            <button type="submit" class="btn btn-primary btn-block btn-flat" id="login-button">
+                                <span class="button-text">Sign In</span>
+                                <span class="loading-spinner hidden"><i class="fa fa-spinner fa-spin"></i> Processing...</span>
+                            </button>
                         </div>
                     </div>
                     <div id="login-error" class="text-center">Invalid User ID or Password</div>
@@ -515,55 +516,74 @@ function openForgotPasswordPopup() {
 		
 		// Handle login form submission
 		$('#login-form').submit(function(e) {
-    e.preventDefault();
-    
-    // Get button and disable it
-    const loginButton = $('#login-button');
-    loginButton.prop('disabled', true);
-    loginButton.addClass('loading');
-    
-    const userId = $('#userid').val().trim();
-    const password = $('#password').val().trim();
-    
-    // Fetch credentials from Google Sheet
-    const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
-    
-    $.get(settingsUrl, function(data) {
-        treasurySettings = data.values;
-        let loginSuccessful = false;
-        let treasuryName = '';
-        
-        // Check each row for matching credentials
-        for (let i = 0; i < treasurySettings.length; i++) {
-            const row = treasurySettings[i];
-            if (row[1] === userId && row[2] === password) {
-                loginSuccessful = true;
-                treasuryName = row[0];
-                treasuryRow = i;
-                break;
-            }
-        }
-        
-        if (loginSuccessful) {
-            $('#login-error').hide();
-            $('#login-overlay').hide();
-            $('#treasury-name-display').text(treasuryName);
-            sessionStorage.setItem('treasuryName', treasuryName);
-            initializeApplication(treasurySettings[treasuryRow][5] || 'nav-links');
-        } else {
-            $('#login-error').show();
-        }
-        
-        // Re-enable button
-        loginButton.prop('disabled', false);
-        loginButton.removeClass('loading');
-    }).fail(function() {
-        $('#login-error').text('Error connecting to server').show();
-        // Re-enable button on error too
-        loginButton.prop('disabled', false);
-        loginButton.removeClass('loading');
-    });
-});
+			e.preventDefault();
+			
+			// Get button and disable it
+			const loginButton = $('#login-button');
+			loginButton.prop('disabled', true);
+			loginButton.addClass('loading');
+			
+			const userId = $('#userid').val().trim();
+			const password = $('#password').val().trim();
+			
+			// Show loading state
+			$('#login-error').hide();
+			
+			// Fetch credentials from Google Sheet
+			const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
+			
+			fetch(settingsUrl)
+				.then(response => {
+					if (!response.ok) {
+						throw new Error('Network response was not ok');
+					}
+					return response.json();
+				})
+				.then(data => {
+					treasurySettings = data.values;
+					let loginSuccessful = false;
+					let treasuryName = '';
+					
+					// Check each row for matching credentials
+					for (let i = 0; i < treasurySettings.length; i++) {
+						const row = treasurySettings[i];
+						if (row[1] === userId && row[2] === password) {
+							loginSuccessful = true;
+							treasuryName = row[0]; // A column - Treasury name
+							treasuryRow = i; // Store the row index for later use
+							break;
+						}
+					}
+					
+					if (loginSuccessful) {
+						// Successful login
+						$('#login-error').hide();
+						$('#login-overlay').hide();
+						
+						// Display treasury name in sidebar
+						$('#treasury-name-display').text(treasuryName);
+						
+						// Store treasury name in session storage
+						sessionStorage.setItem('treasuryName', treasuryName);
+						
+						// Initialize the main application with the menu sheet name from column F
+						initializeApplication(treasurySettings[treasuryRow][5] || 'nav-links');
+					} else {
+						// Failed login
+						$('#login-error').text('Invalid User ID or Password').show();
+					}
+				})
+				.catch(error => {
+					console.error('Error:', error);
+					$('#login-error').text('Error connecting to server. Please try again later.').show();
+				})
+				.finally(() => {
+					// Re-enable button
+					loginButton.prop('disabled', false);
+					loginButton.removeClass('loading');
+				});
+		});
+		
 		// Function to initialize the application after successful login
 		function initializeApplication(menuSheetName) {
 			// Start updating date and time
@@ -578,78 +598,91 @@ function openForgotPasswordPopup() {
 			const reelUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${reelSheetName}?key=${apiKey}`;
 
 			// Fetch and populate the running text
-			$.get(reelUrl, function(data) {
-				const rows = data.values;
-				let runningText = '';
+			fetch(reelUrl)
+				.then(response => response.json())
+				.then(data => {
+					const rows = data.values;
+					let runningText = '';
 
-				// Combine all text from column A2:A into a single string
-				rows.slice(1).forEach(row => {
-					if (row[0]) {
-						runningText += row[0] + ' • '; // Add a separator between items
-					}
+					// Combine all text from column A2:A into a single string
+					rows.slice(1).forEach(row => {
+						if (row[0]) {
+							runningText += row[0] + ' • '; // Add a separator between items
+						}
+					});
+
+					// Set the running text content
+					$('#news-reel').text(runningText);
+				})
+				.catch(error => {
+					console.error('Error loading news reel:', error);
+					$('#news-reel').text('Latest updates will appear here');
 				});
-
-				// Set the running text content
-				$('#news-reel').text(runningText);
-			});
 
 			// Fetch and populate the sidebar menu
-			$.get(menuUrl, function(data) {
-				const rows = data.values;
-				let currentMainMenu = '';
-				let mainMenuLi = null;
-				let subMenuUl = null;
-				let firstSubmenuItem = null;
+			fetch(menuUrl)
+				.then(response => response.json())
+				.then(data => {
+					const rows = data.values;
+					let currentMainMenu = '';
+					let mainMenuLi = null;
+					let subMenuUl = null;
+					let firstSubmenuItem = null;
 
-				rows.slice(1).forEach((row, index) => {
-					const mainMenu = row[0];
-					const subMenu = row[1];
-					const subMenuLink = row[2];
-					const dynamicContent = row[3]; // Content from column D
+					rows.slice(1).forEach((row, index) => {
+						const mainMenu = row[0];
+						const subMenu = row[1];
+						const subMenuLink = row[2];
+						const dynamicContent = row[3]; // Content from column D
 
-					if (mainMenu !== currentMainMenu) {
-						currentMainMenu = mainMenu;
-						mainMenuLi = $('<li>').addClass('treeview');
-						subMenuUl = $('<ul>').addClass('treeview-menu');
+						if (mainMenu !== currentMainMenu) {
+							currentMainMenu = mainMenu;
+							mainMenuLi = $('<li>').addClass('treeview');
+							subMenuUl = $('<ul>').addClass('treeview-menu');
 
-						// Add glyphicon-plus icon before the main menu text
-						const mainMenuLink = $('<a>')
-							.append($('<i>').addClass('glyphicon glyphicon-plus'))
-							.append(' ' + mainMenu)
-							.append($('<i>').addClass('fa fa-angle-left pull-right'));
+							// Add glyphicon-plus icon before the main menu text
+							const mainMenuLink = $('<a>')
+								.append($('<i>').addClass('glyphicon glyphicon-plus'))
+								.append(' ' + mainMenu)
+								.append($('<i>').addClass('fa fa-angle-left pull-right'));
 
-						mainMenuLi.append(mainMenuLink);
-						mainMenuLi.append(subMenuUl);
-						$('#sidebar-menu').append(mainMenuLi);
-					}
-
-					if (subMenu && subMenuLink) {
-						const subMenuLi = $('<li>').append(
-							$('<a>').attr('href', '#').text(subMenu).click(function(e) {
-								e.preventDefault();
-								loadDynamicContent(dynamicContent);
-							})
-						);
-						subMenuUl.append(subMenuLi);
-						
-						// Store the first submenu item to load its content automatically
-						if (!firstSubmenuItem && dynamicContent) {
-							firstSubmenuItem = dynamicContent;
+							mainMenuLi.append(mainMenuLink);
+							mainMenuLi.append(subMenuUl);
+							$('#sidebar-menu').append(mainMenuLi);
 						}
+
+						if (subMenu && subMenuLink) {
+							const subMenuLi = $('<li>').append(
+								$('<a>').attr('href', '#').text(subMenu).click(function(e) {
+									e.preventDefault();
+									loadDynamicContent(dynamicContent);
+								})
+							);
+							subMenuUl.append(subMenuLi);
+							
+							// Store the first submenu item to load its content automatically
+							if (!firstSubmenuItem && dynamicContent) {
+								firstSubmenuItem = dynamicContent;
+							}
+						}
+					});
+					
+					// Reinitialize the tree after adding new elements
+					$('[data-widget="tree"]').tree();
+					$('#loading-spinner').addClass('hidden');
+					
+					// Load the first submenu item's content automatically
+					if (firstSubmenuItem) {
+						loadDynamicContent(firstSubmenuItem);
+					} else {
+						$('#dynamic-content').html('<div class="alert alert-info">Select a menu item to view content</div>');
 					}
+				})
+				.catch(error => {
+					console.error('Error loading menu:', error);
+					$('#dynamic-content').html('<div class="alert alert-danger">Failed to load menu. Please try again later.</div>');
+					$('#loading-spinner').addClass('hidden');
 				});
-				
-				// Reinitialize the tree after adding new elements
-				$('[data-widget="tree"]').tree();
-				$('#loading-spinner').addClass('hidden');
-				
-				// Load the first submenu item's content automatically
-				if (firstSubmenuItem) {
-					loadDynamicContent(firstSubmenuItem);
-				} else {
-					$('#dynamic-content').html('<div class="alert alert-info">Select a menu item to view content</div>');
-				}
-			});
 		}
 	});
     </script>
