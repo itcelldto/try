@@ -20,6 +20,35 @@
     <!-- AdminLTE Skins -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/css/skins/_all-skins.min.css">
     <style>
+	    /* Loading spinner for button */
+#login-button {
+    position: relative;
+}
+
+#login-button .loading-spinner {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #3c8dbc;
+    border-radius: 16px;
+}
+
+#login-button .button-text {
+    visibility: visible;
+}
+
+#login-button.loading .button-text {
+    visibility: hidden;
+}
+
+#login-button.loading .loading-spinner {
+    display: flex !important;
+}
 	.skin-blue .main-header .logo {
   background-color: #1fadffb2;
   color: #fff;
@@ -28,7 +57,7 @@
 	.skin-blue .main-header .navbar {
   background-color: #1fadff;
 }
-        #current-date-time {
+#current-date-time {
             font-family: Arial, sans-serif;
             font-weight: bold;
             margin-right: 20px;
@@ -223,7 +252,10 @@
                     </div>
                     <div class="row">
                         <div class="col-xs-12">
-                            <button type="submit" class="btn btn-primary btn-block btn-flat">Sign In</button>
+                            <button type="submit" class="btn btn-primary btn-block btn-flat">
+				     <span class="button-text">Sign In</span>
+                                     <span class="loading-spinner hidden"><i class="fa fa-spinner fa-spin"></i> Processing...</span>
+			    </button>
                         </div>
                     </div>
                     <div id="login-error" class="text-center">Invalid User ID or Password</div>
@@ -483,52 +515,55 @@ function openForgotPasswordPopup() {
 		
 		// Handle login form submission
 		$('#login-form').submit(function(e) {
-			e.preventDefault();
-			
-			const userId = $('#userid').val().trim();
-			const password = $('#password').val().trim();
-			
-			// Fetch credentials from Google Sheet
-			const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
-			
-			$.get(settingsUrl, function(data) {
-				treasurySettings = data.values;
-				let loginSuccessful = false;
-				let treasuryName = '';
-				
-				// Check each row for matching credentials
-				for (let i = 0; i < treasurySettings.length; i++) {
-					const row = treasurySettings[i];
-					if (row[1] === userId && row[2] === password) {
-						loginSuccessful = true;
-						treasuryName = row[0]; // A column - Treasury name
-						treasuryRow = i; // Store the row index for later use
-						break;
-					}
-				}
-				
-				if (loginSuccessful) {
-    // Successful login
-    $('#login-error').hide();
-    $('#login-overlay').hide();
+    e.preventDefault();
     
-    // Display treasury name in sidebar
-    $('#treasury-name-display').text(treasuryName);
+    // Get button and disable it
+    const loginButton = $('#login-button');
+    loginButton.prop('disabled', true);
+    loginButton.addClass('loading');
     
-    // Store treasury name in session storage
-    sessionStorage.setItem('treasuryName', treasuryName);
+    const userId = $('#userid').val().trim();
+    const password = $('#password').val().trim();
     
-    // Initialize the main application with the menu sheet name from column F
-    initializeApplication(treasurySettings[treasuryRow][5] || 'nav-links');
-} else {
-					// Failed login
-					$('#login-error').show();
-				}
-			}).fail(function() {
-				$('#login-error').text('Error connecting to server').show();
-			});
-		});
-		
+    // Fetch credentials from Google Sheet
+    const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
+    
+    $.get(settingsUrl, function(data) {
+        treasurySettings = data.values;
+        let loginSuccessful = false;
+        let treasuryName = '';
+        
+        // Check each row for matching credentials
+        for (let i = 0; i < treasurySettings.length; i++) {
+            const row = treasurySettings[i];
+            if (row[1] === userId && row[2] === password) {
+                loginSuccessful = true;
+                treasuryName = row[0];
+                treasuryRow = i;
+                break;
+            }
+        }
+        
+        if (loginSuccessful) {
+            $('#login-error').hide();
+            $('#login-overlay').hide();
+            $('#treasury-name-display').text(treasuryName);
+            sessionStorage.setItem('treasuryName', treasuryName);
+            initializeApplication(treasurySettings[treasuryRow][5] || 'nav-links');
+        } else {
+            $('#login-error').show();
+        }
+        
+        // Re-enable button
+        loginButton.prop('disabled', false);
+        loginButton.removeClass('loading');
+    }).fail(function() {
+        $('#login-error').text('Error connecting to server').show();
+        // Re-enable button on error too
+        loginButton.prop('disabled', false);
+        loginButton.removeClass('loading');
+    });
+});
 		// Function to initialize the application after successful login
 		function initializeApplication(menuSheetName) {
 			// Start updating date and time
