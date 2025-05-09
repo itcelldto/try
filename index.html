@@ -606,26 +606,21 @@ function openForgotPasswordPopup() {
 			const reelUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${reelSheetName}?key=${apiKey}`;
 
 			// Fetch and populate the running text
-			fetch(reelUrl)
-				.then(response => response.json())
-				.then(data => {
-					const rows = data.values;
-					let runningText = '';
+			      // Fetch and populate the running text
+                $.get(reelUrl, function(data) {
+                    const rows = data.values;
+                    let runningText = '';
 
-					// Combine all text from column A2:A into a single string
-					rows.slice(1).forEach(row => {
-						if (row[0]) {
-							runningText += row[0] + ' • '; // Add a separator between items
-						}
-					});
+                    // Combine all text from column A2:A into a single string
+                    rows.slice(1).forEach(row => {
+                        if (row[0]) {
+                            runningText += row[0] + ' • '; // Add a separator between items
+                        }
+                    });
 
-					// Set the running text content
-					$('#news-reel').text(runningText);
-				})
-				.catch(error => {
-					console.error('Error loading news reel:', error);
-					$('#news-reel').text('Latest updates will appear here');
-				});
+                    // Set the running text content
+                    $('#news-reel').text(runningText);
+                });
 
 			// Fetch and populate the sidebar menu
 			fetch(menuUrl)
