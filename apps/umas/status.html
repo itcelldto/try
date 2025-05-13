@@ -34,7 +34,7 @@
 </head>
 <body style="background-color: #d7e2ff6e;"><div style="background-color: white;padding: 25px;border-radius: 8px;box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);">
     <div class="container-fluid">
-        <h3 class="my-4">UMAS Data Change Requests</h3>
+        <h4 class="my-4">UMAS Data Change Requests</h4>
         <table id="dataTable" class="display table table-hover" style="width:100%">
             <thead>
                 <tr>
@@ -44,6 +44,7 @@
                     <th>Name</th>
                     <th>PEN</th>
                     <th>Designation</th>
+					 <th>Role</th>
                     <th>from date</th>
                     <th>To Date</th>
                     <th>Status</th>
@@ -108,6 +109,7 @@
                         row[headerMap["toName"]] || '',
                         row[headerMap["toPEN"]] || '',
                         row[headerMap["toDesignation"]] || '',
+						row[headerMap["fromRole"]] || '',
                         row[headerMap["from date"]] || '',
                         row[headerMap["To Date"]] || '',
                         getStatusBadge(row[headerMap["Status"]]),
@@ -121,10 +123,11 @@
                     columns: [
                         { title: "Treasury" },
                         { title: "Option For" },
-                       
+                        
                         { title: "Name" },
                         { title: "PEN" },
                         { title: "Designation" },
+						{ title: "To Role/Charge" },
                         { title: "from date" },
                         { title: "To Date" },
                         { title: "Status" },
