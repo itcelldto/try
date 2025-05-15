@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/css/AdminLTE.min.css">
     <!-- AdminLTE Skins -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/css/skins/_all-skins.min.css">
+    <link rel="stylesheet" href="https://adminlte.io/themes/AdminLTE/plugins/pace/pace.min.css">	
     <style>
 	.skin-blue .main-header .logo {
   background-color: #1fadffb2;
@@ -376,7 +377,7 @@ function openForgotPasswordPopup() {
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <!-- AdminLTE App -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/js/adminlte.min.js"></script>
-
+    <script src="https://adminlte.io/themes/AdminLTE/bower_components/PACE/pace.min.js"></script>
     <script>
 	// Set inactivity timeout to 15 minutes (900,000 milliseconds)
 	const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
@@ -693,6 +694,13 @@ function openForgotPasswordPopup() {
 				});
 		}
 	});
+	     $('.ajax').click(function () {
+    $.ajax({
+      url: '#', success: function (result) {
+        $('.ajax-content').html('<hr>Ajax Request Completed !')
+      }
+    })
+  })
     </script>
 </body>
 </html>
