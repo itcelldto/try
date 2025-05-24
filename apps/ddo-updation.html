@@ -272,7 +272,7 @@
       var xhr = new XMLHttpRequest();
       
       // Use the same Google Apps Script endpoint or create a new one for DDO submissions
-      xhr.open("POST", "https://script.google.com/macros/s/AKfycbzAyYkAboL-OWKGSp6oSn0LPmwICQql9iAwwvBWfRXCo_RCBQG-ulZC7A04Uyc8cZrHqw/exec", true);
+      xhr.open("POST", "https://script.google.com/macros/s/AKfycby8s24c83k2TgcxYEeuRxWmNiFgxZCy0Jf6fQ-mY3kwnjnEWv8TgH7L-LxCXXUByqcS2Q/exec", true);
       
       xhr.onload = function() {
         // Hide spinner and show the submit button after response
@@ -285,7 +285,7 @@
           // Show SweetAlert success message with the reference ID
           Swal.fire({
             title: 'Success!',
-            html: 'DDO details submitted successfully.<br><br><b>Reference ID:</b> ' + referenceId,
+            html: 'Details of ' + referenceId +' saved successfully. ' ,
             icon: 'success',
             confirmButtonText: 'OK'
           }).then(function() {
