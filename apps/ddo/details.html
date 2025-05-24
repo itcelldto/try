@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 1000px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        .table-responsive {
+            
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="min-width: 100%; ">
+       
+        <div id="loading" class="loading">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p>Loading...</p>
+        </div>
+        <div id="data-container" class="d-none">
+            <div class="table-responsive" style="padding: 15px;">
+			 <h3 class="">DDO Details</h3><hr>
+                <table id="data-table" class="table table-striped table-hover" style="width:100%">
+                    <thead class="table-primary"></thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+        <div id="error-message" class="alert alert-danger d-none mt-3"></div>
+    </div>
+
+    <!-- Include jQuery, DataTables, and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        // Your Google Sheets API configuration
+        const spreadsheetId = '15-DTNnC_BLIxpJ_0H9lGhTc-dS1Ezx5P8J476JXzNUw';
+        const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+        const sheetName = 'DB';
+        const range = 'C:J';
+
+        // Function to fetch data from Google Sheets
+        async function fetchSheetData() {
+            const loadingElement = document.getElementById('loading');
+            const dataContainer = document.getElementById('data-container');
+            const errorElement = document.getElementById('error-message');
+            
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!${range}?key=${apiKey}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.values && data.values.length > 0) {
+                    displayData(data.values);
+                    loadingElement.classList.add('d-none');
+                    dataContainer.classList.remove('d-none');
+                } else {
+                    throw new Error('No data found in the sheet');
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                loadingElement.classList.add('d-none');
+                errorElement.textContent = `Error loading data: ${error.message}`;
+                errorElement.classList.remove('d-none');
+            }
+        }
+
+        // Function to display the data in a table
+        function displayData(rows) {
+            const headers = rows[0]; // First row contains headers
+            const dataRows = rows.slice(1); // Remaining rows contain data
+            
+            // Create table header
+            const thead = document.querySelector('#data-table thead');
+            let headerRow = document.createElement('tr');
+            
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            
+            thead.appendChild(headerRow);
+            
+            // Create table body
+            const tbody = document.querySelector('#data-table tbody');
+            
+            dataRows.forEach(row => {
+                const tr = document.createElement('tr');
+                
+                headers.forEach((_, index) => {
+                    const td = document.createElement('td');
+                    td.textContent = index < row.length ? row[index] : '';
+                    tr.appendChild(td);
+                });
+                
+                tbody.appendChild(tr);
+            });
+            
+            // Initialize DataTable
+            $('#data-table').DataTable({
+                responsive: true,
+                pageLength: 10,
+                lengthMenu: [5, 10, 25, 50, 100],
+                order: [], // No initial sorting
+                dom: '<"top"lf>rt<"bottom"ip>',
+                language: {
+                    search: "_INPUT_",
+                    searchPlaceholder: "Search...",
+                }
+            });
+        }
+
+        // Fetch data when page loads
+        document.addEventListener('DOMContentLoaded', fetchSheetData);
+    </script>
+</body>
+</html>
