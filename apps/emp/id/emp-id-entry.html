@@ -1,0 +1,464 @@
+<html>
+<head>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <!-- Add Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+  <!-- Flatpickr for date picker -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+</head>
+<body style="background-color: #d7e2ff6e;">
+  <div class="container py-5" style="min-width:98%">
+    <div class="info-item aos-init aos-animate" data-aos="fade" data-aos-delay="300">
+      <form id="employeeForm" method="post" class="php-email-form aos-init aos-animate" data-aos="fade-up" data-aos-delay="200">
+        <h3>Employee Details Form</h3><hr><br>
+        <div class="row gy-4">
+          <!-- Hidden Timestamp field -->
+          <input type="hidden" name="timestamp" id="timestampField">
+		  
+		  <div class="col-md-12">
+            <label for="officeName" class="form-label">Name of Office</label>
+            <select class="form-select select2" name="officeName" id="officeName" required>
+              <option value="" selected disabled>Select Office</option>
+              <!-- Options will be loaded dynamically from Google Sheet -->
+            </select>
+          </div>
+          
+          
+          <div class="col-md-6">
+            <label for="employeeName" class="form-label">Name of Employee</label>
+            <input type="text" class="form-control" name="employeeName" id="employeeName" placeholder="Full Name" required oninput="this.value = this.value.toUpperCase()">
+          </div>
+          
+          <div class="col-md-6">
+            <label for="pen" class="form-label">PEN</label>
+            <input type="text" class="form-control" name="pen" id="pen" placeholder="PEN Number" required oninput="this.value = this.value.toUpperCase()">
+          </div>
+          
+          <div class="col-md-12">
+            <label for="designation" class="form-label">Designation</label>
+            <select class="form-select select2" name="designation" id="designation" required>
+              <option value="" selected disabled>Select Designation</option>
+              <!-- Options will be loaded dynamically from Google Sheet -->
+            </select>
+          </div>
+		  
+		   <div class="col-md-4">
+            <label for="bloodGroup" class="form-label">Blood Group</label>
+            <select class="form-select" name="bloodGroup" id="bloodGroup" required>
+              <option value="" selected disabled>Select Blood Group</option>
+              <option value="A+">A+</option>
+              <option value="A-">A-</option>
+              <option value="B+">B+</option>
+              <option value="B-">B-</option>
+              <option value="AB+">AB+</option>
+              <option value="AB-">AB-</option>
+              <option value="O+">O+</option>
+              <option value="O-">O-</option>
+            </select>
+          </div>
+		  
+           <div class="col-md-4">
+            <label for="dob" class="form-label">Date of Birth</label>
+            <input type="text" class="form-control datepicker" name="dob" id="dob" placeholder="DD/MM/YYYY" required>
+          </div>
+          
+          <div class="col-md-4">
+            <label for="retirementDate" class="form-label">Date of Retirement</label>
+            <input type="text" class="form-control datepicker" name="retirementDate" id="retirementDate" placeholder="DD/MM/YYYY" required>
+          </div>
+		  
+		     
+		  
+       
+          <div class="col-md-12">
+            <label for="houseName" class="form-label">Address Line 1</label>
+            <input type="text" class="form-control" name="houseName" id="houseName" placeholder="House Name & No. details" required oninput="this.value = this.value.toUpperCase()">
+          </div>
+          
+          <div class="col-md-12">
+            <label for="locality" class="form-label">Address Line 2</label>
+            <input type="text" class="form-control" name="locality" id="locality" placeholder="Locality/Area" required oninput="this.value = this.value.toUpperCase()">
+          </div>
+          
+          <div class="col-md-12">
+            <label for="townCity" class="form-label">Address Line 3</label>
+            <input type="text" class="form-control" name="townCity" id="townCity" placeholder="" required oninput="this.value = this.value.toUpperCase()">
+          </div>
+          
+          <div class="col-md-4">
+            <label for="pinCode" class="form-label">Pin Code</label>
+            <input type="text" class="form-control" name="pinCode" id="pinCode" placeholder="Pin Code" required pattern="[0-9]{6}" title="6-digit pin code">
+          </div>
+          
+          <div class="col-md-4">
+            <label for="residencePhone" class="form-label">Residence Phone No</label>
+            <input type="tel" class="form-control" name="residencePhone" id="residencePhone" placeholder="Residence Phone">
+          </div>
+          
+          <div class="col-md-4">
+            <label for="mobileNumber" class="form-label">Mobile Number</label>
+            <input type="tel" class="form-control" name="mobileNumber" id="mobileNumber" placeholder="Mobile Number" required>
+          </div>
+          
+          <div class="col-md-4">
+            <label for="email" class="form-label">EMAIL ID</label>
+            <input type="email" class="form-control" name="email" id="email" placeholder="CRU Email ID" required>
+          </div>
+          
+          <div class="col-md-4">
+            <label for="idNumber" class="form-label">Driving License No/ Election ID No.</label>
+            <input type="text" class="form-control" name="idNumber" id="idNumber" placeholder="ID Number" oninput="this.value = this.value.toUpperCase()">
+          </div>
+		  
+		  <div class="col-md-4">
+            <label for="pan" class="form-label">PAN</label>
+            <input type="text" class="form-control" name="pan" id="pan" placeholder="PAN Number" pattern="[A-Z]{5}[0-9]{4}[A-Z]{1}" title="First 5 letters, then 4 numbers, then 1 letter (e.g., ABCDE1234F)" oninput="this.value = this.value.toUpperCase()">
+          </div>
+          
+         
+          
+      
+          
+       
+          
+          <div class="col-12 text-center mt-4">
+            <!-- Color Dot Spinner hidden by default -->
+            <div id="spinner" class="dot-spinner" style="display: none;">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+            <!-- Submit Button -->
+            <button type="submit" id="submitBtn" class="btn btn-primary px-4 py-2">Save Details</button>
+			<!-- Image Upload Button -->
+            <a type="" role="button" id="externalBtn" href=" https://docs.google.com/forms/d/e/1FAIpQLSfsUCdJncZ293vXjyGH_jJc4wSbWTxVZ9yArNPhoLVgDGT1-A/viewform" target="_blank" class="btn btn-warning px-4 py-2">Upload Photo & Signature</a>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    /* Dot Spinner CSS */
+    .dot-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #007bff;
+      animation: dotAnimation 1.2s infinite ease-in-out;
+    }
+
+    .dot:nth-child(1) {
+      animation-delay: 0s;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes dotAnimation {
+      0% {
+        transform: scale(0);
+      }
+      50% {
+        transform: scale(1);
+      }
+      100% {
+        transform: scale(0);
+      }
+    }
+    
+    /* Form styling */
+    .php-email-form {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .php-email-form .form-control {
+      height: 44px;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .php-email-form textarea.form-control {
+      min-height: 120px;
+    }
+    
+    .php-email-form label {
+      font-weight: 500;
+      margin-bottom: 8px;
+      display: block;
+    }
+    
+    .icon {
+      font-size: 2.5rem;
+      color: #0d6efd;
+      margin-bottom: 15px;
+    }
+
+    /* Select2 styling */
+    .select2-container--bootstrap-5 .select2-selection {
+      height: 44px;
+      padding: 5px 15px;
+      border: 1px solid #ddd;
+    }
+  </style>
+
+  <script>
+    // Set current timestamp when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      const now = new Date();
+      document.getElementById('timestampField').value = now.toISOString();
+      
+      // Initialize Select2
+      $('.select2').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Select option',
+        allowClear: true
+      });
+
+      // Initialize date pickers
+      flatpickr(".datepicker", {
+        dateFormat: "d/m/Y",
+        allowInput: true
+      });
+
+      // Load designations and offices from Google Sheet
+      loadDesignationsFromGoogleSheet();
+      loadOfficesFromGoogleSheet();
+    });
+
+    function loadDesignationsFromGoogleSheet() {
+      const spinner = document.getElementById("spinner");
+      const submitButton = document.getElementById("submitBtn");
+      
+      // Show spinner and disable the submit button while loading
+      spinner.style.display = "flex";
+      submitButton.disabled = true;
+
+      const spreadsheetId = "1srOLLRSL7CLlQgmuMUIaRh7EcDg5pfNx6Pdo8Qq2J5Q";
+      const sheetName = "Options";
+      const range = "D2:D";
+      const apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!${range}?key=${apiKey}`;
+
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          const designations = [];
+          if (data.values && data.values.length > 0) {
+            data.values.forEach(row => {
+              if (row[0]) { // Check if the cell has a value
+                designations.push(row[0]);
+              }
+            });
+          }
+          
+          // Remove duplicates and sort
+          const uniqueDesignations = [...new Set(designations)].sort();
+          
+          // Populate the select element
+          const select = document.getElementById('designation');
+          uniqueDesignations.forEach(designation => {
+            const option = document.createElement('option');
+            option.value = designation;
+            option.textContent = designation;
+            select.appendChild(option);
+          });
+          
+          // Refresh Select2 to show the new options
+          $(select).trigger('change');
+        })
+        .catch(error => {
+          console.error('Error loading designations:', error);
+          Swal.fire({
+            title: 'Error!',
+            text: 'Could not load designations. Please refresh the page or contact support.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+        })
+        .finally(() => {
+          // Hide spinner and enable the submit button
+          spinner.style.display = "none";
+          submitButton.disabled = false;
+        });
+    }
+
+    function loadOfficesFromGoogleSheet() {
+      const spinner = document.getElementById("spinner");
+      const submitButton = document.getElementById("submitBtn");
+      
+      // Show spinner and disable the submit button while loading
+      spinner.style.display = "flex";
+      submitButton.disabled = true;
+
+      const spreadsheetId = "1srOLLRSL7CLlQgmuMUIaRh7EcDg5pfNx6Pdo8Qq2J5Q";
+      const sheetName = "Options";
+      const range = "A2:A";
+      const apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!${range}?key=${apiKey}`;
+
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          const offices = [];
+          if (data.values && data.values.length > 0) {
+            data.values.forEach(row => {
+              if (row[0]) { // Check if the cell has a value
+                offices.push(row[0]);
+              }
+            });
+          }
+          
+          // Remove duplicates and sort
+          const uniqueOffices = [...new Set(offices)].sort();
+          
+          // Populate the select element
+          const select = document.getElementById('officeName');
+          uniqueOffices.forEach(office => {
+            const option = document.createElement('option');
+            option.value = office;
+            option.textContent = office;
+            select.appendChild(option);
+          });
+          
+          // Refresh Select2 to show the new options
+          $(select).trigger('change');
+        })
+        .catch(error => {
+          console.error('Error loading offices:', error);
+          Swal.fire({
+            title: 'Error!',
+            text: 'Could not load offices. Please refresh the page or contact support.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+        })
+        .finally(() => {
+          // Hide spinner and enable the submit button
+          spinner.style.display = "none";
+          submitButton.disabled = false;
+        });
+    }
+
+    // PAN validation
+    document.getElementById('pan').addEventListener('input', function(e) {
+      const pan = e.target.value;
+      const panPattern = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+      
+      if (pan.length === 10 && !panPattern.test(pan)) {
+        e.target.setCustomValidity('PAN must be in format: ABCDE1234F (5 letters, 4 numbers, 1 letter)');
+      } else {
+        e.target.setCustomValidity('');
+      }
+    });
+
+    document.getElementById("employeeForm").onsubmit = function(e) {
+      e.preventDefault(); // Prevent default form submission
+      
+      var submitButton = document.getElementById("submitBtn");
+      var spinner = document.getElementById("spinner");
+      
+      // Show spinner and hide the button
+      spinner.style.display = "flex";
+      submitButton.style.display = "none";
+      
+      // Convert date format from DD/MM/YYYY to YYYY-MM-DD for Google Sheets
+      const dobInput = document.getElementById('dob');
+      const retirementInput = document.getElementById('retirementDate');
+      
+      if (dobInput.value) {
+        const dobParts = dobInput.value.split('/');
+        dobInput.value = `${dobParts[2]}-${dobParts[1]}-${dobParts[0]}`;
+      }
+      
+      if (retirementInput.value) {
+        const retirementParts = retirementInput.value.split('/');
+        retirementInput.value = `${retirementParts[2]}-${retirementParts[1]}-${retirementParts[0]}`;
+      }
+      
+      var formData = new FormData(this);
+      var xhr = new XMLHttpRequest();
+      
+      xhr.open("POST", "https://script.google.com/macros/s/AKfycbyyyvpNFnSKxRI6XYawKQ8HuBNfVeZ1QmkYqFwy7vMiPq536UGwsHaDuCLA0jc7z9iz/exec", true);
+      
+      xhr.onload = function() {
+        // Hide spinner and show the submit button after response
+        spinner.style.display = "none";
+        submitButton.style.display = "inline-block";
+        
+        // Convert dates back to DD/MM/YYYY format
+        if (dobInput.value) {
+          const dobParts = dobInput.value.split('-');
+          dobInput.value = `${dobParts[2]}/${dobParts[1]}/${dobParts[0]}`;
+        }
+        
+        if (retirementInput.value) {
+          const retirementParts = retirementInput.value.split('-');
+          retirementInput.value = `${retirementParts[2]}/${retirementParts[1]}/${retirementParts[0]}`;
+        }
+        
+        if (xhr.status == 200) {
+          var referenceId = xhr.responseText; // Receive reference ID from the server
+          
+          // Show SweetAlert success message with the reference ID
+          Swal.fire({
+            title: 'Success!',
+            html: 'Employee '+referenceId+ ' details saved successfully. <br> Please update photograph and signature.' ,
+            icon: 'success',
+            confirmButtonText: 'OK'
+          }).then(function() {
+            document.getElementById("employeeForm").reset(); // Reset the form after submission
+          });
+        } else {
+          // Error handling if the form submission fails
+          Swal.fire({
+            title: 'Error!',
+            text: 'There was an issue submitting the form. Please try again.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+        }
+      };
+      
+      xhr.send(formData);
+    };
+  </script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Add jQuery and Select2 JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <!-- Flatpickr for date picker -->
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+</body>
+</html>
