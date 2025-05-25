@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identity Card Proforma</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #1a73e8;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0d5bba;
+        }
+        #status {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,.3);
+            border-radius: 50%;
+            border-top-color: #1a73e8;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Employee Details PDF Generator</h1>
+    <div class="form-group">
+        <label for="penNumber">Enter PEN Number:</label>
+        <input type="text" id="penNumber" placeholder="">
+    </div>
+    <button id="generateBtn">Generate PDF</button>
+    <div id="status"></div>
+
+    <script>
+        document.getElementById('generateBtn').addEventListener('click', generatePDF);
+
+        async function generatePDF() {
+            const penNumber = document.getElementById('penNumber').value.trim();
+            const statusDiv = document.getElementById('status');
+            
+            if (!penNumber) {
+                statusDiv.textContent = "Please enter a PEN number";
+                statusDiv.className = "error";
+                return;
+            }
+
+            statusDiv.innerHTML = '<div class="loading"></div> Processing your request...';
+            statusDiv.className = "";
+
+            try {
+                // Step 1: Update the PEN number in Proforma sheet
+                await updatePENInSheet(penNumber);
+                
+                // Step 2: Export the Proforma sheet as PDF
+                const pdfUrl = await exportSheetAsPDF();
+                
+                // Step 3: Download the PDF
+                downloadPDF(pdfUrl);
+                
+                statusDiv.textContent = "PDF generated successfully!";
+                statusDiv.className = "success";
+            } catch (error) {
+                statusDiv.textContent = "Error: " + error.message;
+                statusDiv.className = "error";
+                console.error(error);
+            }
+        }
+
+        async function updatePENInSheet(penNumber) {
+            // Replace this with your deployed Apps Script URL
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzMKfK0DLivFyPoDGHFhuA37i6PoKUvdDh2UIcsIg4LlgirFIW-dNA1qEeFtGMM6Mqn/exec';
+            
+            const response = await fetch(scriptURL + '?action=updatePen&pen=' + encodeURIComponent(penNumber));
+            
+            if (!response.ok) {
+                throw new Error('Failed to update PEN number in sheet');
+            }
+            
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to update PEN number');
+            }
+        }
+
+        async function exportSheetAsPDF() {
+            // Replace this with your deployed Apps Script URL
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbzMKfK0DLivFyPoDGHFhuA37i6PoKUvdDh2UIcsIg4LlgirFIW-dNA1qEeFtGMM6Mqn/exec';
+            
+            const response = await fetch(scriptURL + '?action=exportPdf');
+            
+            if (!response.ok) {
+                throw new Error('Failed to generate PDF');
+            }
+            
+            const result = await response.json();
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to generate PDF');
+            }
+            
+            return result.pdfUrl;
+        }
+
+        function downloadPDF(pdfUrl) {
+            const a = document.createElement('a');
+            a.href = pdfUrl;
+            a.download = 'Employee_Details.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+    </script>
+</body>
+</html>
