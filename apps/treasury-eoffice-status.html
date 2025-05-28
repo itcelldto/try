@@ -112,17 +112,13 @@
         $(document).ready(function() {
             // Initialize Select2
           // Initialize Select2
-    $('#treasurySelect').select2({
+  $('#treasurySelect').select2({
         placeholder: "Select a Treasury",
         allowClear: true
-    });
-    
-    // Auto-focus the search field when dropdown opens
-    $('#treasurySelect').on('select2:open', function() {
-        // This focuses the search input specifically for this Select2 instance
-        let searchField = $(this).data('select2').dropdown.$search || 
-                         $(this).data('select2').selection.$search;
-        searchField.focus();
+    }).on('select2:open', function() {
+        setTimeout(function() {
+            document.querySelector('.select2-search__field').focus();
+        }, 0);
     });
             // Load treasury options on page load
             loadTreasuryOptions();
