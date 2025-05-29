@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Money Order Credit Booking Processor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+            background-color: #d9dadf;
+
+        }
+        .container {
+            min-width: 100%;
+            margin: 0 auto;
+        }
+        .upload-section, .summary-section, .table-section, .recalculate-section {
+            margin-bottom: 20px;
+            padding: 15px;
+          /*  border: 1px solid #ddd; */
+          /*  border-radius: 5px; */
+			background-color: #fff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        input[type="file"], input[type="number"] {
+            padding: 6px;
+            margin-right: 10px;
+        }
+        .highlight {
+            background-color: #ffffcc;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: inline-block;
+            width: 250px;
+        }
+		/* Create three equal columns that floats next to each other */
+.column {
+  float: left;
+  width: 33.33%;
+  padding: 0px;
+ 
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+  margin-bottom:10px;
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h3>Money Order Credit Booking Processor</h3>
+        
+		<div class="row" style="background-color:#fff">
+  <div class="column">
+   <div class="upload-section" >
+            <h2>Upload CSV File</h2>
+            <input type="file" id="csvFile" accept=".csv,.txt">
+            <button id="uploadBtn">Process CSV</button>
+        </div>
+  </div>
+  <div class="column">
+   <div class="summary-section" id="summarySection" style="display: none;" >
+            <h2>Summary</h2>
+            <p>Total Amount: <span id="totalAmount">0</span></p>
+            <p>Number of Beneficiaries: <span id="beneficiaryCount">0</span></p>
+        </div>
+  
+  
+  </div>
+  <div class="column">
+        <div class="recalculate-section" id="recalculateSection" style="display: none;">
+            <h2>Merge Amount Rows</h2>
+			    <div class="input-group">
+                <label for="mergeFromAmount">Merge rows of amount (From):</label>
+                <input type="number" id="mergeFromAmount" value="5000" min="1">
+            </div>
+            <div class="input-group">
+                <label for="mergeAmount">Amount to merge to (To):</label>
+                <input type="number" id="mergeAmount" value="10000" min="1">
+            </div>
+        
+            <button id="revalidateBtn">Merge and Download CSV</button>
+        </div>
+        
+  
+  </div>
+</div>
+		
+		
+        
+        
+       
+        
+  
+        <div class="table-section"style="background-color: #fff;">
+            <h2>Beneficiary Data</h2>
+            <div id="tableContainer"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('uploadBtn').addEventListener('click', processCSV);
+        document.getElementById('revalidateBtn').addEventListener('click', mergeAndDownload);
+        
+        let csvData = [];
+        let originalFileName = '';
+        
+        function processCSV() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Please select a CSV file first.');
+                return;
+            }
+            
+            originalFileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                parseCSV(content);
+            };
+            reader.readAsText(file);
+        }
+        
+        function parseCSV(content) {
+            const lines = content.split('\n');
+            const headers = lines[0].split(',');
+            
+            csvData = [];
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+                
+                const obj = {};
+                const currentLine = lines[i].split(',');
+                
+                for (let j = 0; j < headers.length; j++) {
+                    obj[headers[j]] = currentLine[j] || '';
+                }
+                
+                csvData.push(obj);
+            }
+            
+            displayData();
+            updateSummary();
+            
+            document.getElementById('summarySection').style.display = 'block';
+            document.getElementById('recalculateSection').style.display = 'block';
+        }
+        
+        function displayData() {
+            const tableContainer = document.getElementById('tableContainer');
+            
+            if (csvData.length === 0) {
+                tableContainer.innerHTML = '<p>No data to display.</p>';
+                return;
+            }
+            
+            let tableHTML = '<table><thead><tr>';
+            
+            // Create headers
+            for (const key in csvData[0]) {
+                tableHTML += `<th>${key}</th>`;
+            }
+            tableHTML += '</tr></thead><tbody>';
+            
+            // Create rows
+            csvData.forEach(row => {
+                tableHTML += '<tr>';
+                for (const key in row) {
+                    tableHTML += `<td>${row[key]}</td>`;
+                }
+                tableHTML += '</tr>';
+            });
+            
+            tableHTML += '</tbody></table>';
+            tableContainer.innerHTML = tableHTML;
+        }
+        
+  // Function to update the summary section
+function updateSummary() {
+    try {
+        // Calculate total amount
+        const totalAmount = csvData.reduce((sum, row) => {
+            const amount = parseFloat(row.Amount) || 0;
+            return sum + amount;
+        }, 0);
+        document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+
+        // Count unique beneficiaries
+        const uniqueRefs = new Set();
+        csvData.forEach(row => {
+            const ref = row['Remitter Reference'];
+            if (ref !== undefined && ref !== null && String(ref).trim() !== '') {
+                uniqueRefs.add(String(ref).trim());
+            }
+        });
+
+        // Update display
+        document.getElementById('beneficiaryCount').textContent = uniqueRefs.size;
+        document.getElementById('summarySection').style.display = 'block';
+        
+        console.log('Summary updated. Beneficiary count:', uniqueRefs.size);
+    } catch (error) {
+        console.error('Error in updateSummary:', error);
+        document.getElementById('beneficiaryCount').textContent = '0';
+    }
+}
+
+// Function to process CSV data
+function parseCSV(content) {
+    try {
+        const lines = content.split('\n').filter(line => line.trim() !== '');
+        if (lines.length < 2) {
+            console.warn('CSV file has no data rows');
+            csvData = [];
+            return;
+        }
+
+        const headers = lines[0].split(',');
+        csvData = [];
+
+        for (let i = 1; i < lines.length; i++) {
+            const currentLine = lines[i].split(',');
+            const obj = {};
+
+            for (let j = 0; j < headers.length; j++) {
+                const header = headers[j].trim();
+                const value = currentLine[j] || '';
+                obj[header] = value.trim();
+            }
+
+            if (Object.keys(obj).length > 0) {
+                csvData.push(obj);
+            }
+        }
+
+        console.log('Parsed CSV data:', csvData);
+        displayData();
+        updateSummary();
+        document.getElementById('recalculateSection').style.display = 'block';
+    } catch (error) {
+        console.error('Error parsing CSV:', error);
+        csvData = [];
+        updateSummary();
+    }
+}
+
+// Function to merge rows and download CSV
+function mergeAndDownload() {
+    try {
+        const mergeToAmount = parseInt(document.getElementById('mergeAmount').value) || 10000;
+        const mergeFromAmount = parseInt(document.getElementById('mergeFromAmount').value) || 5000;
+
+        console.log(`Merging rows from ${mergeFromAmount} to ${mergeToAmount}`);
+
+        // Group by beneficiary reference
+        const groupedData = {};
+        csvData.forEach(row => {
+            const ref = row['Remitter Reference'] || '';
+            const trimmedRef = ref.trim();
+            if (trimmedRef !== '') {
+                if (!groupedData[trimmedRef]) {
+                    groupedData[trimmedRef] = [];
+                }
+                groupedData[trimmedRef].push(row);
+            }
+        });
+
+        console.log('Grouped data:', groupedData);
+
+        // Process each beneficiary's rows
+        const newCsvData = [];
+        const mergeCount = { total: 0, beneficiaries: 0 };
+
+        for (const ref in groupedData) {
+            const beneficiaryRows = groupedData[ref];
+            let i = 0;
+            mergeCount.beneficiaries++;
+
+            while (i < beneficiaryRows.length) {
+                const currentRow = beneficiaryRows[i];
+                const currentAmount = parseFloat(currentRow.Amount) || 0;
+
+                // Check if we can merge with next row
+                if (i + 1 < beneficiaryRows.length && 
+                    currentAmount === mergeFromAmount && 
+                    parseFloat(beneficiaryRows[i+1].Amount) === mergeFromAmount) {
+                    
+                    // Create merged row
+                    const mergedRow = {};
+                    Object.keys(currentRow).forEach(key => {
+                        mergedRow[key] = currentRow[key];
+                    });
+                    
+                    mergedRow.Amount = mergeToAmount;
+                    
+                    // Update Communication field
+                    if (mergedRow.Communication) {
+                        mergedRow.Communication = mergedRow.Communication
+                            .replace(`Rs.${mergeFromAmount}`, `Rs.${mergeToAmount}`);
+                    }
+                    
+                    newCsvData.push(mergedRow);
+                    i += 2;
+                    mergeCount.total++;
+                } else {
+                    // Can't merge, add as-is
+                    newCsvData.push(currentRow);
+                    i++;
+                }
+            }
+        }
+
+        console.log(`Merged ${mergeCount.total} pairs for ${mergeCount.beneficiaries} beneficiaries`);
+
+        // Generate CSV content
+        if (newCsvData.length > 0) {
+            const headers = Object.keys(newCsvData[0]);
+            let csvContent = headers.join(',') + '\n';
+
+            newCsvData.forEach(row => {
+                const rowValues = headers.map(header => {
+                    let value = row[header] || '';
+                    value = String(value);
+                    return value.includes(',') ? `"${value}"` : value;
+                });
+                csvContent += rowValues.join(',') + '\n';
+            });
+
+            // Download the file
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `${originalFileName}_merged_${mergeToAmount}.csv`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Update the displayed data
+            csvData = newCsvData;
+            displayData();
+            updateSummary();
+            
+            alert(`Successfully merged ${mergeCount.total} pairs of ${mergeFromAmount} into ${mergeToAmount} amounts.`);
+        } else {
+            alert('No data available to merge and download.');
+        }
+    } catch (error) {
+        console.error('Error in mergeAndDownload:', error);
+        alert('An error occurred during merging. Please check the console for details.');
+    }
+}
+    </script>
+</body>
+</html>
