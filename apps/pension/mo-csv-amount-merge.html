@@ -17,8 +17,8 @@
         .upload-section, .summary-section, .table-section, .recalculate-section {
             margin-bottom: 20px;
             padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            border: none;
+          
         }
         table {
             width: 100%;
@@ -73,9 +73,9 @@
     border-color: #ddd;
 }
 .panel {
-    margin-bottom: 20px;
+   
     background-color: #fff;
-    border: 1px solid transparent;
+    border: 1px solid #6c6c6c21;
     border-radius: 4px;
     -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
     box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
@@ -93,95 +93,92 @@
 	font-weight:bold;
 }
 .panel-body {
-    padding: 15px;
+   padding: 10px ;
+}
+* {
+  box-sizing: border-box;
+}
+
+/* Create two equal columns that floats next to each other */
+.column {
+  float: left;
+  width: 50%;
+  
+
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
 }
     </style>
 </head>
 <body>
     <div class="container">
-        <h3>Money Order Credit Booking XML/CSV Parser</h3>
+ <h3>Money Order Credit Booking XML/EXCEL/CSV Parser</h3>
 		
-	<div class="panel panel-default">
-    <div class="panel-heading">Upload CSV File</div>
-    <div class="panel-body">
+	<div class="panel panel-default"style="margin: 15px;">
+    <div class="panel-heading">File Upload</div>
+    <div class="panel-body"> <strong style="color:red;">* Upload XML/EXCEL File from PiMS> MO XML File Generation.</strong>
 	
 	   <div class="upload-section">
-         
             <input type="file" id="csvFile" accept=".csv,.txt">
-            <button id="uploadBtn">Verify</button>
+            <button id="uploadBtn">View</button>
             <div id="uploadError" class="error"></div>
         </div>
 	
 	</div>
   </div>
-        
-     
-	
-	
-	<div class="summary-section" id="summarySection" style="display: none;">
-	
-	
+
+ <div class="row">
+   <div class="column" >
+	<div class="summary-section" id="summarySection" style="display: none;">	
 	<div class="panel panel-default">
     <div class="panel-heading">Summary</div>
     <div class="panel-body">
 	 <p>Total Amount: <b><span id="totalAmount"style="color:red">0</span></b></p>
-            <p>Number of Beneficiaries: <span id="beneficiaryCount">0</span></p>
+            <p>Number of Beneficiaries: <span id="beneficiaryCount"style="color:blue;">0</span></p>
             <p>Rows with missing references: <span id="missingRefCount">0</span></p>
 		</div>
-  </div>
-            
-         
-
-        <div class="recalculate-section" id="recalculateSection" style="display: none;">
+  </div>     	 
+ </div>
+</div>
 		
-		
+<div class="column" >
+    <div class="recalculate-section" id="recalculateSection" style="display: none;">
 		  	<div class="panel panel-default">
-    <div class="panel-heading">Merge Amount Rows</div>
+    <div class="panel-heading">Merge </div>
     <div class="panel-body">
-	
+	 <strong style="color:red;">* MO Amount Merge .</strong>
 	   <div class="input-group">
-                <label for="mergeFromAmount">Merge rows of amount (From):</label>
+                <label for="mergeFromAmount">Merge rows of amount(From):</label>
                 <input type="number" id="mergeFromAmount" value="5000" min="1">
             </div>
             <div class="input-group">
                 <label for="mergeAmount">Amount to merge to (To):</label>
                 <input type="number" id="mergeAmount" value="10000" min="1">
             </div>
-            <button id="revalidateBtn">Merge and Download CSV</button>
+           
             <div id="mergeError" class="error"></div>
         </div>
-	
 	</div>
-	
-  </div>
+  </div> 
+</div>	
 
-
-
-		 
-        </div>
-  
-
-        
-        
-        
-
-	 
-	
-	
-<div class="table-section">
+</div>	
+ 
+ <div class="table-section" id="tableSection" style="display: none;">
 	   <div class="panel panel-default">
-    <div class="panel-heading">CSV Details</div>
+    <div class="panel-heading">CSV Details  <button id="revalidateBtn" style="float: right;">Merge and Download CSV</button> </div>
     <div class="panel-body">
-          
             <div id="tableContainer"></div>
         </div>
-	
 	</div>
-           
-           
-        
-      
-    </div>
+</div>
+
+
 
     <script>
         document.getElementById('uploadBtn').addEventListener('click', processCSV);
@@ -290,6 +287,7 @@
             
             document.getElementById('summarySection').style.display = 'block';
             document.getElementById('recalculateSection').style.display = 'block';
+			 document.getElementById('tableSection').style.display = 'block';
         }
         
         function displayData() {
