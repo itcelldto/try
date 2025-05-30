@@ -11,7 +11,7 @@
             line-height: 1.6;
         }
         .container {
-            MIN-width: 100%;
+            max-width: 1200px;
             margin: 0 auto;
         }
         .upload-section, .summary-section, .table-section, .recalculate-section {
@@ -49,34 +49,59 @@
         }
         input[type="file"], input[type="number"] {
             padding: 6px;
+            margin-right: 10px;
         }
         .highlight {
             background-color: #ffffcc;
+        }
+        .input-group {
+            margin-bottom: 10px;
+        }
+        label {
+            display: inline-block;
+            width: 200px;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Money Order Credit Booking Processor 01</h1>
+        <h1>Money Order Credit Booking Processor</h1>
         
         <div class="upload-section">
             <h2>Upload CSV File</h2>
             <input type="file" id="csvFile" accept=".csv,.txt">
             <button id="uploadBtn">Process CSV</button>
+            <div id="uploadError" class="error"></div>
         </div>
         
         <div class="summary-section" id="summarySection" style="display: none;">
             <h2>Summary</h2>
             <p>Total Amount: <span id="totalAmount">0</span></p>
             <p>Number of Beneficiaries: <span id="beneficiaryCount">0</span></p>
+            <p>Rows with missing references: <span id="missingRefCount">0</span></p>
+        </div>
+        
+        <div class="recalculate-section" id="recalculateSection" style="display: none;">
+            <h2>Merge Amount Rows</h2>
+            <div class="input-group">
+                <label for="mergeFromAmount">Merge rows of amount (From):</label>
+                <input type="number" id="mergeFromAmount" value="5000" min="1">
+            </div>
+            <div class="input-group">
+                <label for="mergeAmount">Amount to merge to (To):</label>
+                <input type="number" id="mergeAmount" value="10000" min="1">
+            </div>
             <button id="revalidateBtn">Merge and Download CSV</button>
+            <div id="mergeError" class="error"></div>
         </div>
         
         <div class="table-section">
             <h2>Beneficiary Data</h2>
             <div id="tableContainer"></div>
-        </div>
-        <div class="recalculate-section" id="recalculateSection" style="display: none;">
         </div>
     </div>
 
@@ -86,47 +111,106 @@
         
         let csvData = [];
         let originalFileName = '';
-        let headers = [];
         
         function processCSV() {
             const fileInput = document.getElementById('csvFile');
             const file = fileInput.files[0];
+            const errorElement = document.getElementById('uploadError');
+            errorElement.textContent = '';
             
             if (!file) {
-                alert('Please select a CSV file first.');
+                errorElement.textContent = 'Please select a CSV file first.';
                 return;
             }
             
-            originalFileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+            originalFileName = file.name.replace(/\.[^/.]+$/, "");
             
             const reader = new FileReader();
             reader.onload = function(e) {
-                const content = e.target.result;
-                parseCSV(content);
+                try {
+                    const content = e.target.result;
+                    parseCSV(content);
+                } catch (error) {
+                    errorElement.textContent = 'Error processing file: ' + error.message;
+                    console.error('Error processing file:', error);
+                }
+            };
+            reader.onerror = function() {
+                errorElement.textContent = 'Error reading file.';
             };
             reader.readAsText(file);
         }
         
         function parseCSV(content) {
-            const lines = content.split('\n');
-            headers = lines[0].split(',');
+            const lines = content.split('\n').filter(line => line.trim() !== '');
             
+            if (lines.length < 2) {
+                throw new Error('CSV file must contain at least a header row and one data row');
+            }
+            
+            // Normalize headers by trimming
+            const headers = lines[0].split(',').map(h => h.trim());
+            
+            // Find required columns with flexible matching
+            const remitterRefCol = headers.find(h => 
+                h.toLowerCase().includes('remitter') && h.toLowerCase().includes('reference')) || 
+                headers.find(h => h.toLowerCase().includes('reference'));
+            
+            const amountCol = headers.find(h => h.toLowerCase() === 'amount') || 
+                             headers.find(h => h.toLowerCase().includes('amount'));
+            
+            if (!amountCol) {
+                throw new Error('Could not find Amount column in CSV');
+            }
+            
+            let missingRefCount = 0;
             csvData = [];
             for (let i = 1; i < lines.length; i++) {
-                if (lines[i].trim() === '') continue;
-                
-                const obj = {};
                 const currentLine = lines[i].split(',');
+                const obj = {};
                 
-                for (let j = 0; j < headers.length; j++) {
-                    obj[headers[j]] = currentLine[j] || '';
+                // Handle CSV with quoted values and commas inside fields
+                let currentIndex = 0;
+                let insideQuotes = false;
+                let currentField = '';
+                let fields = [];
+                
+                for (let j = 0; j < currentLine.length; j++) {
+                    const part = currentLine[j];
+                    if (!insideQuotes && part.startsWith('"') && !part.endsWith('"')) {
+                        insideQuotes = true;
+                        currentField = part.substring(1);
+                    } else if (insideQuotes && part.endsWith('"')) {
+                        insideQuotes = false;
+                        currentField += ',' + part.substring(0, part.length - 1);
+                        fields.push(currentField);
+                        currentField = '';
+                    } else if (insideQuotes) {
+                        currentField += ',' + part;
+                    } else {
+                        fields.push(part);
+                    }
                 }
                 
-                csvData.push(obj);
+                for (let j = 0; j < headers.length; j++) {
+                    const header = headers[j];
+                    const value = (fields[j] || '').trim();
+                    obj[header] = value;
+                }
+                
+                // Count rows with missing references
+                if (remitterRefCol && (!obj[remitterRefCol] || obj[remitterRefCol].trim() === '')) {
+                    missingRefCount++;
+                }
+                
+                // Only require Amount column to be present
+                if (obj[amountCol] && obj[amountCol].trim() !== '') {
+                    csvData.push(obj);
+                }
             }
             
             displayData();
-            updateSummary();
+            updateSummary(remitterRefCol, amountCol, missingRefCount);
             
             document.getElementById('summarySection').style.display = 'block';
             document.getElementById('recalculateSection').style.display = 'block';
@@ -143,17 +227,18 @@
             let tableHTML = '<table><thead><tr>';
             
             // Create headers
-            for (const key in csvData[0]) {
+            const headers = Object.keys(csvData[0]);
+            headers.forEach(key => {
                 tableHTML += `<th>${key}</th>`;
-            }
+            });
             tableHTML += '</tr></thead><tbody>';
             
             // Create rows
             csvData.forEach(row => {
                 tableHTML += '<tr>';
-                for (const key in row) {
-                    tableHTML += `<td>${row[key]}</td>`;
-                }
+                headers.forEach(header => {
+                    tableHTML += `<td>${row[header] || ''}</td>`;
+                });
                 tableHTML += '</tr>';
             });
             
@@ -161,111 +246,165 @@
             tableContainer.innerHTML = tableHTML;
         }
         
-        function updateSummary() {
+        function updateSummary(remitterRefCol, amountCol, missingRefCount) {
             // Calculate total amount
-            const totalAmount = csvData.reduce((sum, row) => sum + parseFloat(row.Amount || 0), 0);
+            const totalAmount = csvData.reduce((sum, row) => {
+                const amount = parseFloat(row[amountCol]) || 0;
+                return sum + amount;
+            }, 0);
             document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
             
-            // Count unique beneficiaries based on the last column value
-            if (csvData.length > 0) {
-                const lastColumnKey = headers[headers.length - 1];
-                const uniqueValues = new Set();
-                
+            // Count unique beneficiaries if reference column exists
+            let uniqueRefs = 0;
+            if (remitterRefCol) {
+                const refSet = new Set();
                 csvData.forEach(row => {
-                    if (row[lastColumnKey]) {
-                        uniqueValues.add(row[lastColumnKey]);
+                    const ref = row[remitterRefCol];
+                    if (ref && ref.trim() !== '') {
+                        refSet.add(ref.trim());
                     }
                 });
-                
-                document.getElementById('beneficiaryCount').textContent = uniqueValues.size;
-            } else {
-                document.getElementById('beneficiaryCount').textContent = '0';
+                uniqueRefs = refSet.size;
             }
+            
+            document.getElementById('beneficiaryCount').textContent = uniqueRefs;
+            document.getElementById('missingRefCount').textContent = missingRefCount || 0;
         }
         
         function mergeAndDownload() {
+            const mergeToAmount = parseInt(document.getElementById('mergeAmount').value) || 10000;
+            const mergeFromAmount = parseInt(document.getElementById('mergeFromAmount').value) || 5000;
+            const errorElement = document.getElementById('mergeError');
+            errorElement.textContent = '';
+            
             if (csvData.length === 0) {
-                alert('No data to process');
+                errorElement.textContent = 'No data available to merge. Please upload a CSV file first.';
                 return;
             }
-
-            // Group by beneficiary reference (using last column)
-            const lastColumnKey = headers[headers.length - 1];
-            const groupedData = {};
             
-            csvData.forEach(row => {
-                const ref = row[lastColumnKey];
-                if (!groupedData[ref]) {
-                    groupedData[ref] = [];
-                }
-                groupedData[ref].push(row);
-            });
-            
-            // Process each beneficiary's rows to merge 5000 amounts
-            const newCsvData = [];
-            
-            for (const ref in groupedData) {
-                const beneficiaryRows = groupedData[ref];
-                let i = 0;
+            try {
+                // Find actual column names
+                const headers = Object.keys(csvData[0]);
+                const remitterRefCol = headers.find(h => 
+                    h.toLowerCase().includes('remitter') && h.toLowerCase().includes('reference')) || 
+                    headers.find(h => h.toLowerCase().includes('reference'));
+                const amountCol = headers.find(h => h.toLowerCase() === 'amount') || 
+                                 headers.find(h => h.toLowerCase().includes('amount'));
+                const communicationCol = headers.find(h => h.toLowerCase() === 'communication');
                 
-                while (i < beneficiaryRows.length) {
-                    const currentRow = beneficiaryRows[i];
-                    
-                    // Check if we can merge with next row (both 5000)
-                    if (i + 1 < beneficiaryRows.length && 
-                        parseFloat(currentRow.Amount) === 5000 && 
-                        parseFloat(beneficiaryRows[i+1].Amount) === 5000) {
-                        
-                        // Create merged row with all columns preserved
-                        const mergedRow = {};
-                        // Copy all properties from current row
-                        for (const key in currentRow) {
-                            mergedRow[key] = currentRow[key];
-                        }
-                        // Update the amount
-                        mergedRow.Amount = 10000;
-                        
-                        // For other columns, take the value from either row (prefer non-empty values)
-                        for (const key in beneficiaryRows[i+1]) {
-                            if (beneficiaryRows[i+1][key] && !mergedRow[key]) {
-                                mergedRow[key] = beneficiaryRows[i+1][key];
-                            }
-                        }
-                        
-                        newCsvData.push(mergedRow);
-                        i += 2; // Skip next row as we've merged it
+                // Group by beneficiary reference if available, otherwise by all columns except amount
+                const groupedData = {};
+                csvData.forEach(row => {
+                    let groupKey;
+                    if (remitterRefCol && row[remitterRefCol] && row[remitterRefCol].trim() !== '') {
+                        groupKey = row[remitterRefCol].trim();
                     } else {
-                        // Can't merge, add as-is
-                        newCsvData.push(currentRow);
-                        i++;
+                        // Create a composite key from all columns except amount
+                        groupKey = headers
+                            .filter(h => h !== amountCol)
+                            .map(h => row[h] || '')
+                            .join('|');
+                    }
+                    
+                    if (!groupedData[groupKey]) {
+                        groupedData[groupKey] = [];
+                    }
+                    groupedData[groupKey].push(row);
+                });
+                
+                // Process each group's rows to merge amounts
+                const newCsvData = [];
+                let mergeCount = 0;
+                
+                for (const groupKey in groupedData) {
+                    const groupRows = groupedData[groupKey];
+                    let i = 0;
+                    
+                    while (i < groupRows.length) {
+                        const currentRow = groupRows[i];
+                        const currentAmount = parseFloat(currentRow[amountCol]) || 0;
+                        
+                        // Check if we can merge with next row
+                        if (i + 1 < groupRows.length && 
+                            currentAmount === mergeFromAmount && 
+                            parseFloat(groupRows[i+1][amountCol]) === mergeFromAmount) {
+                            
+                            // Create merged row
+                            const mergedRow = {};
+                            Object.keys(currentRow).forEach(key => {
+                                mergedRow[key] = currentRow[key];
+                            });
+                            
+                            mergedRow[amountCol] = mergeToAmount;
+                            
+                            // Update Communication field if exists
+                            if (communicationCol && mergedRow[communicationCol]) {
+                                mergedRow[communicationCol] = String(mergedRow[communicationCol])
+                                    .replace(`Rs.${mergeFromAmount}`, `Rs.${mergeToAmount}`)
+                                    .replace(`${mergeFromAmount}-`, `${mergeToAmount}-`);
+                            }
+                            
+                            newCsvData.push(mergedRow);
+                            i += 2;
+                            mergeCount++;
+                        } else {
+                            // Can't merge, add as-is
+                            newCsvData.push(currentRow);
+                            i++;
+                        }
                     }
                 }
-            }
-            
-            // Generate CSV content
-            let csvContent = '';
-            
-            // Headers
-            csvContent += headers.join(',') + '\n';
-            
-            // Rows - ensure all columns are included in the correct order
-            newCsvData.forEach(row => {
-                const rowValues = headers.map(header => {
-                    // Handle missing values by providing empty string
-                    return row[header] !== undefined ? row[header] : '';
+                
+                if (newCsvData.length === 0) {
+                    errorElement.textContent = 'No rows matched the merge criteria.';
+                    return;
+                }
+                
+                // Generate CSV content - ensure all rows have values for all columns
+                let csvContent = headers.join(',') + '\n';
+                
+                newCsvData.forEach(row => {
+                    const rowValues = headers.map(header => {
+                        let value = row[header] || '';
+                        value = String(value);
+                        // Escape values containing commas or quotes
+                        if (value.includes(',') || value.includes('"')) {
+                            return `"${value.replace(/"/g, '""')}"`;
+                        }
+                        return value;
+                    });
+                    csvContent += rowValues.join(',') + '\n';
                 });
-                csvContent += rowValues.join(',') + '\n';
-            });
-            
-            // Download the file
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.setAttribute('href', url);
-            link.setAttribute('download', originalFileName + '_merged.csv');
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+                
+                // Download the file
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${originalFileName}_merged_${mergeToAmount}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Update the displayed data
+                csvData = newCsvData;
+                displayData();
+                
+                // Find columns again for summary update
+                const newRemitterRefCol = Object.keys(csvData[0]).find(h => 
+                    h.toLowerCase().includes('remitter') && h.toLowerCase().includes('reference')) || 
+                    Object.keys(csvData[0]).find(h => h.toLowerCase().includes('reference'));
+                const newAmountCol = Object.keys(csvData[0]).find(h => h.toLowerCase() === 'amount') || 
+                                   Object.keys(csvData[0]).find(h => h.toLowerCase().includes('amount'));
+                
+                updateSummary(newRemitterRefCol, newAmountCol, 0);
+                
+                alert(`Successfully merged ${mergeCount} pairs of Rs.${mergeFromAmount} into Rs.${mergeToAmount} amounts.`);
+                
+            } catch (error) {
+                errorElement.textContent = 'Error during merging: ' + error.message;
+                console.error('Merge error:', error);
+            }
         }
     </script>
 </body>
