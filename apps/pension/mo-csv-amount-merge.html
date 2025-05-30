@@ -244,35 +244,33 @@
             let missingRefCount = 0;
             csvData = [];
             for (let i = 1; i < lines.length; i++) {
-                const currentLine = lines[i].split(',');
+                const currentLine = lines[i];
                 const obj = {};
                 
-                // Handle CSV with quoted values and commas inside fields
-                let currentIndex = 0;
+                // Handle CSV with quoted values
                 let insideQuotes = false;
                 let currentField = '';
                 let fields = [];
+                let currentChar = '';
                 
                 for (let j = 0; j < currentLine.length; j++) {
-                    const part = currentLine[j];
-                    if (!insideQuotes && part.startsWith('"') && !part.endsWith('"')) {
-                        insideQuotes = true;
-                        currentField = part.substring(1);
-                    } else if (insideQuotes && part.endsWith('"')) {
-                        insideQuotes = false;
-                        currentField += ',' + part.substring(0, part.length - 1);
+                    currentChar = currentLine[j];
+                    if (currentChar === '"') {
+                        insideQuotes = !insideQuotes;
+                    } else if (currentChar === ',' && !insideQuotes) {
                         fields.push(currentField);
                         currentField = '';
-                    } else if (insideQuotes) {
-                        currentField += ',' + part;
                     } else {
-                        fields.push(part);
+                        currentField += currentChar;
                     }
                 }
+                fields.push(currentField); // Add the last field
                 
-                for (let j = 0; j < headers.length; j++) {
+                for (let j = 0; j < headers.length && j < fields.length; j++) {
                     const header = headers[j];
-                    const value = (fields[j] || '').trim();
+                    let value = fields[j] || '';
+                    // Remove any remaining quotes
+                    value = value.replace(/"/g, '').trim();
                     obj[header] = value;
                 }
                 
@@ -438,17 +436,14 @@
                     return;
                 }
                 
-                // Generate CSV content - ensure all rows have values for all columns
+                // Generate CSV content without quotes
                 let csvContent = headers.join(',') + '\n';
                 
                 newCsvData.forEach(row => {
                     const rowValues = headers.map(header => {
                         let value = row[header] || '';
-                        value = String(value);
-                        // Escape values containing commas or quotes
-                        if (value.includes(',') || value.includes('"')) {
-                            return `"${value.replace(/"/g, '""')}"`;
-                        }
+                        // Remove any commas that might interfere with CSV structure
+                        value = String(value).replace(/,/g, ' ');
                         return value;
                     });
                     csvContent += rowValues.join(',') + '\n';
