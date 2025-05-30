@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Money Order Credit Booking Processor</title>
+    <title>Money Order Credit </title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,7 +11,7 @@
             line-height: 1.6;
         }
         .container {
-            max-width: 1200px;
+            m1n-width: 1200px;
             margin: 0 auto;
         }
         .upload-section, .summary-section, .table-section, .recalculate-section {
@@ -38,14 +38,14 @@
         }
         button {
             padding: 8px 15px;
-            background-color: #4CAF50;
+            background-color: #3675b8;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
         }
         button:hover {
-            background-color: #45a049;
+            background-color: #224d7b;
         }
         input[type="file"], input[type="number"] {
             padding: 6px;
@@ -65,29 +65,81 @@
             color: red;
             margin-top: 10px;
         }
+		
+		.panel {
+    color: #333;
+}
+.panel-default {
+    border-color: #ddd;
+}
+.panel {
+    margin-bottom: 20px;
+    background-color: #fff;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+}
+.panel-default>.panel-heading {
+    color: #333;
+    background-color: #f5f5f5;
+    border-color: #ddd;
+}
+.panel-heading {
+    padding: 10px 15px;
+    border-bottom: 1px solid transparent;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+	font-weight:bold;
+}
+.panel-body {
+    padding: 15px;
+}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Money Order Credit Booking Processor</h1>
-        
-        <div class="upload-section">
-            <h2>Upload CSV File</h2>
+        <h3>Money Order Credit Booking XML/CSV Parser</h3>
+		
+	<div class="panel panel-default">
+    <div class="panel-heading">Upload CSV File</div>
+    <div class="panel-body">
+	
+	   <div class="upload-section">
+         
             <input type="file" id="csvFile" accept=".csv,.txt">
-            <button id="uploadBtn">Process CSV</button>
+            <button id="uploadBtn">Verify</button>
             <div id="uploadError" class="error"></div>
         </div>
+	
+	</div>
+  </div>
         
-        <div class="summary-section" id="summarySection" style="display: none;">
-            <h2>Summary</h2>
-            <p>Total Amount: <span id="totalAmount">0</span></p>
+     
+	
+	
+	<div class="summary-section" id="summarySection" style="display: none;">
+	
+	
+	<div class="panel panel-default">
+    <div class="panel-heading">Summary</div>
+    <div class="panel-body">
+	 <p>Total Amount: <b><span id="totalAmount"style="color:red">0</span></b></p>
             <p>Number of Beneficiaries: <span id="beneficiaryCount">0</span></p>
             <p>Rows with missing references: <span id="missingRefCount">0</span></p>
-        </div>
-        
+		</div>
+  </div>
+            
+         
+
         <div class="recalculate-section" id="recalculateSection" style="display: none;">
-            <h2>Merge Amount Rows</h2>
-            <div class="input-group">
+		
+		
+		  	<div class="panel panel-default">
+    <div class="panel-heading">Merge Amount Rows</div>
+    <div class="panel-body">
+	
+	   <div class="input-group">
                 <label for="mergeFromAmount">Merge rows of amount (From):</label>
                 <input type="number" id="mergeFromAmount" value="5000" min="1">
             </div>
@@ -98,11 +150,37 @@
             <button id="revalidateBtn">Merge and Download CSV</button>
             <div id="mergeError" class="error"></div>
         </div>
+	
+	</div>
+	
+  </div>
+
+
+
+		 
+        </div>
+  
+
         
-        <div class="table-section">
-            <h2>Beneficiary Data</h2>
+        
+        
+
+	 
+	
+	
+<div class="table-section">
+	   <div class="panel panel-default">
+    <div class="panel-heading">CSV Details</div>
+    <div class="panel-body">
+          
             <div id="tableContainer"></div>
         </div>
+	
+	</div>
+           
+           
+        
+      
     </div>
 
     <script>
