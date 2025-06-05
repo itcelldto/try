@@ -54,7 +54,7 @@
             <div class="col-md-12">
                 <div class="panel panel-primary">
                     <div class="panel-heading">
-                        <h3 class="panel-title">Employee Data Viewer</h3>
+                        <h3 class="panel-title">Employee Data Bank</h3>
                     </div>
                     <div class="panel-body">
                         <form id="searchForm" class="form-horizontal">
@@ -211,7 +211,7 @@
                 });
             }
             
-            // Function to fetch employee data with proper filtering
+            // Function to fetch employee data with proper filtering and duplicate handling
             function fetchEmployeeData(officeName, profilePicChecked, signatureChecked) {
                 $('#loading').show();
                 
@@ -232,62 +232,91 @@
                         return;
                     }
                     
-                    let slNo = 1;
+                    // Create a map to track the last occurrence of each PEN
+                    const penMap = new Map();
+                    let rowIndex = 0;
+                    
+                    // First pass: identify all rows for the selected office and track last occurrence of each PEN
                     data.values.forEach(row => {
-                        // Check if the row matches the selected office
                         if (row[1] === officeName) {
-                            const profilePic = row[16]; // Column Q (Profile PIC)
-                            const signature = row[17]; // Column R (Signature)
-                            
-                            // Determine if record matches filter criteria
-                            const showRecord = 
-                                (!profilePicChecked && !signatureChecked) || // No filters selected
-                                (profilePicChecked && profilePic && !signatureChecked) || // Only profile pic checked
-                                (!profilePicChecked && signatureChecked && signature) || // Only signature checked
-                                (profilePicChecked && profilePic && signatureChecked && signature); // Both checked
-                            
-                            if (showRecord) {
-                                // Profile PIC column content
-                                let profilePicContent;
-                                if (profilePic) {
-                                    profilePicContent = `
-                                        <span class="glyphicon glyphicon-ok-circle status-icon"></span>
-                                        <button class="btn btn-xs btn-success image-view-btn" 
-                                                onclick="window.open('${profilePic}', '_blank', 'width=800,height=600')">
-                                            <i class="glyphicon glyphicon-search"></i> View
-                                        </button>
-                                    `;
-                                } else {
-                                    profilePicContent = '<span class="glyphicon glyphicon-remove-circle status-icon"></span>';
-                                }
-                                
-                                // Signature column content
-                                let signatureContent;
-                                if (signature) {
-                                    signatureContent = `
-                                        <span class="glyphicon glyphicon-ok-circle status-icon"></span>
-                                        <button class="btn btn-xs btn-success image-view-btn" 
-                                                onclick="window.open('${signature}', '_blank', 'width=800,height=600')">
-                                            <i class="glyphicon glyphicon-search"></i> View
-                                        </button>
-                                    `;
-                                } else {
-                                    signatureContent = '<span class="glyphicon glyphicon-remove-circle status-icon"></span>';
-                                }
-                                
-                                $('#resultsTable tbody').append(`
-                                    <tr>
-                                        <td>${slNo++}</td>
-                                        <td>${row[2] || ''}</td>
-                                        <td>${row[3] || ''}</td>
-                                        <td>${row[4] || ''}</td>
-                                        <td>${row[10] || ''}</td>
-                                        <td>${row[11] || ''}</td>
-                                        <td class="text-center">${profilePicContent}</td>
-                                        <td class="text-center">${signatureContent}</td>
-                                    </tr>
-                                `);
+                            const pen = row[3]; // PEN is in column D (index 3)
+                            if (pen) {
+                                penMap.set(pen, rowIndex); // Store the latest row index for each PEN
                             }
+                            rowIndex++;
+                        }
+                    });
+                    
+                    // Second pass: collect only the last occurrence of each PEN
+                    const uniqueRows = [];
+                    const seenPens = new Set();
+                    
+                    // Iterate in reverse to find the last occurrences
+                    for (let i = data.values.length - 1; i >= 0; i--) {
+                        const row = data.values[i];
+                        if (row[1] === officeName) {
+                            const pen = row[3];
+                            if (pen && !seenPens.has(pen)) {
+                                seenPens.add(pen);
+                                uniqueRows.unshift(row); // Add to beginning to maintain original order
+                            }
+                        }
+                    }
+                    
+                    // Now process the filtered unique rows
+                    let slNo = 1;
+                    uniqueRows.forEach(row => {
+                        const profilePic = row[17]; // Column Q (Profile PIC)
+                        const signature = row[18]; // Column R (Signature)
+                        
+                        // Determine if record matches filter criteria
+                        const showRecord = 
+                            (!profilePicChecked && !signatureChecked) || // No filters selected
+                            (profilePicChecked && profilePic && !signatureChecked) || // Only profile pic checked
+                            (!profilePicChecked && signatureChecked && signature) || // Only signature checked
+                            (profilePicChecked && profilePic && signatureChecked && signature); // Both checked
+                        
+                        if (showRecord) {
+                            // Profile PIC column content
+                            let profilePicContent;
+                            if (profilePic) {
+                                profilePicContent = `
+                                    <span class="glyphicon glyphicon-ok-circle status-icon"></span>
+                                    <button class="btn btn-xs btn-success image-view-btn" 
+                                            onclick="window.open('${profilePic}', '_blank', 'width=800,height=600')">
+                                        <i class="glyphicon glyphicon-search"></i> View
+                                    </button>
+                                `;
+                            } else {
+                                profilePicContent = '<span class="glyphicon glyphicon-remove-circle status-icon"></span>';
+                            }
+                            
+                            // Signature column content
+                            let signatureContent;
+                            if (signature) {
+                                signatureContent = `
+                                    <span class="glyphicon glyphicon-ok-circle status-icon"></span>
+                                    <button class="btn btn-xs btn-success image-view-btn" 
+                                            onclick="window.open('${signature}', '_blank', 'width=800,height=600')">
+                                        <i class="glyphicon glyphicon-search"></i> View
+                                    </button>
+                                `;
+                            } else {
+                                signatureContent = '<span class="glyphicon glyphicon-remove-circle status-icon"></span>';
+                            }
+                            
+                            $('#resultsTable tbody').append(`
+                                <tr>
+                                    <td>${slNo++}</td>
+                                    <td>${row[2] || ''}</td>
+                                    <td>${row[3] || ''}</td>
+                                    <td>${row[4] || ''}</td>
+                                    <td>${row[10] || ''}</td>
+                                    <td>${row[11] || ''}</td>
+                                    <td class="text-center">${profilePicContent}</td>
+                                    <td class="text-center">${signatureContent}</td>
+                                </tr>
+                            `);
                         }
                     });
                     
