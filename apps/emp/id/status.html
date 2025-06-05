@@ -49,7 +49,7 @@
     </style>
 </head>
 <body>
-    <div class="container"style="min-width: 90%;">
+    <div class="container">
         <div class="row">
             <div class="col-md-12">
                 <div class="panel panel-primary">
@@ -60,18 +60,13 @@
                         <form id="searchForm" class="form-horizontal">
                             <div class="form-group">
                                 <label for="officeName" class="col-sm-2 control-label">Name of Office:</label>
-                                <div class="col-sm-8">
+                                <div class="col-sm-10">
                                     <select id="officeName" class="form-control select2" style="width: 100%;" autofocus>
                                         <option value="">Loading offices...</option>
                                     </select>
                                 </div>
-								 <div class="col-sm-2">
-                                    <button type="button" id="viewBtn" class="btn btn-primary">
-                                        <i class="glyphicon glyphicon-search"></i> View
-                                    </button>
-                                </div>
                             </div>
-                            <div class="form-group" style="display:none;">
+                            <div class="form-group">
                                 <label class="col-sm-2 control-label">Status:</label>
                                 <div class="col-sm-10">
                                     <div class="checkbox">
@@ -87,7 +82,11 @@
                                 </div>
                             </div>
                             <div class="form-group">
-                               
+                                <div class="col-sm-offset-2 col-sm-10">
+                                    <button type="button" id="viewBtn" class="btn btn-primary">
+                                        <i class="glyphicon glyphicon-search"></i> View
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -142,14 +141,22 @@
 
     <script>
         $(document).ready(function() {
-            // Initialize Select2
-            $('.select2').select2();
-            
             // Variables for Google Sheets API
             const spreadsheetId = '1srOLLRSL7CLlQgmuMUIaRh7EcDg5pfNx6Pdo8Qq2J5Q';
             const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
             const sheetName = 'Data';
-            const range = 'A:S';
+            
+            // Initialize Select2 with change handler
+            $('#officeName').select2({
+                placeholder: "Select Office",
+                allowClear: true
+            }).on('change', function() {
+                // Clear the table when office selection changes
+                if ($.fn.DataTable.isDataTable('#resultsTable')) {
+                    $('#resultsTable').DataTable().destroy();
+                }
+                $('#resultsTable tbody').empty();
+            });
             
             // Load office names
             loadOfficeNames();
@@ -207,6 +214,11 @@
             // Function to fetch employee data with proper filtering
             function fetchEmployeeData(officeName, profilePicChecked, signatureChecked) {
                 $('#loading').show();
+                
+                // Clear previous results
+                if ($.fn.DataTable.isDataTable('#resultsTable')) {
+                    $('#resultsTable').DataTable().destroy();
+                }
                 $('#resultsTable tbody').empty();
                 
                 const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!A2:S?key=${apiKey}`;
@@ -216,6 +228,7 @@
                     
                     if (!data.values || data.values.length === 0) {
                         $('#resultsTable tbody').append('<tr><td colspan="8" class="text-center">No data found</td></tr>');
+                        initializeDataTable();
                         return;
                     }
                     
@@ -223,8 +236,8 @@
                     data.values.forEach(row => {
                         // Check if the row matches the selected office
                         if (row[1] === officeName) {
-                            const profilePic = row[17]; // Column Q (Profile PIC)
-                            const signature = row[18]; // Column R (Signature)
+                            const profilePic = row[16]; // Column Q (Profile PIC)
+                            const signature = row[17]; // Column R (Signature)
                             
                             // Determine if record matches filter criteria
                             const showRecord = 
@@ -245,7 +258,7 @@
                                         </button>
                                     `;
                                 } else {
-                                    profilePicContent = '<span class="glyphicon glyphicon-remove-circle status-icon"> Not-Updated</span>';
+                                    profilePicContent = '<span class="glyphicon glyphicon-remove-circle status-icon"></span>';
                                 }
                                 
                                 // Signature column content
@@ -259,7 +272,7 @@
                                         </button>
                                     `;
                                 } else {
-                                    signatureContent = '<span class="glyphicon glyphicon-remove-circle status-icon"> Not-Updated</span>';
+                                    signatureContent = '<span class="glyphicon glyphicon-remove-circle status-icon"></span>';
                                 }
                                 
                                 $('#resultsTable tbody').append(`
@@ -282,16 +295,21 @@
                         $('#resultsTable tbody').append('<tr><td colspan="8" class="text-center">No matching records found</td></tr>');
                     }
                     
-                    // Initialize DataTable
-                    $('#resultsTable').DataTable({
-                        responsive: true,
-                        destroy: true // To allow reinitialization
-                    });
+                    initializeDataTable();
                     
                 }).fail(function(error) {
                     $('#loading').hide();
                     console.error('Error fetching employee data:', error);
                     $('#resultsTable tbody').append('<tr><td colspan="8" class="text-center">Error loading data</td></tr>');
+                    initializeDataTable();
+                });
+            }
+            
+            // Function to initialize DataTable
+            function initializeDataTable() {
+                $('#resultsTable').DataTable({
+                    responsive: true,
+                    destroy: true // Allows table to be reinitialized
                 });
             }
         });
