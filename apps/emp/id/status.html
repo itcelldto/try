@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Data Viewer</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .panel {
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .panel-heading {
+            font-weight: bold;
+        }
+        .glyphicon-remove-circle {
+            color: #d9534f;
+        }
+        .glyphicon-ok-circle {
+            color: #5cb85c;
+        }
+        .view-btn {
+            margin-left: 5px;
+        }
+        #loading {
+            display: none;
+            text-align: center;
+            margin: 20px;
+        }
+        .image-view-btn {
+            padding: 2px 5px;
+            font-size: 12px;
+        }
+        .status-icon {
+            font-size: 18px;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container"style="min-width: 90%;">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Employee Data Viewer</h3>
+                    </div>
+                    <div class="panel-body">
+                        <form id="searchForm" class="form-horizontal">
+                            <div class="form-group">
+                                <label for="officeName" class="col-sm-2 control-label">Name of Office:</label>
+                                <div class="col-sm-8">
+                                    <select id="officeName" class="form-control select2" style="width: 100%;" autofocus>
+                                        <option value="">Loading offices...</option>
+                                    </select>
+                                </div>
+								 <div class="col-sm-2">
+                                    <button type="button" id="viewBtn" class="btn btn-primary">
+                                        <i class="glyphicon glyphicon-search"></i> View
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="form-group" style="display:none;">
+                                <label class="col-sm-2 control-label">Status:</label>
+                                <div class="col-sm-10">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" id="profilePicUpdated"> Profile PIC updated
+                                        </label>
+                                    </div>
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" id="signatureUpdated"> Signature updated
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                               
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="loading">
+            <i class="fa fa-spinner fa-spin fa-3x"></i>
+            <p>Loading data...</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Employee Records</h3>
+                    </div>
+                    <div class="panel-body">
+                        <table id="resultsTable" class="table table-striped table-bordered" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>SL No</th>
+                                    <th>Name</th>
+                                    <th>PEN</th>
+                                    <th>Designation</th>
+                                    <th>Mobile</th>
+                                    <th>Email</th>
+                                    <th>Profile PIC</th>
+                                    <th>Signature</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Initialize Select2
+            $('.select2').select2();
+            
+            // Variables for Google Sheets API
+            const spreadsheetId = '1srOLLRSL7CLlQgmuMUIaRh7EcDg5pfNx6Pdo8Qq2J5Q';
+            const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+            const sheetName = 'Data';
+            const range = 'A:S';
+            
+            // Load office names
+            loadOfficeNames();
+            
+            // View button click handler
+            $('#viewBtn').click(function() {
+                const officeName = $('#officeName').val();
+                const profilePicChecked = $('#profilePicUpdated').is(':checked');
+                const signatureChecked = $('#signatureUpdated').is(':checked');
+                
+                if (!officeName) {
+                    alert('Please select an office name');
+                    return;
+                }
+                
+                fetchEmployeeData(officeName, profilePicChecked, signatureChecked);
+            });
+            
+            // Function to load office names
+            function loadOfficeNames() {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!B2:B?key=${apiKey}`;
+                
+                $.get(url, function(data) {
+                    const officeNames = [];
+                    const uniqueNames = new Set();
+                    
+                    if (data.values && data.values.length > 0) {
+                        data.values.forEach(row => {
+                            if (row[0] && !uniqueNames.has(row[0])) {
+                                uniqueNames.add(row[0]);
+                                officeNames.push(row[0]);
+                            }
+                        });
+                        
+                        // Sort office names in ascending order
+                        officeNames.sort(function(a, b) {
+                            return a.localeCompare(b);
+                        });
+                    }
+                    
+                    $('#officeName').empty();
+                    $('#officeName').append('<option value="">Select Office</option>');
+                    officeNames.forEach(name => {
+                        $('#officeName').append(`<option value="${name}">${name}</option>`);
+                    });
+                    
+                    // Focus on the select2 input
+                    $('.select2').focus();
+                }).fail(function(error) {
+                    console.error('Error loading office names:', error);
+                    $('#officeName').empty().append('<option value="">Error loading offices</option>');
+                });
+            }
+            
+            // Function to fetch employee data with proper filtering
+            function fetchEmployeeData(officeName, profilePicChecked, signatureChecked) {
+                $('#loading').show();
+                $('#resultsTable tbody').empty();
+                
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!A2:S?key=${apiKey}`;
+                
+                $.get(url, function(data) {
+                    $('#loading').hide();
+                    
+                    if (!data.values || data.values.length === 0) {
+                        $('#resultsTable tbody').append('<tr><td colspan="8" class="text-center">No data found</td></tr>');
+                        return;
+                    }
+                    
+                    let slNo = 1;
+                    data.values.forEach(row => {
+                        // Check if the row matches the selected office
+                        if (row[1] === officeName) {
+                            const profilePic = row[17]; // Column Q (Profile PIC)
+                            const signature = row[18]; // Column R (Signature)
+                            
+                            // Determine if record matches filter criteria
+                            const showRecord = 
+                                (!profilePicChecked && !signatureChecked) || // No filters selected
+                                (profilePicChecked && profilePic && !signatureChecked) || // Only profile pic checked
+                                (!profilePicChecked && signatureChecked && signature) || // Only signature checked
+                                (profilePicChecked && profilePic && signatureChecked && signature); // Both checked
+                            
+                            if (showRecord) {
+                                // Profile PIC column content
+                                let profilePicContent;
+                                if (profilePic) {
+                                    profilePicContent = `
+                                        <span class="glyphicon glyphicon-ok-circle status-icon"></span>
+                                        <button class="btn btn-xs btn-success image-view-btn" 
+                                                onclick="window.open('${profilePic}', '_blank', 'width=800,height=600')">
+                                            <i class="glyphicon glyphicon-search"></i> View
+                                        </button>
+                                    `;
+                                } else {
+                                    profilePicContent = '<span class="glyphicon glyphicon-remove-circle status-icon"></span>';
+                                }
+                                
+                                // Signature column content
+                                let signatureContent;
+                                if (signature) {
+                                    signatureContent = `
+                                        <span class="glyphicon glyphicon-ok-circle status-icon"></span>
+                                        <button class="btn btn-xs btn-success image-view-btn" 
+                                                onclick="window.open('${signature}', '_blank', 'width=800,height=600')">
+                                            <i class="glyphicon glyphicon-search"></i> View
+                                        </button>
+                                    `;
+                                } else {
+                                    signatureContent = '<span class="glyphicon glyphicon-remove-circle status-icon"></span>';
+                                }
+                                
+                                $('#resultsTable tbody').append(`
+                                    <tr>
+                                        <td>${slNo++}</td>
+                                        <td>${row[2] || ''}</td>
+                                        <td>${row[3] || ''}</td>
+                                        <td>${row[4] || ''}</td>
+                                        <td>${row[10] || ''}</td>
+                                        <td>${row[11] || ''}</td>
+                                        <td class="text-center">${profilePicContent}</td>
+                                        <td class="text-center">${signatureContent}</td>
+                                    </tr>
+                                `);
+                            }
+                        }
+                    });
+                    
+                    if (slNo === 1) {
+                        $('#resultsTable tbody').append('<tr><td colspan="8" class="text-center">No matching records found</td></tr>');
+                    }
+                    
+                    // Initialize DataTable
+                    $('#resultsTable').DataTable({
+                        responsive: true,
+                        destroy: true // To allow reinitialization
+                    });
+                    
+                }).fail(function(error) {
+                    $('#loading').hide();
+                    console.error('Error fetching employee data:', error);
+                    $('#resultsTable tbody').append('<tr><td colspan="8" class="text-center">Error loading data</td></tr>');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
