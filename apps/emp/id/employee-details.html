@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Data Viewer</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .panel {
+            margin-top: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .panel-heading {
+            font-weight: bold;
+        }
+        .glyphicon-remove-circle {
+            color: #d9534f;
+        }
+        .glyphicon-ok-circle {
+            color: #5cb85c;
+        }
+        .view-btn {
+            margin-left: 5px;
+        }
+        #loading {
+            display: none;
+            text-align: center;
+            margin: 20px;
+        }
+        .image-view-btn {
+            padding: 2px 5px;
+            font-size: 12px;
+        }
+        .status-icon {
+            font-size: 18px;
+            margin-right: 5px;
+        }
+        .address-col {
+            min-width: 200px;
+        }
+        .compact-col {
+            white-space: nowrap;
+        }
+        .alert-danger {
+            color: #a94442;
+            background-color: #f2dede;
+            border-color: #ebccd1;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="min-width:100%">
+        <div id="loginAlert" class="alert-danger" style="display: none;">
+            <strong>Error:</strong> Treasury information not found. Please <a href="https://itcelldto.github.io/try/" target="_blank">login</a> again.
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Employee Data Viewer</h3>
+                    </div>
+                    <div class="panel-body">
+                        <form id="searchForm" class="form-horizontal">
+                            <div class="form-group">
+                                <label for="officeName" class="col-sm-2 control-label">Name of Office:</label>
+                                <div class="col-sm-10">
+                                    <select id="officeName" class="form-control select2" style="width: 100%;" autofocus>
+                                        <option value="">Loading offices...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">Status:</label>
+                                <div class="col-sm-10">
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" id="profilePicUpdated"> Profile PIC updated
+                                        </label>
+                                    </div>
+                                    <div class="checkbox">
+                                        <label>
+                                            <input type="checkbox" id="signatureUpdated"> Signature updated
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="col-sm-offset-2 col-sm-10">
+                                    <button type="button" id="viewBtn" class="btn btn-primary">
+                                        <i class="glyphicon glyphicon-search"></i> View
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="loading">
+            <i class="fa fa-spinner fa-spin fa-3x"></i>
+            <p>Loading data...</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Employee Records</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="table-responsive">
+                            <table id="resultsTable" class="table table-striped table-bordered" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>SL No</th>
+                                        <th>Name</th>
+                                        <th>PEN</th>
+                                        <th>Designation</th>
+                                        <th>Address</th>
+                                        <th>Residence Contact</th>
+                                        <th>Mobile No</th>
+                                        <th>Email</th>
+                                      
+                                        <th>DOB</th>
+                                        <th>Retirement Date</th>
+                                        <th>Blood Group</th>
+                                        <th>Photo</th>
+                                     
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // Variables for Google Sheets API
+            const spreadsheetId = '1srOLLRSL7CLlQgmuMUIaRh7EcDg5pfNx6Pdo8Qq2J5Q';
+            const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+            const sheetName = 'Data';
+            
+            // Check for treasury name in session storage
+            const treasuryName = sessionStorage.getItem('treasuryName');
+            if (!treasuryName) {
+                $('#loginAlert').show();
+                $('.panel').hide();
+                return;
+            }
+            
+            // Initialize Select2 with change handler
+            $('#officeName').select2({
+                placeholder: "Select Office",
+                allowClear: true
+            }).on('change', function() {
+                // Clear the table when office selection changes
+                if ($.fn.DataTable.isDataTable('#resultsTable')) {
+                    $('#resultsTable').DataTable().destroy();
+                }
+                $('#resultsTable tbody').empty();
+            });
+            
+            // Load office names
+            loadOfficeNames(treasuryName);
+            
+            // View button click handler
+            $('#viewBtn').click(function() {
+                const officeName = $('#officeName').val();
+                const profilePicChecked = $('#profilePicUpdated').is(':checked');
+                const signatureChecked = $('#signatureUpdated').is(':checked');
+                
+                if (!officeName) {
+                    alert('Please select an office name');
+                    return;
+                }
+                
+                fetchEmployeeData(officeName, profilePicChecked, signatureChecked);
+            });
+            
+            // Function to load office names
+            function loadOfficeNames(treasuryName) {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!B2:B?key=${apiKey}`;
+                
+                $.get(url, function(data) {
+                    const officeNames = [];
+                    const uniqueNames = new Set();
+                    
+                    if (data.values && data.values.length > 0) {
+                        data.values.forEach(row => {
+                            if (row[0] && !uniqueNames.has(row[0])) {
+                                uniqueNames.add(row[0]);
+                                officeNames.push(row[0]);
+                            }
+                        });
+                        
+                        // Sort office names in ascending order
+                        officeNames.sort(function(a, b) {
+                            return a.localeCompare(b);
+                        });
+                    }
+                    
+                    $('#officeName').empty();
+                    $('#officeName').append('<option value="">Select Office</option>');
+                    officeNames.forEach(name => {
+                        $('#officeName').append(`<option value="${name}">${name}</option>`);
+                    });
+                    
+                    // Try to automatically select the treasury name if it exists in the list
+                    if (treasuryName && officeNames.includes(treasuryName)) {
+                        $('#officeName').val(treasuryName).trigger('change');
+                        // Optionally trigger the search automatically
+                        $('#viewBtn').click();
+                    } else if (treasuryName) {
+                        // Try case-insensitive match
+                        const lowerTreasury = treasuryName.toLowerCase();
+                        const matchedName = officeNames.find(name => name.toLowerCase() === lowerTreasury);
+                        if (matchedName) {
+                            $('#officeName').val(matchedName).trigger('change');
+                            // Optionally trigger the search automatically
+                            $('#viewBtn').click();
+                        }
+                    }
+                    
+                    // Focus on the select2 input
+                    $('.select2').focus();
+                }).fail(function(error) {
+                    console.error('Error loading office names:', error);
+                    $('#officeName').empty().append('<option value="">Error loading offices</option>');
+                });
+            }
+            
+            // Function to fetch employee data with proper filtering and duplicate handling
+            function fetchEmployeeData(officeName, profilePicChecked, signatureChecked) {
+                $('#loading').show();
+                
+                // Clear previous results
+                if ($.fn.DataTable.isDataTable('#resultsTable')) {
+                    $('#resultsTable').DataTable().destroy();
+                }
+                $('#resultsTable tbody').empty();
+                
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!A2:S?key=${apiKey}`;
+                
+                $.get(url, function(data) {
+                    $('#loading').hide();
+                    
+                    if (!data.values || data.values.length === 0) {
+                        $('#resultsTable tbody').append('<tr><td colspan="14" class="text-center">No data found</td></tr>');
+                        initializeDataTable();
+                        return;
+                    }
+                    
+                    // Create a map to track the last occurrence of each PEN
+                    const penMap = new Map();
+                    let rowIndex = 0;
+                    
+                    // First pass: identify all rows for the selected office and track last occurrence of each PEN
+                    data.values.forEach(row => {
+                        if (row[1] === officeName) {
+                            const pen = row[3]; // PEN is in column D (index 3)
+                            if (pen) {
+                                penMap.set(pen, rowIndex); // Store the latest row index for each PEN
+                            }
+                            rowIndex++;
+                        }
+                    });
+                    
+                    // Second pass: collect only the last occurrence of each PEN
+                    const uniqueRows = [];
+                    const seenPens = new Set();
+                    
+                    // Iterate in reverse to find the last occurrences
+                    for (let i = data.values.length - 1; i >= 0; i--) {
+                        const row = data.values[i];
+                        if (row[1] === officeName) {
+                            const pen = row[3];
+                            if (pen && !seenPens.has(pen)) {
+                                seenPens.add(pen);
+                                uniqueRows.unshift(row); // Add to beginning to maintain original order
+                            }
+                        }
+                    }
+                    
+                    // Now process the filtered unique rows
+                    let slNo = 1;
+                    uniqueRows.forEach(row => {
+                        const profilePic = row[17]; // Column Q (Profile PIC)
+                        const signature = row[18]; // Column R (Signature)
+                        
+                        // Determine if record matches filter criteria
+                        const showRecord = 
+                            (!profilePicChecked && !signatureChecked) || // No filters selected
+                            (profilePicChecked && profilePic && !signatureChecked) || // Only profile pic checked
+                            (!profilePicChecked && signatureChecked && signature) || // Only signature checked
+                            (profilePicChecked && profilePic && signatureChecked && signature); // Both checked
+                        
+                        if (showRecord) {
+                            // Combine address columns (F,G,H,I)
+                            const address = [
+                                row[5] || '', // House Name & Number
+                                row[6] || '', // Locality/Area
+                                row[7] || '', // Town/City
+                                row[8] || ''  // Pin Code
+                            ].filter(Boolean).join(', ');
+                            
+                            // Profile PIC column content
+                            let profilePicContent;
+                            if (profilePic) {
+                                profilePicContent = `
+                                    <span class="glyphicon glyphicon-ok-circle status-icon"></span>
+                                    <button class="btn btn-xs btn-success image-view-btn" 
+                                            onclick="window.open('${profilePic}', '_blank', 'width=800,height=600')">
+                                        <i class="glyphicon glyphicon-search"></i> View
+                                    </button>
+                                `;
+                            } else {
+                                profilePicContent = '<span class="glyphicon glyphicon-remove-circle status-icon"></span>';
+                            }
+                            
+                            // Signature column content
+                            let signatureContent;
+                            if (signature) {
+                                signatureContent = `
+                                    <span class="glyphicon glyphicon-ok-circle status-icon"></span>
+                                    <button class="btn btn-xs btn-success image-view-btn" 
+                                            onclick="window.open('${signature}', '_blank', 'width=800,height=600')">
+                                        <i class="glyphicon glyphicon-search"></i> View
+                                    </button>
+                                `;
+                            } else {
+                                signatureContent = '<span class="glyphicon glyphicon-remove-circle status-icon"></span>';
+                            }
+                            
+                            $('#resultsTable tbody').append(`
+                                <tr>
+                                    <td>${slNo++}</td>
+                                    <td>${row[2] || ''}</td>
+                                    <td>${row[3] || ''}</td>
+                                    <td>${row[4] || ''}</td>
+                                    <td class="address-col">${address}</td>
+                                  
+                                    <td>${row[10] || ''}</td>
+                                    <td>${row[11] || ''}</td>
+                                    <td>${row[12] || ''}</td>
+                                    <td class="compact-col">${row[13] || ''}</td>
+                                    <td class="compact-col">${row[14] || ''}</td>
+                                    <td>${row[15] || ''}</td>
+                                    <td class="text-center">${profilePicContent}</td>
+                                  
+                                </tr>
+                            `);
+                        }
+                    });
+                    
+                    if (slNo === 1) {
+                        $('#resultsTable tbody').append('<tr><td colspan="14" class="text-center">No matching records found</td></tr>');
+                    }
+                    
+                    initializeDataTable();
+                    
+                }).fail(function(error) {
+                    $('#loading').hide();
+                    console.error('Error fetching employee data:', error);
+                    $('#resultsTable tbody').append('<tr><td colspan="14" class="text-center">Error loading data</td></tr>');
+                    initializeDataTable();
+                });
+            }
+            
+            // Function to initialize DataTable
+            function initializeDataTable() {
+                $('#resultsTable').DataTable({
+                    responsive: true,
+                    destroy: true, // Allows table to be reinitialized
+                    scrollX: true,  // Enable horizontal scrolling
+                    scrollCollapse: true,
+                    fixedColumns: {
+                        leftColumns: 2 // Keep first 2 columns visible when scrolling
+                    },
+                    columnDefs: [
+                        { width: "50px", targets: 0 }, // SL No
+                        { width: "150px", targets: [1,2,3] }, // Name, PEN, Designation
+                        { width: "200px", targets: 4 }, // Address
+                        { width: "100px", targets: [5,6,9,10,11] }, // Contact numbers and dates
+                        { width: "120px", targets: [7,8] }, // Email and ID
+                        { width: "100px", targets: [12,13] } // Profile and Signature
+                    ]
+                });
+            }
+        });
+    </script>
+</body>
+</html>
