@@ -61,6 +61,15 @@
             border: 1px solid transparent;
             border-radius: 4px;
         }
+        /* Hide the dropdown arrow */
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            display: none;
+        }
+        /* Make the select2 look like a disabled input */
+        .select2-container--default .select2-selection--single {
+            background-color: #eee;
+            cursor: default;
+        }
     </style>
 </head>
 <body>
@@ -80,8 +89,8 @@
                             <div class="form-group">
                                 <label for="officeName" class="col-sm-2 control-label">Name of Office:</label>
                                 <div class="col-sm-10">
-                                    <select id="officeName" class="form-control select2" style="width: 100%;" autofocus>
-                                        <option value="">Loading offices...</option>
+                                    <select id="officeName" class="form-control select2" style="width: 100%;" autofocus disabled>
+                                        <option value="">Loading office...</option>
                                     </select>
                                 </div>
                             </div>
@@ -181,86 +190,27 @@
                 return;
             }
             
-            // Initialize Select2 with change handler
+            // Initialize Select2 with just the treasury name
             $('#officeName').select2({
-                placeholder: "Select Office",
-                allowClear: true
-            }).on('change', function() {
-                // Clear the table when office selection changes
-                if ($.fn.DataTable.isDataTable('#resultsTable')) {
-                    $('#resultsTable').DataTable().destroy();
-                }
-                $('#resultsTable tbody').empty();
+                minimumResultsForSearch: -1 // Hide the search box
             });
             
-            // Load office names
-            loadOfficeNames(treasuryName);
+            // Set the treasury name as the only option and select it
+            $('#officeName').empty().append(`<option value="${treasuryName}" selected>${treasuryName}</option>`);
+            $('#officeName').trigger('change');
             
-            // View button click handler
+            // Disable the select2 dropdown to prevent changes
+            $('#officeName').prop('disabled', true);
+            
+            // Automatically trigger the search
+            fetchEmployeeData(treasuryName, false, false);
+            
+            // View button click handler (in case user changes filters)
             $('#viewBtn').click(function() {
-                const officeName = $('#officeName').val();
                 const profilePicChecked = $('#profilePicUpdated').is(':checked');
                 const signatureChecked = $('#signatureUpdated').is(':checked');
-                
-                if (!officeName) {
-                    alert('Please select an office name');
-                    return;
-                }
-                
-                fetchEmployeeData(officeName, profilePicChecked, signatureChecked);
+                fetchEmployeeData(treasuryName, profilePicChecked, signatureChecked);
             });
-            
-            // Function to load office names
-            function loadOfficeNames(treasuryName) {
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!B2:B?key=${apiKey}`;
-                
-                $.get(url, function(data) {
-                    const officeNames = [];
-                    const uniqueNames = new Set();
-                    
-                    if (data.values && data.values.length > 0) {
-                        data.values.forEach(row => {
-                            if (row[0] && !uniqueNames.has(row[0])) {
-                                uniqueNames.add(row[0]);
-                                officeNames.push(row[0]);
-                            }
-                        });
-                        
-                        // Sort office names in ascending order
-                        officeNames.sort(function(a, b) {
-                            return a.localeCompare(b);
-                        });
-                    }
-                    
-                    $('#officeName').empty();
-                    $('#officeName').append('<option value="">Select Office</option>');
-                    officeNames.forEach(name => {
-                        $('#officeName').append(`<option value="${name}">${name}</option>`);
-                    });
-                    
-                    // Try to automatically select the treasury name if it exists in the list
-                    if (treasuryName && officeNames.includes(treasuryName)) {
-                        $('#officeName').val(treasuryName).trigger('change');
-                        // Optionally trigger the search automatically
-                        $('#viewBtn').click();
-                    } else if (treasuryName) {
-                        // Try case-insensitive match
-                        const lowerTreasury = treasuryName.toLowerCase();
-                        const matchedName = officeNames.find(name => name.toLowerCase() === lowerTreasury);
-                        if (matchedName) {
-                            $('#officeName').val(matchedName).trigger('change');
-                            // Optionally trigger the search automatically
-                            $('#viewBtn').click();
-                        }
-                    }
-                    
-                    // Focus on the select2 input
-                    $('.select2').focus();
-                }).fail(function(error) {
-                    console.error('Error loading office names:', error);
-                    $('#officeName').empty().append('<option value="">Error loading offices</option>');
-                });
-            }
             
             // Function to fetch employee data with proper filtering and duplicate handling
             function fetchEmployeeData(officeName, profilePicChecked, signatureChecked) {
