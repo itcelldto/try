@@ -61,15 +61,6 @@
             border: 1px solid transparent;
             border-radius: 4px;
         }
-        /* Hide the dropdown arrow */
-        .select2-container--default .select2-selection--single .select2-selection__arrow {
-            display: none;
-        }
-        /* Make the select2 look like a disabled input */
-        .select2-container--default .select2-selection--single {
-            background-color: #eee;
-            cursor: default;
-        }
     </style>
 </head>
 <body>
@@ -89,7 +80,7 @@
                             <div class="form-group">
                                 <label for="officeName" class="col-sm-2 control-label">Name of Office:</label>
                                 <div class="col-sm-10">
-                                    <select id="officeName" class="form-control select2" style="width: 100%;" autofocus disabled>
+                                    <select id="officeName" class="form-control select2" style="width: 100%;" autofocus>
                                         <option value="">Loading office...</option>
                                     </select>
                                 </div>
@@ -199,17 +190,18 @@
             $('#officeName').empty().append(`<option value="${treasuryName}" selected>${treasuryName}</option>`);
             $('#officeName').trigger('change');
             
-            // Disable the select2 dropdown to prevent changes
-            $('#officeName').prop('disabled', true);
-            
-            // Automatically trigger the search
-            fetchEmployeeData(treasuryName, false, false);
-            
-            // View button click handler (in case user changes filters)
+            // View button click handler
             $('#viewBtn').click(function() {
+                const officeName = $('#officeName').val();
                 const profilePicChecked = $('#profilePicUpdated').is(':checked');
                 const signatureChecked = $('#signatureUpdated').is(':checked');
-                fetchEmployeeData(treasuryName, profilePicChecked, signatureChecked);
+                
+                if (!officeName) {
+                    alert('Please select an office name');
+                    return;
+                }
+                
+                fetchEmployeeData(officeName, profilePicChecked, signatureChecked);
             });
             
             // Function to fetch employee data with proper filtering and duplicate handling
