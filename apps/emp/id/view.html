@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Data Bank</title>
+    <title>Employee Data Viewer</title>
     <!-- Bootstrap CSS -->
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
     <!-- Select2 CSS -->
@@ -60,7 +60,7 @@
             <div class="col-md-12">
                 <div class="panel panel-primary">
                     <div class="panel-heading">
-                        <h3 class="panel-title">Employee Data Bank</h3>
+                        <h3 class="panel-title">Employee Data Viewer</h3>
                     </div>
                     <div class="panel-body">
                         <form id="searchForm" class="form-horizontal">
@@ -109,7 +109,7 @@
             <div class="col-md-12">
                 <div class="panel panel-default">
                     <div class="panel-heading">
-                        <h3 class="panel-title">Employee Details</h3>
+                        <h3 class="panel-title">Employee Records</h3>
                     </div>
                     <div class="panel-body">
                         <div class="table-responsive">
@@ -124,12 +124,12 @@
                                         <th>Residence Contact</th>
                                         <th>Mobile No</th>
                                         <th>Email</th>
-                                        <th>ID No</th>
+                                      
                                         <th>DOB</th>
                                         <th>Retirement Date</th>
                                         <th>Blood Group</th>
-                                        <th>Photograph</th>
-                                        <th>Signature</th>
+                                        <th>Photo</th>
+                                     
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -280,8 +280,8 @@
                     // Now process the filtered unique rows
                     let slNo = 1;
                     uniqueRows.forEach(row => {
-                        const profilePic = row[17]; // Column Q (Profile PIC)
-                        const signature = row[18]; // Column R (Signature)
+                        const profilePic = row[16]; // Column Q (Profile PIC)
+                        const signature = row[17]; // Column R (Signature)
                         
                         // Determine if record matches filter criteria
                         const showRecord = 
@@ -334,7 +334,7 @@
                                     <td>${row[3] || ''}</td>
                                     <td>${row[4] || ''}</td>
                                     <td class="address-col">${address}</td>
-                                    <td>${row[9] || ''}</td>
+                                  
                                     <td>${row[10] || ''}</td>
                                     <td>${row[11] || ''}</td>
                                     <td>${row[12] || ''}</td>
@@ -342,7 +342,7 @@
                                     <td class="compact-col">${row[14] || ''}</td>
                                     <td>${row[15] || ''}</td>
                                     <td class="text-center">${profilePicContent}</td>
-                                    <td class="text-center">${signatureContent}</td>
+                                  
                                 </tr>
                             `);
                         }
