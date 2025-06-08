@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Money Order Credit</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+       
+        .upload-section, .summary-section, .table-section, .recalculate-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+      
+      
+        label {
+            display: inline-block;
+            width: 200px;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .panel {
+            color: #333;
+        }
+        .panel-default {
+            border-color: #ddd;
+        }
+        .panel {
+            background-color: #fff;
+            border: 1px solid #6c6c6c21;
+            border-radius: 4px;
+            -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+            box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+        }
+        .panel-default>.panel-heading {
+            color: #333;
+            background-color: #f5f5f5;
+            border-color: #ddd;
+        }
+        .panel-heading {
+            padding: 10px 15px;
+            border-bottom: 1px solid transparent;
+            border-top-left-radius: 3px;
+            border-top-right-radius: 3px;
+            font-weight:bold;
+        }
+        .panel-body {
+           padding: 10px;
+        }
+        * {
+          box-sizing: border-box;
+        }
+        .column {
+          float: left;
+          width: 50%;
+        }
+        .row:after {
+          content: "";
+          display: table;
+          clear: both;
+        }
+        .beneficiary-table {
+            margin-top: 20px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .loading {
+            color: blue;
+        }
+        .success {
+            color: green;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="min-width:100%">
+        <h3>Money Order Credit Booking XML/EXCEL/CSV Parser</h3>
+		
+			     <div id="pensionSection" style="" class="panel panel-default">
+            <div class="panel-heading">Pension Details</div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <label for="pensionType">Pension Type:</label>
+                    <select id="pensionType" class="form-control" style="width: 200px; display: inline-block;">
+                        <option value="">Loading...</option>
+                    </select>
+					 <label style="margin-left: 25px;" for="monthYear">Month & Year:</label>
+                    <input type="month" id="monthYear" class="form-control" style="width: 200px; display: inline-block;">
+                </div>
+              
+                
+            </div>
+        </div>
+        <br>
+        <div class="panel panel-default" >
+            <div class="panel-heading">File Upload</div>
+            <div class="panel-body"> <strong style="color:red;">* Upload XML/EXCEL File from PiMS> MO XML File Generation.</strong>
+            
+                <div class="upload-section">
+                    <input type="file" id="csvFile" class="" accept=".csv,.txt" style="">
+                    <button id="uploadBtn" class="btn btn-primary">View</button>
+                    <button id="updateCityBtn" style="display: none;"class="btn btn-success">Update City & S.O</button>
+					<button id="revalidateBtn" style="display: none;"class="btn btn-info">Merge and Download CSV</button>
+					<button id="saveBeneficiaryBtn" class="btn btn-warning" style="display: none;">Save Beneficiary Details</button>
+					
+                    <div  id="uploadError" class="error"></div>
+                </div>
+            
+            </div>
+        </div>
+	
+
+        <div class="row">
+            <div class="column">
+                <div class="summary-section" id="summarySection" style="display: none;">    
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Summary</div>
+                        <div class="panel-body">
+                            <p>Total Amount: <b><span id="totalAmount" style="color:red">0</span></b></p>
+                            <p>Number of Beneficiaries: <span id="beneficiaryCount" style="color:blue;">0</span></p>
+                            <p>Rows with missing references: <span id="missingRefCount">0</span></p>
+                        </div>
+                    </div>             
+                </div>
+            </div>
+            
+            <div class="column">
+                <div class="recalculate-section" id="recalculateSection" style="display: none;">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Merge </div>
+                        <div class="panel-body">
+                            <strong style="color:red;">* MO Amount Merge .</strong>
+                            <div class="input-group">
+                                <label for="mergeFromAmount">Merge rows of amount(From):</label>
+                                <input class="form-control form-control-sm" type="number" id="mergeFromAmount" value="5000" min="1">
+                            </div>
+                            <div class="input-group">
+                                <label for="mergeAmount">Amount to merge to (To):</label>
+                                <input class="form-control form-control-sm" type="number" id="mergeAmount" value="10000" min="1">
+                            </div>
+                            <div id="mergeError" class="error"></div>
+                        </div>
+                    </div>
+                </div> 
+            </div>    
+        </div>
+        
+   
+        
+        <div class="table-section" id="tableSection" style="display: none;">
+            <div class="panel panel-default">
+                <div class="panel-heading">CSV Details   </div>
+                <div class="panel-body">
+                    <div id="tableContainer"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="beneficiaryTableSection" style="display: none;" class="panel panel-default">
+            <div class="panel-heading">Combined Beneficiary Details</div>
+            <div class="panel-body">
+                <div id="beneficiaryTableContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('uploadBtn').addEventListener('click', processCSV);
+        document.getElementById('revalidateBtn').addEventListener('click', mergeAndDownload);
+        document.getElementById('updateCityBtn').addEventListener('click', updateCityAndSO);
+        document.getElementById('saveBeneficiaryBtn').addEventListener('click', saveBeneficiaryDetails);
+        
+        let csvData = [];
+        let originalFileName = '';
+        let postOfficeData = [];
+        let pensionTypes = [];
+        
+        // Load pension types from Google Sheet on page load
+        window.addEventListener('DOMContentLoaded', (event) => {
+            loadPensionTypes();
+            
+            // Set default month/year to current
+            const now = new Date();
+            const month = (now.getMonth() + 1).toString().padStart(2, '0');
+            document.getElementById('monthYear').value = `${now.getFullYear()}-${month}`;
+        });
+        
+        async function loadPensionTypes() {
+            try {
+                const sheetId = '1HOo8P4sAWp0N63Xfi8Fcna0zU2euo8_a5h3kSaOvJcI';
+                const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+                const sheetName = 'Settings';
+                const range = 'A2:A';
+                
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}!${range}?key=${apiKey}`;
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (data.values && data.values.length > 0) {
+                    pensionTypes = data.values.map(row => row[0]).filter(Boolean);
+                    
+                    const select = document.getElementById('pensionType');
+                    select.innerHTML = '';
+                    
+                    // Add default option
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = '-- Select Pension Type --';
+                    select.appendChild(defaultOption);
+                    
+                    // Add pension types
+                    pensionTypes.forEach(type => {
+                        const option = document.createElement('option');
+                        option.value = type;
+                        option.textContent = type;
+                        select.appendChild(option);
+                    });
+                    
+                    console.log('Pension types loaded successfully:', pensionTypes);
+                } else {
+                    console.error('No pension types found in the sheet');
+                    document.getElementById('pensionType').innerHTML = '<option value="">No pension types found</option>';
+                }
+            } catch (error) {
+                console.error('Error loading pension types:', error);
+                document.getElementById('pensionType').innerHTML = '<option value="">Error loading pension types</option>';
+                document.getElementById('uploadError').textContent = 'Error loading pension types. Please check console for details.';
+                document.getElementById('uploadError').style.color = 'red';
+            }
+        }
+        
+        async function loadPostOfficeData() {
+            try {
+                const sheetId = '1HOo8P4sAWp0N63Xfi8Fcna0zU2euo8_a5h3kSaOvJcI';
+                const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+                const sheetName = 'Post Offices';
+                const range = 'A:C';
+                
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}!${range}?key=${apiKey}`;
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                
+                if (data.values && data.values.length > 0) {
+                    // Skip header row if exists
+                    const startRow = data.values[0][0] === 'Pincode' ? 1 : 0;
+                    postOfficeData = data.values.slice(startRow).map(row => ({
+                        pincode: row[0] ? row[0].toString().trim() : '',
+                        add3: row[1] || '',
+                        city: row[2] || ''
+                    }));
+                    
+                    console.log('Post office data loaded successfully:', postOfficeData.length, 'records');
+                    return true;
+                } else {
+                    throw new Error('No data found in Post Offices sheet');
+                }
+            } catch (error) {
+                console.error('Error loading post office data:', error);
+                throw error;
+            }
+        }
+        
+        function processCSV() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            const errorElement = document.getElementById('uploadError');
+            errorElement.textContent = '';
+            
+            if (!file) {
+                errorElement.textContent = 'Please select a CSV file first.';
+                return;
+            }
+            
+            originalFileName = file.name.replace(/\.[^/.]+$/, "");
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    parseCSV(content);
+                } catch (error) {
+                    errorElement.textContent = 'Error processing file: ' + error.message;
+                    console.error('Error processing file:', error);
+                }
+            };
+            reader.onerror = function() {
+                errorElement.textContent = 'Error reading file.';
+            };
+            reader.readAsText(file);
+        }
+        
+        function parseCSV(content) {
+            const lines = content.split('\n').filter(line => line.trim() !== '');
+            
+            if (lines.length < 2) {
+                throw new Error('CSV file must contain at least a header row and one data row');
+            }
+            
+            // Normalize headers by trimming
+            const headers = lines[0].split(',').map(h => h.trim());
+            
+            // Find required columns with flexible matching
+            const remitterRefCol = headers.find(h => 
+                h.toLowerCase().includes('remitter') && h.toLowerCase().includes('reference')) || 
+                headers.find(h => h.toLowerCase().includes('reference'));
+            
+            const amountCol = headers.find(h => h.toLowerCase() === 'amount') || 
+                             headers.find(h => h.toLowerCase().includes('amount'));
+            
+            if (!amountCol) {
+                throw new Error('Could not find Amount column in CSV');
+            }
+            
+            let missingRefCount = 0;
+            csvData = [];
+            for (let i = 1; i < lines.length; i++) {
+                const currentLine = lines[i];
+                const obj = {};
+                
+                // Handle CSV with quoted values
+                let insideQuotes = false;
+                let currentField = '';
+                let fields = [];
+                let currentChar = '';
+                
+                for (let j = 0; j < currentLine.length; j++) {
+                    currentChar = currentLine[j];
+                    if (currentChar === '"') {
+                        insideQuotes = !insideQuotes;
+                    } else if (currentChar === ',' && !insideQuotes) {
+                        fields.push(currentField);
+                        currentField = '';
+                    } else {
+                        currentField += currentChar;
+                    }
+                }
+                fields.push(currentField); // Add the last field
+                
+                for (let j = 0; j < headers.length && j < fields.length; j++) {
+                    const header = headers[j];
+                    let value = fields[j] || '';
+                    // Remove any remaining quotes
+                    value = value.replace(/"/g, '').trim();
+                    obj[header] = value;
+                }
+                
+                // Count rows with missing references
+                if (remitterRefCol && (!obj[remitterRefCol] || obj[remitterRefCol].trim() === '')) {
+                    missingRefCount++;
+                }
+                
+                // Only require Amount column to be present
+                if (obj[amountCol] && obj[amountCol].trim() !== '') {
+                    csvData.push(obj);
+                }
+            }
+            
+            displayData();
+            updateSummary(remitterRefCol, amountCol, missingRefCount);
+            
+            document.getElementById('summarySection').style.display = 'block';
+            document.getElementById('recalculateSection').style.display = 'block';
+            document.getElementById('tableSection').style.display = 'block';
+            document.getElementById('updateCityBtn').style.display = 'inline-block';
+            document.getElementById('pensionSection').style.display = 'block';
+        }
+        
+        function displayData() {
+            const tableContainer = document.getElementById('tableContainer');
+            
+            if (csvData.length === 0) {
+                tableContainer.innerHTML = '<p>No data to display.</p>';
+                return;
+            }
+            
+            let tableHTML = '<table class="table table-bordered"><thead><tr>';
+            
+            // Create headers
+            const headers = Object.keys(csvData[0]);
+            headers.forEach(key => {
+                tableHTML += `<th>${key}</th>`;
+            });
+            tableHTML += '</tr></thead><tbody>';
+            
+            // Create rows
+            csvData.forEach(row => {
+                tableHTML += '<tr>';
+                headers.forEach(header => {
+                    tableHTML += `<td>${row[header] || ''}</td>`;
+                });
+                tableHTML += '</tr>';
+            });
+            
+            tableHTML += '</tbody></table>';
+            tableContainer.innerHTML = tableHTML;
+        }
+        
+        function updateSummary(remitterRefCol, amountCol, missingRefCount) {
+            // Calculate total amount
+            const totalAmount = csvData.reduce((sum, row) => {
+                const amount = parseFloat(row[amountCol]) || 0;
+                return sum + amount;
+            }, 0);
+            document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+            
+            // Count unique beneficiaries if reference column exists
+            let uniqueRefs = 0;
+            if (remitterRefCol) {
+                const refSet = new Set();
+                csvData.forEach(row => {
+                    const ref = row[remitterRefCol];
+                    if (ref && ref.trim() !== '') {
+                        refSet.add(ref.trim());
+                    }
+                });
+                uniqueRefs = refSet.size;
+            }
+            
+            document.getElementById('beneficiaryCount').textContent = uniqueRefs;
+            document.getElementById('missingRefCount').textContent = missingRefCount || 0;
+        }
+        
+        async function updateCityAndSO() {
+            try {
+                const errorElement = document.getElementById('uploadError');
+                errorElement.textContent = 'Loading post office data...';
+                errorElement.className = 'loading';
+                
+                if (csvData.length === 0) {
+                    errorElement.textContent = 'No data available to update. Please upload a CSV file first.';
+                    errorElement.className = 'error';
+                    return;
+                }
+                
+                // Load post office data if not already loaded
+                if (postOfficeData.length === 0) {
+                    await loadPostOfficeData();
+                }
+                
+                // Find columns in CSV data
+                const headers = Object.keys(csvData[0]);
+                const pincodeCol = headers.find(h => h.toLowerCase() === 'pincode');
+                const add3Col = headers.find(h => h.toLowerCase() === 'add3');
+                const cityCol = headers.find(h => h.toLowerCase() === 'city');
+                
+                if (!pincodeCol) {
+                    errorElement.textContent = 'Could not find Pincode column in CSV';
+                    errorElement.className = 'error';
+                    return;
+                }
+                
+                let updatedCount = 0;
+                
+                // Update each row with matching pincode data
+                csvData.forEach(row => {
+                    const pincode = row[pincodeCol] ? row[pincodeCol].toString().trim() : '';
+                    if (pincode) {
+                        const match = postOfficeData.find(po => po.pincode === pincode);
+                        if (match) {
+                            if (add3Col) {
+                                row[add3Col] = match.add3 || row[add3Col];
+                            }
+                            if (cityCol) {
+                                row[cityCol] = match.city || row[cityCol];
+                            }
+                            updatedCount++;
+                        }
+                    }
+                });
+                
+                // Refresh the displayed data
+                displayData();
+                
+                errorElement.textContent = `Successfully updated ${updatedCount} rows with City and Sub Office information.`;
+                errorElement.className = 'success';
+				document.getElementById('revalidateBtn').style.display = 'inline-block';
+				
+                
+            } catch (error) {
+                document.getElementById('uploadError').textContent = 'Error updating City and S.O: ' + error.message;
+                document.getElementById('uploadError').className = 'error';
+                console.error('Update error:', error);
+            }
+        }
+        
+        function mergeAndDownload() {
+            const mergeToAmount = parseInt(document.getElementById('mergeAmount').value) || 10000;
+            const mergeFromAmount = parseInt(document.getElementById('mergeFromAmount').value) || 5000;
+            const errorElement = document.getElementById('mergeError');
+            errorElement.textContent = '';
+            
+            if (csvData.length === 0) {
+                errorElement.textContent = 'No data available to merge. Please upload a CSV file first.';
+                return;
+            }
+            
+            try {
+                // Find actual column names
+                const headers = Object.keys(csvData[0]);
+                const remitterRefCol = headers.find(h => 
+                    h.toLowerCase().includes('remitter') && h.toLowerCase().includes('reference')) || 
+                    headers.find(h => h.toLowerCase().includes('reference'));
+                const amountCol = headers.find(h => h.toLowerCase() === 'amount') || 
+                                 headers.find(h => h.toLowerCase().includes('amount'));
+                const communicationCol = headers.find(h => h.toLowerCase() === 'communication');
+                
+                // Group by beneficiary reference if available, otherwise by all columns except amount
+                const groupedData = {};
+                csvData.forEach(row => {
+                    let groupKey;
+                    if (remitterRefCol && row[remitterRefCol] && row[remitterRefCol].trim() !== '') {
+                        groupKey = row[remitterRefCol].trim();
+                    } else {
+                        // Create a composite key from all columns except amount
+                        groupKey = headers
+                            .filter(h => h !== amountCol)
+                            .map(h => row[h] || '')
+                            .join('|');
+                    }
+                    
+                    if (!groupedData[groupKey]) {
+                        groupedData[groupKey] = [];
+                    }
+                    groupedData[groupKey].push(row);
+                });
+                
+                // Process each group's rows to merge amounts
+                const newCsvData = [];
+                let mergeCount = 0;
+                
+                for (const groupKey in groupedData) {
+                    const groupRows = groupedData[groupKey];
+                    let i = 0;
+                    
+                    while (i < groupRows.length) {
+                        const currentRow = groupRows[i];
+                        const currentAmount = parseFloat(currentRow[amountCol]) || 0;
+                        
+                        // Check if we can merge with next row
+                        if (i + 1 < groupRows.length && 
+                            currentAmount === mergeFromAmount && 
+                            parseFloat(groupRows[i+1][amountCol]) === mergeFromAmount) {
+                            
+                            // Create merged row
+                            const mergedRow = {};
+                            Object.keys(currentRow).forEach(key => {
+                                mergedRow[key] = currentRow[key];
+                            });
+                            
+                            mergedRow[amountCol] = mergeToAmount;
+                            
+                            // Update Communication field if exists
+                            if (communicationCol && mergedRow[communicationCol]) {
+                                mergedRow[communicationCol] = String(mergedRow[communicationCol])
+                                    .replace(`Rs.${mergeFromAmount}`, `Rs.${mergeToAmount}`)
+                                    .replace(`${mergeFromAmount}-`, `${mergeToAmount}-`);
+                            }
+                            
+                            newCsvData.push(mergedRow);
+                            i += 2;
+                            mergeCount++;
+                        } else {
+                            // Can't merge, add as-is
+                            newCsvData.push(currentRow);
+                            i++;
+                        }
+                    }
+                }
+                
+                if (newCsvData.length === 0) {
+                    errorElement.textContent = 'No rows matched the merge criteria.';
+                    return;
+                }
+                
+                // Generate CSV content without quotes
+                let csvContent = headers.join(',') + '\n';
+                
+                newCsvData.forEach(row => {
+                    const rowValues = headers.map(header => {
+                        let value = row[header] || '';
+                        // Remove any commas that might interfere with CSV structure
+                        value = String(value).replace(/,/g, ' ');
+                        return value;
+                    });
+                    csvContent += rowValues.join(',') + '\n';
+                });
+                
+                // Download the file
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `${originalFileName}_merged_${mergeToAmount}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Update the displayed data
+                csvData = newCsvData;
+                displayData();
+                
+                // Find columns again for summary update
+                const newRemitterRefCol = Object.keys(csvData[0]).find(h => 
+                    h.toLowerCase().includes('remitter') && h.toLowerCase().includes('reference')) || 
+                    Object.keys(csvData[0]).find(h => h.toLowerCase().includes('reference'));
+                const newAmountCol = Object.keys(csvData[0]).find(h => h.toLowerCase() === 'amount') || 
+                                   Object.keys(csvData[0]).find(h => h.toLowerCase().includes('amount'));
+                
+                updateSummary(newRemitterRefCol, newAmountCol, 0);
+                
+                alert(`Successfully merged ${mergeCount} pairs of Rs.${mergeFromAmount} into Rs.${mergeToAmount} amounts.`);
+                
+                // Show the save beneficiary button
+                document.getElementById('saveBeneficiaryBtn').style.display = 'inline-block';
+                
+            } catch (error) {
+                errorElement.textContent = 'Error during merging: ' + error.message;
+                console.error('Merge error:', error);
+            }
+        }
+        
+        function saveBeneficiaryDetails() {
+            try {
+                if (csvData.length === 0) {
+                    alert('No data available to save. Please upload and process a CSV file first.');
+                    return;
+                }
+                
+                const pensionType = document.getElementById('pensionType').value;
+                const monthYear = document.getElementById('monthYear').value;
+                
+                if (!pensionType) {
+                    alert('Please select a pension type.');
+                    return;
+                }
+                
+                if (!monthYear) {
+                    alert('Please select a month and year.');
+                    return;
+                }
+                
+                // Parse month/year (format is YYYY-MM)
+                const [year, month] = monthYear.split('-');
+                const monthYearDisplay = `${month}/${year}`;
+                
+                // Find columns in CSV data
+                const headers = Object.keys(csvData[0]);
+                const remitterRefCol = headers.find(h => 
+                    h.toLowerCase().includes('remitter') && h.toLowerCase().includes('reference')) || 
+                    headers.find(h => h.toLowerCase().includes('reference'));
+                const amountCol = headers.find(h => h.toLowerCase() === 'amount') || 
+                                 headers.find(h => h.toLowerCase().includes('amount'));
+                const nameCol = headers.find(h => h.toLowerCase() === 'name');
+                const communicationCol = headers.find(h => h.toLowerCase() === 'communication');
+                
+                if (!remitterRefCol || !amountCol || !nameCol) {
+                    alert('Required columns (Remitter Reference, Amount, Name) not found in CSV.');
+                    return;
+                }
+                
+                // Group by beneficiary reference and sum amounts
+                const beneficiaryMap = new Map();
+                
+                csvData.forEach(row => {
+                    const ref = row[remitterRefCol] || '';
+                    const name = row[nameCol] || '';
+                    const communication = communicationCol ? row[communicationCol] || '' : '';
+                    const amount = parseFloat(row[amountCol]) || 0;
+                    
+                    if (ref) {
+                        if (!beneficiaryMap.has(ref)) {
+                            beneficiaryMap.set(ref, {
+                                name: name,
+                                communication: communication,
+                                amount: 0,
+                                count: 0
+                            });
+                        }
+                        
+                        const beneficiary = beneficiaryMap.get(ref);
+                        beneficiary.amount += amount;
+                        beneficiary.count++;
+                    }
+                });
+                
+                // Convert map to array for display and submission
+                const beneficiaryData = [];
+                beneficiaryMap.forEach((value, key) => {
+                    beneficiaryData.push({
+                        amount: value.amount,
+                        name: value.name,
+                        communication: value.communication,
+                        remitterReference: key,
+                        monthYear: monthYearDisplay,
+                        pensionType: pensionType
+                    });
+                });
+                
+                // Display the combined data
+                displayBeneficiaryTable(beneficiaryData);
+                
+                // Submit the data to Google Sheets
+                submitToGoogleSheets(beneficiaryData);
+                
+            } catch (error) {
+                alert('Error saving beneficiary details: ' + error.message);
+                console.error('Save error:', error);
+            }
+        }
+        
+        function displayBeneficiaryTable(data) {
+            const container = document.getElementById('beneficiaryTableContainer');
+            
+            if (data.length === 0) {
+                container.innerHTML = '<p>No beneficiary data to display.</p>';
+                return;
+            }
+            
+            let tableHTML = `
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Amount</th>
+                            <th>Name</th>
+                            <th>Communication</th>
+                            <th>Remitter Reference</th>
+                            <th>Month & Year</th>
+                            <th>Pension Type</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            data.forEach(item => {
+                tableHTML += `
+                    <tr>
+                        <td>${item.amount.toFixed(2)}</td>
+                        <td>${item.name}</td>
+                        <td>${item.communication}</td>
+                        <td>${item.remitterReference}</td>
+                        <td>${item.monthYear}</td>
+                        <td>${item.pensionType}</td>
+                    </tr>
+                `;
+            });
+            
+            tableHTML += `</tbody></table>`;
+            container.innerHTML = tableHTML;
+            
+            // Show the beneficiary table section
+            document.getElementById('beneficiaryTableSection').style.display = 'block';
+        }
+		
+	function submitToGoogleSheets(data) {
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbw8LCJ1eM65Gd9ANANUYbMOzogbWUq0bHREccZMiPZzWumrYKi-K4Qc4cKFRykiP5Tn/exec';
+    
+    // Show loading alert
+    Swal.fire({
+        title: 'Saving Data',
+        html: 'Please wait while we save beneficiary details...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Create URL-encoded form data
+    const params = new URLSearchParams();
+    params.append('action', 'saveBeneficiaryData');
+    params.append('sheetName', 'IndividualDetails');
+    params.append('data', JSON.stringify(data));
+    
+    // Create and send fetch request
+    fetch(scriptUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params.toString()
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+    })
+    .then(response => {
+        if (response.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: response.message || 'Beneficiary details saved successfully!',
+                confirmButtonText: 'OK'
+            });
+        } else {
+            throw new Error(response.message || 'Unknown error');
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error saving to Google Sheets: ' + error.message,
+            confirmButtonText: 'OK'
+        });
+        console.error('Error details:', error);
+    });
+}
+
+    </script>
+</body>
+</html>
