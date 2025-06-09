@@ -217,7 +217,7 @@
                 const sheetId = '1HOo8P4sAWp0N63Xfi8Fcna0zU2euo8_a5h3kSaOvJcI';
                 const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
                 const sheetName = 'Settings';
-                const range = 'A2:A';
+                const range = 'A2:B'; // Now fetching both columns A and B
                 
                 const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}!${range}?key=${apiKey}`;
                 
@@ -228,7 +228,11 @@
                 const data = await response.json();
                 
                 if (data.values && data.values.length > 0) {
-                    pensionTypes = data.values.map(row => row[0]).filter(Boolean);
+                    // Store both code (A) and name (B) in pensionTypes array
+                    pensionTypes = data.values.map(row => ({
+                        code: row[0] ? row[0].toString().trim() : '',
+                        name: row[1] ? row[1].toString().trim() : ''
+                    })).filter(item => item.code);
                     
                     const select = document.getElementById('pensionType');
                     select.innerHTML = '';
@@ -242,8 +246,8 @@
                     // Add Credit types
                     pensionTypes.forEach(type => {
                         const option = document.createElement('option');
-                        option.value = type;
-                        option.textContent = type;
+                        option.value = type.code;
+                        option.textContent = type.code;
                         select.appendChild(option);
                     });
                     
@@ -633,14 +637,22 @@
                 });
                 
                 // Generate filename based on pension type and total amount
-                const pensionType = document.getElementById('pensionType').value;
+                const pensionTypeCode = document.getElementById('pensionType').value;
                 const totalAmount = document.getElementById('totalAmount').textContent;
                 
                 let filename;
-                if (pensionType && detectedPensionCode !== 'Not detected') {
-                    // Format: First letter uppercase + pension code + space + total amount
-                    const pensionTypeFirstLetter = pensionType.charAt(0).toUpperCase();
-                    filename = `${pensionTypeFirstLetter}${detectedPensionCode} ${totalAmount}`;
+                if (pensionTypeCode && detectedPensionCode !== 'Not detected') {
+                    // Find the matching pension type to get the name
+                    const pensionType = pensionTypes.find(pt => pt.code === pensionTypeCode);
+                    if (pensionType && pensionType.name) {
+                        // Get first letter of the name (column B)
+                        const firstLetter = pensionType.name.charAt(0).toUpperCase();
+                        filename = `${firstLetter}${detectedPensionCode} ${totalAmount}`;
+                    } else {
+                        // Fallback to using the code if name not found
+                        const pensionTypeFirstLetter = pensionTypeCode.charAt(0).toUpperCase();
+                        filename = `${pensionTypeFirstLetter}${detectedPensionCode} ${totalAmount}`;
+                    }
                 } else {
                     filename = `${originalFileName}_merged_${mergeToAmount}`;
                 }
