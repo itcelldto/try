@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Money Order Credit</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-	<script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
-<script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-	 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -36,7 +36,6 @@
         tr:nth-child(even) {
             background-color: #f9f9f9;
         }
-      
       
         label {
             display: inline-block;
@@ -103,7 +102,7 @@
 <body style="background-color: #f4f6f9;">
     <div class="container" style="min-width:100%">
       
-			     <div id="pensionSection" style="" class="panel panel-default">
+        <div id="pensionSection" style="" class="panel panel-default">
             <div class="panel-heading"><ion-icon name="card-outline"></ion-icon> M.O Pension Credit  Details</div>
             <div class="panel-body">
                 <div class="form-group">
@@ -111,11 +110,9 @@
                     <select id="pensionType" class="form-control" style="width: 200px; display: inline-block;">
                         <option value="">Loading...</option>
                     </select>
-					 <label style="margin-left: 25px;" for="monthYear">Month & Year:</label>
+                    <label style="margin-left: 25px;" for="monthYear">Month & Year:</label>
                     <input type="month" id="monthYear" class="form-control" style="width: 200px; display: inline-block;">
                 </div>
-              
-                
             </div>
         </div>
         <br>
@@ -127,15 +124,15 @@
                     <input type="file" id="csvFile" class="" accept=".csv,.txt" style="">
                     <button id="uploadBtn" class="btn btn-primary"><ion-icon name="arrow-undo-outline"></ion-icon> View</button>
                     <button id="updateCityBtn" style="display: none;"class="btn btn-success"><ion-icon name="podium-outline"></ion-icon> Update City & S.O</button>
-					<button id="revalidateBtn" style="display: none;"class="btn btn-info"><ion-icon name="cloud-download-outline"></ion-icon> Merge and Download CSV</button>
-					<button id="saveBeneficiaryBtn" class="btn btn-warning" style="display: none;"><ion-icon name="person-add-outline"></ion-icon> Save Beneficiary Details</button>
-					
+                    <button id="revalidateBtn" style="display: none;"class="btn btn-info"><ion-icon name="cloud-download-outline"></ion-icon> Merge and Download CSV</button>
+                    <button id="saveBeneficiaryBtn" class="btn btn-warning" style="display: none;"><ion-icon name="person-add-outline"></ion-icon> Save Beneficiary Details</button>
+                    
                     <div  id="uploadError" class="error"><ion-icon name="bulb-outline"></ion-icon></div>
                 </div>
             
             </div>
         </div>
-	
+    
 
         <div class="row">
             <div class="column">
@@ -143,6 +140,7 @@
                     <div class="panel panel-default">
                         <div class="panel-heading"><ion-icon name="podium-outline"></ion-icon> Summary</div>
                         <div class="panel-body">
+                            <p>Pension Type: <b><span id="pensionTypeDisplay" style="color:green;">Not detected</span></b></p>
                             <p>Total Amount: <b><span id="totalAmount" style="color:red">0</span></b></p>
                             <p>Number of Beneficiaries: <span id="beneficiaryCount" style="color:blue;">0</span></p>
                             <p>Rows with missing references: <span id="missingRefCount">0</span></p>
@@ -202,6 +200,7 @@
         let originalFileName = '';
         let postOfficeData = [];
         let pensionTypes = [];
+        let detectedPensionCode = '';
         
         // Load pension types from Google Sheet on page load
         window.addEventListener('DOMContentLoaded', (event) => {
@@ -335,7 +334,6 @@
             // Normalize headers by trimming
             const headers = lines[0].split(',').map(h => h.trim());
             
-            // Find required columns with flexible matching
             const remitterRefCol = headers.find(h => 
                 h.toLowerCase().includes('remitter') && h.toLowerCase().includes('reference')) || 
                 headers.find(h => h.toLowerCase().includes('reference'));
@@ -349,6 +347,8 @@
             
             let missingRefCount = 0;
             csvData = [];
+            detectedPensionCode = 'Not detected';
+            
             for (let i = 1; i < lines.length; i++) {
                 const currentLine = lines[i];
                 const obj = {};
@@ -385,6 +385,15 @@
                     missingRefCount++;
                 }
                 
+                // Extract pension type from first row's remitter reference if available
+                if (i === 1 && remitterRefCol && obj[remitterRefCol]) {
+                    const ref = obj[remitterRefCol];
+                    const pensionCodeMatch = ref.match(/Pension Code:(\d+)/);
+                    if (pensionCodeMatch) {
+                        detectedPensionCode = pensionCodeMatch[1];
+                    }
+                }
+                
                 // Only require Amount column to be present
                 if (obj[amountCol] && obj[amountCol].trim() !== '') {
                     csvData.push(obj);
@@ -393,6 +402,9 @@
             
             displayData();
             updateSummary(remitterRefCol, amountCol, missingRefCount);
+            
+            // Display detected pension type
+            document.getElementById('pensionTypeDisplay').textContent = detectedPensionCode;
             
             document.getElementById('summarySection').style.display = 'block';
             document.getElementById('recalculateSection').style.display = 'block';
@@ -509,8 +521,7 @@
                 
                 errorElement.textContent = `Successfully updated ${updatedCount} rows with City and Sub Office information.`;
                 errorElement.className = 'success';
-				document.getElementById('revalidateBtn').style.display = 'inline-block';
-				
+                document.getElementById('revalidateBtn').style.display = 'inline-block';
                 
             } catch (error) {
                 document.getElementById('uploadError').textContent = 'Error updating City and S.O: ' + error.message;
@@ -621,12 +632,25 @@
                     csvContent += rowValues.join(',') + '\n';
                 });
                 
+                // Generate filename based on pension type and total amount
+                const pensionType = document.getElementById('pensionType').value;
+                const totalAmount = document.getElementById('totalAmount').textContent;
+                
+                let filename;
+                if (pensionType && detectedPensionCode !== 'Not detected') {
+                    // Format: First letter uppercase + pension code + space + total amount
+                    const pensionTypeFirstLetter = pensionType.charAt(0).toUpperCase();
+                    filename = `${pensionTypeFirstLetter}${detectedPensionCode} ${totalAmount}`;
+                } else {
+                    filename = `${originalFileName}_merged_${mergeToAmount}`;
+                }
+                
                 // Download the file
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.download = `${originalFileName}_merged_${mergeToAmount}.csv`;
+                link.download = `${filename}.csv`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -666,23 +690,18 @@
                 const monthYear = document.getElementById('monthYear').value;
                 
                 if (!pensionType) {
-				
-				Swal.fire({
-  icon: "warning",
-  text: "Please select a Credit type.",
-});
-
-                   // alert('Please select a Credit type.');
+                    Swal.fire({
+                        icon: "warning",
+                        text: "Please select a Credit type.",
+                    });
                     return;
                 }
                 
                 if (!monthYear) {
-				
-				Swal.fire({
-  icon: "warning",
-  text: "Please select a month and year.",
-});
-                   // alert('Please select a month and year.');
+                    Swal.fire({
+                        icon: "warning",
+                        text: "Please select a month and year.",
+                    });
                     return;
                 }
                 
@@ -797,61 +816,60 @@
             // Show the beneficiary table section
             document.getElementById('beneficiaryTableSection').style.display = 'block';
         }
-		
-	function submitToGoogleSheets(data) {
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbw8LCJ1eM65Gd9ANANUYbMOzogbWUq0bHREccZMiPZzWumrYKi-K4Qc4cKFRykiP5Tn/exec';
-    
-    // Show loading alert
-    Swal.fire({
-        title: 'Saving Data',
-        html: 'Please wait while we save beneficiary details...',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-
-    // Create URL-encoded form data
-    const params = new URLSearchParams();
-    params.append('action', 'saveBeneficiaryData');
-    params.append('sheetName', 'IndividualDetails');
-    params.append('data', JSON.stringify(data));
-    
-    // Create and send fetch request
-    fetch(scriptUrl, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: params.toString()
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Network response was not ok');
-        return response.json();
-    })
-    .then(response => {
-        if (response.success) {
+        
+        function submitToGoogleSheets(data) {
+            const scriptUrl = 'https://script.google.com/macros/s/AKfycbw8LCJ1eM65Gd9ANANUYbMOzogbWUq0bHREccZMiPZzWumrYKi-K4Qc4cKFRykiP5Tn/exec';
+            
+            // Show loading alert
             Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: response.message || 'Beneficiary details saved successfully!',
-                confirmButtonText: 'OK'
+                title: 'Saving Data',
+                html: 'Please wait while we save beneficiary details...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
             });
-        } else {
-            throw new Error(response.message || 'Unknown error');
-        }
-    })
-    .catch(error => {
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Error saving to Google Sheets: ' + error.message,
-            confirmButtonText: 'OK'
-        });
-        console.error('Error details:', error);
-    });
-}
 
+            // Create URL-encoded form data
+            const params = new URLSearchParams();
+            params.append('action', 'saveBeneficiaryData');
+            params.append('sheetName', 'IndividualDetails');
+            params.append('data', JSON.stringify(data));
+            
+            // Create and send fetch request
+            fetch(scriptUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: params.toString()
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.json();
+            })
+            .then(response => {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: response.message || 'Beneficiary details saved successfully!',
+                        confirmButtonText: 'OK'
+                    });
+                } else {
+                    throw new Error(response.message || 'Unknown error');
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error saving to Google Sheets: ' + error.message,
+                    confirmButtonText: 'OK'
+                });
+                console.error('Error details:', error);
+            });
+        }
     </script>
 </body>
 </html>
