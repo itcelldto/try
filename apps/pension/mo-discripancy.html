@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pension Credit vs. Return Comparison</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .discrepancy-card {
+            margin-top: 30px;
+        }
+        .excess {
+            color: green;
+            font-weight: bold;
+        }
+        .deficit {
+            color: red;
+            font-weight: bold;
+        }
+        .match-highlight {
+            background-color: #e6ffe6;
+        }
+        .controls-card {
+            margin-bottom: 30px;
+        }
+        .loading-container, .no-data-container {
+            margin: 30px 0;
+            text-align: center;
+        }
+        .table-container {
+            margin-bottom: 30px;
+        }
+        .report-title {
+            margin: 20px 0;
+        }
+        .table-responsive {
+            overflow-x: auto;
+        }
+        .table-count {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .difference-card {
+            height: 100%;
+        }
+        .difference-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .difference-header {
+            font-weight: bold;
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="container py-4" style="min-width:100%">
+        
+        
+   <div class="card controls-card">
+    <div class="card-body">
+      <h4 class="">M.O Credit vs. Return Comparison Report</h4>
+        <div class="row g-2">
+            <div class="col-md-3">
+                <label for="fromMonth" class="form-label">From Month:</label>
+                <select id="fromMonth" class="form-select">
+                    <option value="1">Jan</option>
+                    <option value="2">Feb</option>
+                    <option value="3">Mar</option>
+                    <option value="4">Apr</option>
+                    <option value="5">May</option>
+                    <option value="6">Jun</option>
+                    <option value="7">Jul</option>
+                    <option value="8">Aug</option>
+                    <option value="9">Sep</option>
+                    <option value="10">Oct</option>
+                    <option value="11">Nov</option>
+                    <option value="12">Dec</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="fromYear" class="form-label">Year:</label>
+                <select id="fromYear" class="form-select"></select>
+            </div>
+            
+            <div class="col-md-1 text-center align-self-end pb-2">
+                <span class="fw-bold">to</span>
+            </div>
+            
+            <div class="col-md-3">
+                <label for="toMonth" class="form-label">To Month:</label>
+                <select id="toMonth" class="form-select">
+                    <option value="1">Jan</option>
+                    <option value="2">Feb</option>
+                    <option value="3">Mar</option>
+                    <option value="4">Apr</option>
+                    <option value="5">May</option>
+                    <option value="6">Jun</option>
+                    <option value="7">Jul</option>
+                    <option value="8">Aug</option>
+                    <option value="9">Sep</option>
+                    <option value="10">Oct</option>
+                    <option value="11">Nov</option>
+                    <option value="12">Dec</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label for="toYear" class="form-label">Year:</label>
+                <select id="toYear" class="form-select"></select>
+            </div>
+            
+            <div class="col-md-1 align-self-end">
+                <button id="generateReport" class="btn btn-primary">View</button>
+            </div>
+        </div>
+        <div id="errorMessage" class="alert alert-danger mt-2 mb-0" style="display: none;"></div>
+    </div>
+</div>
+        
+        <div id="loading" class="loading-container" style="display: none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading data, please wait...</p>
+        </div>
+        
+        <div id="reportContainer" style="display: none;">
+            <h2 id="reportTitle" class="report-title text-center"></h2>
+            
+            <div class="row">
+                <!-- Return Table (Left) -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-danger text-white">
+                            <h3 class="card-title mb-0">M.O Return Details</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-count" id="returnCount"></div>
+                            <div class="table-responsive">
+                                <table id="returnTable" class="table table-striped table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Sr. No.</th>
+                                            <th>Period</th>
+                                            <th>Remitter Reference</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Credit Table (Center) -->
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h3 class="card-title mb-0">M.O Credit Details</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-count" id="creditCount"></div>
+                            <div class="table-responsive">
+                                <table id="creditTable" class="table table-striped table-bordered">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Sr. No.</th>
+                                            <th>Period</th>
+                                            <th>Remitter Reference</th>
+                                            <th>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Differences (Right) -->
+                <div class="col-md-4">
+                    <div class="card difference-card">
+                        <div class="card-header bg-info text-white">
+                            <h3 class="card-title mb-0">Differences by Remitter</h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <div id="differencesList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card discrepancy-card">
+                <div class="card-header bg-warning text-white">
+                    <h3 class="card-title mb-0">Summary</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p class="h5">Total Return Amount: <span id="totalReturn" class="fw-bold">0.00</span></p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="h5">Total Matching Credit Amount: <span id="totalCredit" class="fw-bold">0.00</span></p>
+                        </div>
+                        <div class="col-md-4">
+                            <p class="h5">Overall Difference: <span id="difference" class="fw-bold">0.00</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="noData" class="no-data-container alert alert-warning" style="display: none;">
+            No data found for the selected period.
+        </div>
+    </div>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Initialize year dropdowns
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentYear = new Date().getFullYear();
+            const currentMonth = new Date().getMonth() + 1;
+            
+            const yearSelects = document.querySelectorAll('select[id$="Year"]');
+            
+            yearSelects.forEach(select => {
+                // Add years from current year back to 10 years ago
+                for (let year = currentYear; year >= currentYear - 10; year--) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    select.appendChild(option);
+                }
+                
+                // Set default to current year
+                select.value = currentYear;
+            });
+            
+            // Set default months
+            document.getElementById('fromMonth').value = currentMonth;
+            document.getElementById('toMonth').value = currentMonth;
+            
+            // Generate report button click handler
+            document.getElementById('generateReport').addEventListener('click', generateReport);
+        });
+        
+        function getMonthName(monthValue) {
+            const months = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            return months[parseInt(monthValue) - 1];
+        }
+        
+        function showError(message) {
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            setTimeout(() => errorElement.style.display = 'none', 5000);
+        }
+        
+        async function generateReport() {
+            const fromMonth = document.getElementById('fromMonth').value;
+            const fromYear = document.getElementById('fromYear').value;
+            const toMonth = document.getElementById('toMonth').value;
+            const toYear = document.getElementById('toYear').value;
+            
+            // Validate date range
+            const fromDate = new Date(fromYear, fromMonth - 1);
+            const toDate = new Date(toYear, toMonth - 1);
+            
+            if (fromDate > toDate) {
+                showError('"From" date cannot be after "To" date');
+                return;
+            }
+            
+            // Show loading indicator
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('reportContainer').style.display = 'none';
+            document.getElementById('noData').style.display = 'none';
+            
+            // Set report title
+            document.getElementById('reportTitle').textContent = 
+                `Report for Period: ${getMonthName(fromMonth)} ${fromYear} to ${getMonthName(toMonth)} ${toYear}`;
+            
+            try {
+                // Fetch data from both sheets
+                const [creditData, returnData] = await Promise.all([
+                    fetchCreditData(),
+                    fetchReturnData()
+                ]);
+                
+                // Process data for the selected period
+                const filteredReturnData = filterDataByPeriod(returnData, fromMonth, fromYear, toMonth, toYear);
+                const filteredCreditData = filterDataByPeriod(creditData, fromMonth, fromYear, toMonth, toYear);
+                
+                // Get unique remitter references from return data
+                const returnRemitterRefs = new Set(
+                    filteredReturnData.map(item => 
+                        (item['Remitter Reference'] || item['Remitter reference'] || '').toLowerCase().trim()
+                    )
+                );
+                
+                // Filter credit data to only include matching remitter references
+                const matchingCreditData = filteredCreditData.filter(item => {
+                    const ref = (item['Remitter Reference'] || item['Remitter reference'] || '').toLowerCase().trim();
+                    return returnRemitterRefs.has(ref);
+                });
+                
+                // Generate tables
+                generateComparisonTables(filteredReturnData, matchingCreditData);
+                
+                // Hide loading indicator
+                document.getElementById('loading').style.display = 'none';
+                
+                // Show report or no data message
+                if (filteredReturnData.length > 0 || matchingCreditData.length > 0) {
+                    document.getElementById('reportContainer').style.display = 'block';
+                } else {
+                    document.getElementById('noData').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error generating report:', error);
+                document.getElementById('loading').style.display = 'none';
+                showError('Error generating report. Please check console for details.');
+            }
+        }
+        
+        function filterDataByPeriod(data, fromMonth, fromYear, toMonth, toYear) {
+            return data.filter(item => {
+                // Check if period exists and is in correct format
+                const period = item.Period || item.period;
+                if (!period || typeof period !== 'string') return false;
+                
+                const periodParts = period.split('/');
+                if (periodParts.length !== 2) return false;
+                
+                const itemMonth = parseInt(periodParts[0]);
+                const itemYear = parseInt(periodParts[1]);
+                
+                // Validate month and year values
+                if (isNaN(itemMonth) || isNaN(itemYear)) return false;
+                if (itemMonth < 1 || itemMonth > 12) return false;
+                
+                // Create date objects for comparison
+                const itemDate = new Date(itemYear, itemMonth - 1);
+                const fromDate = new Date(fromYear, fromMonth - 1);
+                const toDate = new Date(toYear, toMonth - 1);
+                
+                return itemDate >= fromDate && itemDate <= toDate;
+            });
+        }
+        
+        async function fetchCreditData() {
+            const sheetId = '1HOo8P4sAWp0N63Xfi8Fcna0zU2euo8_a5h3kSaOvJcI';
+            const sheetName = 'IndividualDetails';
+            const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+            
+            const range = 'A:E'; // Columns A to E
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}!${range}?key=${apiKey}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (!data.values || data.values.length < 2) return [];
+                
+                const headers = data.values[0].map(header => header.trim());
+                const rows = data.values.slice(1);
+                
+                return rows.map(row => {
+                    const obj = {};
+                    headers.forEach((header, i) => {
+                        obj[header] = (row[i] || '').toString().trim();
+                    });
+                    return obj;
+                });
+            } catch (error) {
+                console.error('Error fetching credit data:', error);
+                throw error;
+            }
+        }
+        
+        async function fetchReturnData() {
+            const sheetId = '1weOpS4nZW01q-ox3B_KRH_mNIbNkD_OHD4i59NhvHKE';
+            const sheetName = 'Sheet1';
+            const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+            
+            const range = 'Q:S'; // Columns Q to S
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${sheetName}!${range}?key=${apiKey}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (!data.values || data.values.length < 2) return [];
+                
+                const headers = data.values[0].map(header => header.trim());
+                const rows = data.values.slice(1);
+                
+                return rows.map(row => {
+                    const obj = {};
+                    headers.forEach((header, i) => {
+                        obj[header] = (row[i] || '').toString().trim();
+                    });
+                    return obj;
+                });
+            } catch (error) {
+                console.error('Error fetching return data:', error);
+                throw error;
+            }
+        }
+        
+        function generateComparisonTables(returnData, creditData) {
+            // Clear previous tables
+            document.getElementById('returnTable').querySelector('tbody').innerHTML = '';
+            document.getElementById('creditTable').querySelector('tbody').innerHTML = '';
+            document.getElementById('differencesList').innerHTML = '';
+            
+            // Create maps to store the last entry for each remitter
+            const lastReturnEntries = {};
+            const lastCreditEntries = {};
+            
+            // Process return data to get last entry for each remitter
+            returnData.forEach(item => {
+                const ref = (item['Remitter Reference'] || item['Remitter reference'] || '').toLowerCase().trim();
+                lastReturnEntries[ref] = item;
+            });
+            
+            // Process credit data to get last entry for each remitter
+            creditData.forEach(item => {
+                const ref = (item['Remitter Reference'] || item['Remitter reference'] || '').toLowerCase().trim();
+                lastCreditEntries[ref] = item;
+            });
+            
+            // Generate return table with only last entries
+            const returnTbody = document.getElementById('returnTable').querySelector('tbody');
+            let returnCount = 0;
+            let totalReturn = 0;
+            
+            Object.keys(lastReturnEntries).forEach((ref, index) => {
+                const item = lastReturnEntries[ref];
+                const amount = parseFloat(item.Amount || 0) || 0;
+                totalReturn += amount;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.Period || item.period || ''}</td>
+                    <td>${item['Remitter Reference'] || item['Remitter reference'] || ''}</td>
+                    <td>${amount.toFixed(2)}</td>
+                `;
+                returnTbody.appendChild(row);
+                returnCount++;
+            });
+            
+            // Generate credit table with only last entries (for remitters that exist in return data)
+            const creditTbody = document.getElementById('creditTable').querySelector('tbody');
+            let creditCount = 0;
+            let totalCredit = 0;
+            
+            Object.keys(lastReturnEntries).forEach((ref, index) => {
+                const item = lastCreditEntries[ref];
+                if (!item) return;
+                
+                const amount = parseFloat(item.Amount || 0) || 0;
+                totalCredit += amount;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.Period || item.period || ''}</td>
+                    <td>${item['Remitter Reference'] || item['Remitter reference'] || ''}</td>
+                    <td>${amount.toFixed(2)}</td>
+                `;
+                creditTbody.appendChild(row);
+                creditCount++;
+            });
+            
+            // Generate differences list
+            const differencesList = document.getElementById('differencesList');
+            
+            // Add header
+            const headerDiv = document.createElement('div');
+            headerDiv.className = 'difference-item difference-header d-flex justify-content-between';
+            headerDiv.innerHTML = `
+                <span>Remitter Reference</span>
+                <span>Difference</span>
+            `;
+            differencesList.appendChild(headerDiv);
+            
+            // Add differences for each remitter
+            Object.keys(lastReturnEntries).forEach((ref, index) => {
+                const returnItem = lastReturnEntries[ref];
+                const creditItem = lastCreditEntries[ref];
+                
+                const returnAmount = parseFloat(returnItem?.Amount || 0) || 0;
+                const creditAmount = parseFloat(creditItem?.Amount || 0) || 0;
+                const difference = creditAmount - returnAmount;
+                
+                const diffClass = difference >= 0 ? 'excess' : 'deficit';
+                const displayRef = returnItem['Remitter Reference'] || 
+                                 returnItem['Remitter reference'] || 
+                                 creditItem?.['Remitter Reference'] || 
+                                 creditItem?.['Remitter reference'] || 
+                                 ref;
+                
+                const diffDiv = document.createElement('div');
+                diffDiv.className = 'difference-item d-flex justify-content-between';
+                diffDiv.innerHTML = `
+                    <span>${displayRef}</span>
+                    <span class="${diffClass}">${difference.toFixed(2)}</span>
+                `;
+                differencesList.appendChild(diffDiv);
+            });
+            
+            // Update counts
+            document.getElementById('returnCount').textContent = `${returnCount} remitters found`;
+            document.getElementById('creditCount').textContent = `${creditCount} remitters found`;
+            
+            // Update summary
+            const difference = totalCredit - totalReturn;
+            
+            document.getElementById('totalReturn').textContent = totalReturn.toFixed(2);
+            document.getElementById('totalCredit').textContent = totalCredit.toFixed(2);
+            
+            const differenceElement = document.getElementById('difference');
+            differenceElement.textContent = Math.abs(difference).toFixed(2);
+            differenceElement.className = difference >= 0 ? 'excess' : 'deficit';
+        }
+    </script>
+</body>
+</html>
