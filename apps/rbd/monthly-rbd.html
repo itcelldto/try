@@ -458,7 +458,7 @@
                 // Compare the absolute values
                 const statusElement = $('#rbdStatus');
                 if (Math.abs(totalCashDiff) === Math.abs(totalRBD)) {
-                    statusElement.html('<i class="fas fa-check-circle green-status"></i> RBD Agreed with Treasury RBD');
+                    statusElement.html('<i class="fas fa-check-circle green-status"></i> Agreed with Treasury RBD');
                 } else {
                     statusElement.html(`<i class="fas fa-times-circle red-status"></i> RBD difference of ${Math.abs(totalDiff).toLocaleString()}`);
                 }
