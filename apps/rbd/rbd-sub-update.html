@@ -259,7 +259,7 @@
         // Set the treasury name as the only option and select it
         $('#treasuryName').empty().append(`<option value="${treasuryName}" selected>${treasuryName}</option>`);
         $('#treasuryName').trigger('change');
-        $('#treasuryName').prop('disabled', true); // Make it readonly since it's set from session
+        $('#treasuryName').prop('disabled', false); // Make it readonly since it's set from session
         
         // Set current timestamp and year
         const now = new Date();
