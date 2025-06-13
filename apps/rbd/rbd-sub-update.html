@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RBD Data Entry Form</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <style>
+        .panel {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 1px 1px rgba(0,0,0,.05);
+        }
+        .panel-default {
+            border-color: #ddd;
+        }
+        .panel-heading {
+            padding: 10px 15px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            border-top-left-radius: 3px;
+            border-top-right-radius: 3px;
+        }
+        .panel-body {
+            padding: 15px;
+            background-color: #fff;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .spinner {
+            display: none;
+            justify-content: left;
+            align-items: left;
+        }
+        .spinner-border {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+        .hidden {
+            display: none;
+        }
+        .select2-container--default .select2-selection--single {
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            min-height: 35px;
+        } 
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 1px solid #5897fb;
+        }
+        .h1, .h2, .h3, .h4, .h5, .h6, h1, h2, h3, h4, h5, h6 {
+            margin-bottom: .1rem; 
+        }
+        .alert-danger {
+            color: #a94442;
+            background-color: #f2dede;
+            border-color: #ebccd1;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body style="background-color: #d7e2ff6e;">
+    <div class="container mt-4" style="min-width:100%">
+        <div id="loginAlert" class="alert-danger" style="display: none;">
+            <strong>Error:</strong> Session Expired ! Please <a href="https://itcelldto.github.io/try/" target="_blank">login</a> again.
+        </div>
+        
+        <form id="rbdForm">
+            <input type="hidden" id="timestamp" name="timestamp">
+            
+            <!-- Panel 1: Basic Information -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h5 class="panel-title">Monthly RBD Updation Form</h5>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="treasuryName" class="required-field">Treasury Name</label>
+                                <select class="form-control select2" id="treasuryName" name="treasuryName" required>
+                                    <option value="">Select Treasury</option>
+                                    <!-- Treasury options will be loaded dynamically -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="rbdMonth" class="required-field">RBD Month</label>
+                                <select class="form-control select2" id="rbdMonth" name="rbdMonth" required>
+                                    <option value="">Select Month</option>
+                                    <option value="January">January</option>
+                                    <option value="February">February</option>
+                                    <option value="March">March</option>
+                                    <option value="April">April</option>
+                                    <option value="May">May</option>
+                                    <option value="June">June</option>
+                                    <option value="July">July</option>
+                                    <option value="August">August</option>
+                                    <option value="September">September</option>
+                                    <option value="October">October</option>
+                                    <option value="November">November</option>
+                                    <option value="December">December</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <label for="year" class="required-field">Year</label>
+                                <input type="text" class="form-control" id="year" name="year" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel 2: Treasury Amounts -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h5 class="panel-title">Treasury RBD Details</h5>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="treasuryReceipt" class="required-field">Total Receipt Amount (Treasury)</label>
+                                <input type="number" class="form-control" id="treasuryReceipt" name="treasuryReceipt" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="treasuryPayment" class="required-field">Total Payment Amount (Treasury)</label>
+                                <input type="number" class="form-control" id="treasuryPayment" name="treasuryPayment" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="treasuryNet">Total Net Amount (Treasury)</label>
+                                <input type="number" class="form-control" id="treasuryNet" name="treasuryNet" step="0.01" readonly disabled>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel 3: Bank Amounts -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h5 class="panel-title">Bank VDMS Details</h5>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="bankReceipt" class="required-field">Total Receipt Amount (Bank)</label>
+                                <input type="number" class="form-control" id="bankReceipt" name="bankReceipt" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="bankPayment" class="required-field">Total Payment Amount (Bank)</label>
+                                <input type="number" class="form-control" id="bankPayment" name="bankPayment" step="0.01" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="bankNet">Total Net Amount (Bank)</label>
+                                <input type="number" class="form-control" id="bankNet" name="bankNet" step="0.01" readonly disabled>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel 4: Difference and Remarks -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h5 class="panel-title">Difference and Verification</h5>
+                </div>
+                <div class="panel-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="difference">Difference</label>
+                                <input type="number" class="form-control" id="difference" name="difference" step="0.01" readonly="" disabled="">
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="form-group">
+                                <label for="differenceRemarks">Difference Remarks</label>
+                                <textarea class="form-control" id="differenceRemarks" name="differenceRemarks" rows="2" placeholder="Please provide details of difference" disabled=""></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="declaration" name="declaration" required="">
+                                <label class="form-check-label required-field" for="declaration">
+                                    I declare that the information provided above is true and correct to the best of my knowledge.
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <input type="text" class="form-control" id="reportingOfficerPen" name="reportingOfficerPen" placeholder="Reporting Officer PEN*" required="">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <button type="submit" class="btn btn-primary" id="submitBtn">Submit</button>
+                                <a href="https://forms.gle/NGexWHixZz5o4DV5A" target="_blank" type="button" class="btn btn-warning"> File Upload Form</a>
+                                <div class="spinner" id="spinner">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- jQuery, Bootstrap, Select2, SweetAlert2 JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    
+    <script>
+    $(document).ready(function() {
+        // Check for treasury name in session storage
+        const treasuryName = sessionStorage.getItem('treasuryName');
+        if (!treasuryName) {
+            $('#loginAlert').show();
+            $('.panel').hide();
+            return;
+        }
+        
+        // Initialize Select2
+        $('.select2').select2();
+        
+        // Set the treasury name as the only option and select it
+        $('#treasuryName').empty().append(`<option value="${treasuryName}" selected>${treasuryName}</option>`);
+        $('#treasuryName').trigger('change');
+        $('#treasuryName').prop('disabled', true); // Make it readonly since it's set from session
+        
+        // Set current timestamp and year
+        const now = new Date();
+        $('#timestamp').val(now.toISOString());
+        $('#year').val(now.getFullYear());
+        
+        // Setup calculation event handlers
+        setupCalculationHandlers();
+        
+        // Form submission handler
+        document.getElementById("rbdForm").onsubmit = function(e) {
+            e.preventDefault(); // Prevent default form submission
+            
+            // Validate form
+            if (!e.target.checkValidity()) {
+                e.stopPropagation();
+                $(e.target).addClass('was-validated');
+                return;
+            }
+            
+            var submitButton = document.getElementById("submitBtn");
+            var spinner = document.getElementById("spinner");
+            // Show spinner and hide the button
+            spinner.style.display = "flex";
+            submitButton.style.display = "none";
+            
+            var formData = new FormData(this);
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "https://script.google.com/macros/s/AKfycby5hSeZ_0I3MbkHpBDkPcrgO35hg7dRif833-T5gpN7ndaLqOUbbTZ5ERWU1rBR_Pyc2Q/exec", true);
+            xhr.onload = function() {
+                // Hide spinner and show the submit button after response
+                spinner.style.display = "none";
+                submitButton.style.display = "inline-block";
+                if (xhr.status == 200) {
+                    var referenceId = xhr.responseText; // Receive reference ID from the server
+                    // Show SweetAlert success message with the reference ID
+                    Swal.fire({
+                        title: 'Success!',
+                        html: 'Your submission has been received.' ,
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(function() {
+                        document.getElementById("rbdForm").reset(); // Reset the form after submission
+                        $('#rbdForm').removeClass('was-validated');
+                        $('#differenceRemarks').prop('disabled', true);
+                        $('#timestamp').val(new Date().toISOString());
+                        // Reset treasury name to the session value
+                        $('#treasuryName').empty().append(`<option value="${treasuryName}" selected>${treasuryName}</option>`);
+                        $('#treasuryName').trigger('change');
+                    });
+                } else {
+                    // Error handling if the form submission fails
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'There was an issue submitting your form. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            };
+            xhr.send(formData);
+        };
+    });
+    
+    function setupCalculationHandlers() {
+        // Calculate Treasury Net Amount
+        $('#treasuryReceipt, #treasuryPayment').on('input', function() {
+            const receipt = parseFloat($('#treasuryReceipt').val()) || 0;
+            const payment = parseFloat($('#treasuryPayment').val()) || 0;
+            const net = receipt - payment;
+            $('#treasuryNet').val(net.toFixed(2));
+            
+            // Trigger difference calculation if bank net is already calculated
+            if ($('#bankNet').val()) {
+                calculateDifference();
+            }
+        });
+        
+        // Calculate Bank Net Amount
+        $('#bankReceipt, #bankPayment').on('input', function() {
+            const receipt = parseFloat($('#bankReceipt').val()) || 0;
+            const payment = parseFloat($('#bankPayment').val()) || 0;
+            const net = receipt - payment;
+            $('#bankNet').val(net.toFixed(2));
+            
+            // Trigger difference calculation if treasury net is already calculated
+            if ($('#treasuryNet').val()) {
+                calculateDifference();
+            }
+        });
+        
+        // Enable/disable difference remarks based on difference value
+        $('#difference').on('change', function() {
+            const difference = parseFloat($(this).val()) || 0;
+            if (Math.abs(difference) > 0.01) { // Account for floating point precision
+                $('#differenceRemarks').prop('disabled', false).prop('required', true);
+            } else {
+                $('#differenceRemarks').prop('disabled', true).prop('required', false).val('');
+            }
+        });
+    }
+    
+    function calculateDifference() {
+        const treasuryNet = parseFloat($('#treasuryNet').val()) || 0;
+        const bankNet = parseFloat($('#bankNet').val()) || 0;
+        const difference = treasuryNet - bankNet;
+        $('#difference').val(difference.toFixed(2)).trigger('change');
+    }
+    </script>
+</body>
+</html>
