@@ -71,12 +71,15 @@
             border: 1px solid transparent;
             border-radius: 4px;
         }
+        .readonly-select2 {
+            background-color: #e9ecef !important;
+        }
     </style>
 </head>
 <body style="background-color: #d7e2ff6e;">
     <div class="container mt-4" style="min-width:100%">
         <div id="loginAlert" class="alert-danger" style="display: none;">
-            <strong>Error:</strong> Session Expired ! Please <a href="https://itcelldto.github.io/try/" target="_blank">login</a> again.
+            <strong>Error:</strong> session expired. Please <a href="https://itcelldto.github.io/try/" target="_blank">login</a> again.
         </div>
         
         <form id="rbdForm">
@@ -94,7 +97,6 @@
                                 <label for="treasuryName" class="required-field">Treasury Name</label>
                                 <select class="form-control select2" id="treasuryName" name="treasuryName" required>
                                     <option value="">Select Treasury</option>
-                                    <!-- Treasury options will be loaded dynamically -->
                                 </select>
                             </div>
                         </div>
@@ -150,7 +152,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="treasuryNet">Total Net Amount (Treasury)</label>
-                                <input type="number" class="form-control" id="treasuryNet" name="treasuryNet" step="0.01"  style="font-weight:500;color:blue;" readonly disabled>
+                                <input type="number" class="form-control" id="treasuryNet" name="treasuryNet" step="0.01" readonly disabled>
                             </div>
                         </div>
                     </div>
@@ -179,7 +181,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="bankNet">Total Net Amount (Bank)</label>
-                                <input type="number" class="form-control" id="bankNet" name="bankNet" step="0.01" style="font-weight:500;color:blue;" readonly disabled>
+                                <input type="number" class="form-control" id="bankNet" name="bankNet" step="0.01" readonly disabled>
                             </div>
                         </div>
                     </div>
@@ -196,20 +198,20 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label for="difference">Difference</label>
-                                <input type="number" class="form-control" id="difference" name="difference" step="0.01" readonly="" disabled="">
+                                <input type="number" class="form-control" id="difference" name="difference" step="0.01" readonly disabled>
                             </div>
                         </div>
                         <div class="col-md-8">
                             <div class="form-group">
                                 <label for="differenceRemarks">Difference Remarks</label>
-                                <textarea class="form-control" id="differenceRemarks" name="differenceRemarks" rows="2" placeholder="Please provide details of difference" disabled=""></textarea>
+                                <textarea class="form-control" id="differenceRemarks" name="differenceRemarks" rows="2" placeholder="Please provide details of difference" disabled></textarea>
                             </div>
                         </div>
                     </div>
                     <div class="row mt-3">
                         <div class="col-md-3">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="declaration" name="declaration" required="">
+                                <input class="form-check-input" type="checkbox" id="declaration" name="declaration" required>
                                 <label class="form-check-label required-field" for="declaration">
                                     I declare that the information provided above is true and correct to the best of my knowledge.
                                 </label>
@@ -217,7 +219,7 @@
                         </div>
                         <div class="col-md-3">
                             <div class="form-group">
-                                <input type="text" class="form-control" id="reportingOfficerPen" name="reportingOfficerPen" placeholder="Reporting Officer PEN*" required="">
+                                <input type="text" class="form-control" id="reportingOfficerPen" name="reportingOfficerPen" placeholder="Reporting Officer PEN*" required>
                             </div>
                         </div>
                         <div class="col-md-3">
@@ -259,7 +261,10 @@
         // Set the treasury name as the only option and select it
         $('#treasuryName').empty().append(`<option value="${treasuryName}" selected>${treasuryName}</option>`);
         $('#treasuryName').trigger('change');
-        $('#treasuryName').prop('disabled', false); // Make it readonly since it's set from session
+        
+        // Make the Select2 control look disabled but keep it functional for form submission
+        $('#treasuryName').next('.select2-container').find('.select2-selection').addClass('readonly-select2');
+        $('#treasuryName').prop('disabled', false); // Ensure it's not disabled
         
         // Set current timestamp and year
         const now = new Date();
@@ -271,9 +276,8 @@
         
         // Form submission handler
         document.getElementById("rbdForm").onsubmit = function(e) {
-            e.preventDefault(); // Prevent default form submission
+            e.preventDefault();
             
-            // Validate form
             if (!e.target.checkValidity()) {
                 e.stopPropagation();
                 $(e.target).addClass('was-validated');
@@ -282,36 +286,43 @@
             
             var submitButton = document.getElementById("submitBtn");
             var spinner = document.getElementById("spinner");
-            // Show spinner and hide the button
             spinner.style.display = "flex";
             submitButton.style.display = "none";
+            
+            // Create a hidden input to ensure treasuryName is submitted
+            if (!$('#hiddenTreasuryName').length) {
+                $('<input>').attr({
+                    type: 'hidden',
+                    id: 'hiddenTreasuryName',
+                    name: 'treasuryName',
+                    value: treasuryName
+                }).appendTo('#rbdForm');
+            }
             
             var formData = new FormData(this);
             var xhr = new XMLHttpRequest();
             xhr.open("POST", "https://script.google.com/macros/s/AKfycby5hSeZ_0I3MbkHpBDkPcrgO35hg7dRif833-T5gpN7ndaLqOUbbTZ5ERWU1rBR_Pyc2Q/exec", true);
             xhr.onload = function() {
-                // Hide spinner and show the submit button after response
                 spinner.style.display = "none";
                 submitButton.style.display = "inline-block";
                 if (xhr.status == 200) {
-                    var referenceId = xhr.responseText; // Receive reference ID from the server
-                    // Show SweetAlert success message with the reference ID
+                    var referenceId = xhr.responseText;
                     Swal.fire({
                         title: 'Success!',
-                        html: 'Your submission has been received.' ,
+                        html: 'Your submission has been received.',
                         icon: 'success',
                         confirmButtonText: 'OK'
                     }).then(function() {
-                        document.getElementById("rbdForm").reset(); // Reset the form after submission
+                        document.getElementById("rbdForm").reset();
                         $('#rbdForm').removeClass('was-validated');
                         $('#differenceRemarks').prop('disabled', true);
                         $('#timestamp').val(new Date().toISOString());
                         // Reset treasury name to the session value
                         $('#treasuryName').empty().append(`<option value="${treasuryName}" selected>${treasuryName}</option>`);
                         $('#treasuryName').trigger('change');
+                        $('#treasuryName').next('.select2-container').find('.select2-selection').addClass('readonly-select2');
                     });
                 } else {
-                    // Error handling if the form submission fails
                     Swal.fire({
                         title: 'Error!',
                         text: 'There was an issue submitting your form. Please try again.',
@@ -332,7 +343,6 @@
             const net = receipt - payment;
             $('#treasuryNet').val(net.toFixed(2));
             
-            // Trigger difference calculation if bank net is already calculated
             if ($('#bankNet').val()) {
                 calculateDifference();
             }
@@ -345,7 +355,6 @@
             const net = receipt - payment;
             $('#bankNet').val(net.toFixed(2));
             
-            // Trigger difference calculation if treasury net is already calculated
             if ($('#treasuryNet').val()) {
                 calculateDifference();
             }
@@ -354,7 +363,7 @@
         // Enable/disable difference remarks based on difference value
         $('#difference').on('change', function() {
             const difference = parseFloat($(this).val()) || 0;
-            if (Math.abs(difference) > 0.01) { // Account for floating point precision
+            if (Math.abs(difference) > 0.01) {
                 $('#differenceRemarks').prop('disabled', false).prop('required', true);
             } else {
                 $('#differenceRemarks').prop('disabled', true).prop('required', false).val('');
