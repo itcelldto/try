@@ -19,14 +19,13 @@
             line-height: 1.6;
         }
        
-		.container {
-		 
-    background-color: white;
-    border-radius: 10px;
-    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-    padding: 25px;
-	margin:15PX;
-}
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            margin:15PX;
+        }
         .select-container {
             margin-bottom: 20px;
             display: flex;
@@ -68,7 +67,7 @@
 </head>
 <body style="background-color: #d7e2ff6e;">
     <div class="container" >
-        <h3>eOffice Seat Wise View</h3>
+        <h3>eOffice Seat Wise View</h3><hr>
         
         <div class="select-container" >
             <label for="treasurySelect">Select Treasury:</label>
@@ -81,12 +80,11 @@
             <table id="dataTable" class="display" style="width:100%">
                 <thead>
                     <tr>
-                       
                         <th>Name</th>
                         <th>Designation</th>
                         <th>Seat(eOffice)</th>
                         <th>CRU eMail</th>
-						 <th>Contact</th>
+                        <th>Contact</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -102,7 +100,7 @@
         
         // Treasury values range (A3:A)
         const treasuryRange = 'A3:A';
-        // Full data range (A2:F) - includes headers
+        // Full data range (A2:G) - includes headers
         const fullRange = 'A2:G';
         
         let allData = [];
@@ -111,15 +109,15 @@
 
         $(document).ready(function() {
             // Initialize Select2
-          // Initialize Select2
-  $('#treasurySelect').select2({
-        placeholder: "Select a Treasury",
-        allowClear: true
-    }).on('select2:open', function() {
-        setTimeout(function() {
-            document.querySelector('.select2-search__field').focus();
-        }, 0);
-    });
+            $('#treasurySelect').select2({
+                placeholder: "Select a Treasury",
+                allowClear: true
+            }).on('select2:open', function() {
+                setTimeout(function() {
+                    document.querySelector('.select2-search__field').focus();
+                }, 0);
+            });
+            
             // Load treasury options on page load
             loadTreasuryOptions();
             
@@ -171,21 +169,36 @@
                         headers = data.values[0];
                         
                         // Process data rows (skip header row)
-                        allData = data.values.slice(1).map(row => {
+                        allData = data.values.slice(1).map((row, index) => {
                             let obj = {};
-                            headers.forEach((header, index) => {
-                                obj[header] = row[index] || '';
+                            headers.forEach((header, i) => {
+                                obj[header] = row[i] || '';
                             });
+                            // Add original row index to track order
+                            obj._originalIndex = index;
                             return obj;
                         });
                         
                         // Filter data based on selected treasury
                         const selectedTreasury = $('#treasurySelect').val();
-                        let displayData = allData;
+                        let filteredData = allData;
                         
                         if (selectedTreasury) {
-                            displayData = allData.filter(item => item.Treasury === selectedTreasury);
+                            filteredData = allData.filter(item => item.Treasury === selectedTreasury);
                         }
+                        
+                        // Process to keep only the last entry for each seat
+                        const seatMap = {};
+                        filteredData.forEach(item => {
+                            const seat = item['Seat(eOffice)'];
+                            // Keep the item with the highest original index (last entry)
+                            if (!seatMap[seat] || item._originalIndex > seatMap[seat]._originalIndex) {
+                                seatMap[seat] = item;
+                            }
+                        });
+                        
+                        // Convert the map back to an array
+                        const displayData = Object.values(seatMap);
                         
                         // Initialize or update DataTable
                         updateDataTable(displayData);
@@ -213,13 +226,11 @@
             data.forEach(row => {
                 $('#dataTable tbody').append(`
                     <tr>
-                        
-                    
                         <td>${row['Name'] || ''}</td>
                         <td>${row.Designation || ''}</td>
                         <td>${row['Seat(eOffice)'] || ''}</td>
                         <td>${row['CRU eMail'] || ''}</td>
-						<td>${row['Contact'] || ''}</td>
+                        <td>${row['Contact'] || ''}</td>
                     </tr>
                 `);
             });
