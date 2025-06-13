@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EMD Status Viewer</title>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- DataTables -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+       
+        .container {
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+            
+        }
+        .select-container {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #treasurySelect {
+            width: 300px;
+        }
+        #viewBtn {
+            padding: 6px 12px;
+            background-color: #2283d7;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #viewBtn:hover {
+            background-color: #185a93;
+        }
+        #dataTable {
+            margin-top: 20px;
+            border-collapse: collapse;
+            width: 100%;
+        }
+        #dataTable th, #dataTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        #dataTable th {
+            background-color: #f2f2f2;
+        }
+        .loading {
+            display: inline-block;
+            margin-left: 10px;
+        }
+        .view-button {
+            padding: 4px 8px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .view-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body style="background-color: #d7e2ff6e;">
+    <div class="container">
+         <h3 style=" margin-top: 0px;"> CRU eMail ID creation Status </h3><hr>
+        
+        <div class="select-container">
+            <label for="treasurySelect">Select Treasury:</label>
+            <select id="treasurySelect" class="js-example-basic-single" style="min-width: 400px;"></select>
+            <button id="viewBtn">View</button>
+			<a  href="https://forms.gle/8hviLKtA6Nzt29Nu8" style="padding: 6px 12px;background-color: #d7b422;color: white;border: none; border-radius: 4px; cursor: pointer; font-size: 11px;">Upload Signed Doc.</a>
+            <span id="loading" class="loading" style="display:none;">Loading...</span>
+        </div>
+        
+        <div id="tableContainer">
+            <table id="dataTable" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>PEN</th>
+                        <th>Status</th>
+                        <th>File</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Google Sheets API configuration
+        const spreadsheetId = '1bGd83-iK7XHBygGivClAlqpWwTi4Ha2E6dmCj_PF-Rg';
+        const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+        const sheetName = 'Transfer_EMD_Try_View';
+        
+        // Treasury values range (P6:P)
+        const treasuryRange = 'P6:P';
+        // Full data range (P5:T) - includes headers
+        const fullRange = 'P5:T';
+        
+        let allData = [];
+        let dataTable = null;
+        let headers = [];
+
+        $(document).ready(function() {
+            // Initialize Select2
+            $('#treasurySelect').select2({
+                placeholder: "Select a Treasury",
+                allowClear: true
+            }).on('select2:open', function() {
+                setTimeout(function() {
+                    document.querySelector('.select2-search__field').focus();
+                }, 0);
+            });
+            
+            // Load treasury options on page load
+            loadTreasuryOptions();
+            
+            // Handle view button click
+            $('#viewBtn').on('click', function() {
+                loadAndFilterData();
+            });
+        });
+        
+        function loadTreasuryOptions() {
+            $('#loading').show();
+            
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!${treasuryRange}?key=${apiKey}`;
+            
+            $.getJSON(url)
+                .done(function(data) {
+                    if (data.values && data.values.length > 0) {
+                        // Get unique Treasury values
+                        const treasuries = [...new Set(data.values.map(row => row[0]))]
+                            .filter(Boolean) // Remove empty values
+                            .sort(); // Sort alphabetically
+                        
+                        // Populate Select2
+                        $('#treasurySelect').empty().append('<option></option>');
+                        treasuries.forEach(treasury => {
+                            $('#treasurySelect').append(`<option value="${treasury}">${treasury}</option>`);
+                        });
+                    }
+                })
+                .fail(function(error) {
+                    console.error('Error loading treasury options:', error);
+                    alert('Error loading treasury options. Please check console for details.');
+                })
+                .always(function() {
+                    $('#loading').hide();
+                });
+        }
+        
+        function loadAndFilterData() {
+            $('#loading').show();
+            
+            // Load all data including headers
+            const dataUrl = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!${fullRange}?key=${apiKey}`;
+            
+            $.getJSON(dataUrl)
+                .done(function(data) {
+                    if (data.values && data.values.length > 1) {
+                        // First row contains headers
+                        headers = data.values[0];
+                        
+                        // Process data rows (skip header row)
+                        allData = data.values.slice(1).map((row, index) => {
+                            let obj = {};
+                            headers.forEach((header, i) => {
+                                obj[header] = row[i] || '';
+                            });
+                            // Add original row index to track order
+                            obj._originalIndex = index;
+                            return obj;
+                        });
+                        
+                        // Filter data based on selected treasury
+                        const selectedTreasury = $('#treasurySelect').val();
+                        let filteredData = allData;
+                        
+                        if (selectedTreasury) {
+                            filteredData = allData.filter(item => item.Treasury === selectedTreasury);
+                        }
+                        
+                        // Initialize or update DataTable
+                        updateDataTable(filteredData);
+                    }
+                })
+                .fail(function(error) {
+                    console.error('Error loading data:', error);
+                    alert('Error loading data. Please check console for details.');
+                })
+                .always(function() {
+                    $('#loading').hide();
+                });
+        }
+        
+        function updateDataTable(data) {
+            // Destroy existing table if it exists
+            if (dataTable) {
+                dataTable.destroy();
+            }
+            
+            // Clear the table body
+            $('#dataTable tbody').empty();
+            
+            // Add filtered data to table (excluding Treasury column)
+            data.forEach(row => {
+                const fileUrl = row['File Url'] || '';
+                const viewButton = fileUrl ? 
+                    `<button class="view-button" onclick="window.open('${fileUrl}', '_blank', 'width=800,height=600')">View</button>` : 
+                    '';
+                
+                $('#dataTable tbody').append(`
+                    <tr>
+                        <td>${row.Name || ''}</td>
+                        <td>${row.PEN || ''}</td>
+                        <td>${row.Status || ''}</td>
+                        <td>${viewButton}</td>
+                    </tr>
+                `);
+            });
+            
+            // Initialize DataTable
+            dataTable = $('#dataTable').DataTable({
+                pageLength: 10,
+                responsive: true,
+                destroy: true // Allow reinitialization
+            });
+        }
+    </script>
+</body>
+</html>
