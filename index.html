@@ -265,7 +265,41 @@ background-color: #091c34c7;
 }
 .skin-blue .main-header .logo {
     background-color: #505db9c9;
-)
+}
+
+/* Custom navbar styles */
+.navbar-custom-menu {
+    float: right;
+    margin-right: 10px;
+}
+
+.navbar-custom-menu .user-image {
+    width: 25px;
+    height: 25px;
+    margin-right: 5px;
+}
+
+.user-header {
+    height: auto;
+    padding: 10px;
+    text-align: center;
+    background: #3c8dbc;
+}
+
+.user-header img {
+    width: 80px;
+    height: 80px;
+    border: 3px solid #fff;
+}
+
+.user-footer {
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.user-footer .btn {
+    margin: 0 5px;
+}
     </style>
 </head>
 <body class="hold-transition skin-blue sidebar-mini" style="background-color: #06002c;	">
@@ -344,6 +378,39 @@ function openForgotPasswordPopup() {
             </div>
                 <!-- Current Date and Time -->
                 <span id="current-date-time" style="float: right; padding: 15px;  color: #fff;"></span>
+                
+                <!-- Custom Menu Section -->
+                <div class="navbar-custom-menu">
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown user user-menu">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                <img src="./img/user.png" class="user-image" alt="User Image">
+                                <span class="hidden-xs" id="session-storage-value"></span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <!-- User image -->
+                                <li class="user-header">
+                                    <img src="./img/user.png" class="img-circle" alt="User Image">
+                                    <p id="user-name-display">
+                                        <small id="user-name-display"></small>
+                                    </p>
+									<p id="user-role-display">
+                                        <small id="user-role-display"></small>
+                                    </p>
+                                </li>
+                                <!-- Menu Footer-->
+                                <li class="user-footer">
+                                    <div class="pull-left">
+                                        <a href="#" class="btn btn-default btn-flat">Profile</a>
+                                    </div>
+                                    <div class="pull-right">
+                                        <a href="#" class="btn btn-default btn-flat" onclick="window.location.reload(); return false;">Sign out</a>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
             </nav>
         </header>
         <!-- Left side column. contains the logo and sidebar -->
@@ -357,9 +424,6 @@ function openForgotPasswordPopup() {
                 <ul class="sidebar-menu" data-widget="tree" id="sidebar-menu">
                     <!-- Menu items will be dynamically populated here -->
                 </ul>
-				<ul class="sidebar-menu" data-widget="tree" >
-				<li class="treeview"><a href="#" onclick="window.location.reload(); return false;"><i class="glyphicon glyphicon-log-out"></i> Logout</a>></li>
-				</ul>
                 <!-- /.sidebar-menu -->
             </section>
             <!-- /.sidebar -->
@@ -565,7 +629,7 @@ function openForgotPasswordPopup() {
 			// Show loading state
 			$('#login-error').hide();
 			
-			// Fetch credentials from Google Sheet
+			// Fetch credentials
 			const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
 			
 			fetch(settingsUrl)
@@ -579,6 +643,8 @@ function openForgotPasswordPopup() {
 					treasurySettings = data.values;
 					let loginSuccessful = false;
 					let treasuryName = '';
+					let userName = '';
+					let userRole = '';
 					
 					// Check each row for matching credentials
 					for (let i = 0; i < treasurySettings.length; i++) {
@@ -586,6 +652,8 @@ function openForgotPasswordPopup() {
 						if (row[1] === userId && row[2] === password) {
 							loginSuccessful = true;
 							treasuryName = row[0]; // A column - Treasury name
+							userName = row[1] || userId; // D column - User Name
+							userRole = row[3] || UserRole; // E column - User Role
 							treasuryRow = i; // Store the row index for later use
 							break;
 						}
@@ -599,8 +667,15 @@ function openForgotPasswordPopup() {
 						// Display treasury name in sidebar
 						$('#treasury-name-display').text(treasuryName);
 						
-						// Store treasury name in session storage
+						// Store user information in session storage
 						sessionStorage.setItem('treasuryName', treasuryName);
+						sessionStorage.setItem('userName', userName);
+						sessionStorage.setItem('userRole', userRole);
+						
+						// Update user display in navbar
+						$('#session-storage-value').text(userName);
+						$('#user-name-display').text(treasuryName);
+						$('#user-role-display').text(userRole);
 						
 						// Show the main content wrapper
 						$('#main-wrapper').show();
@@ -637,21 +712,20 @@ function openForgotPasswordPopup() {
 			const reelUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${reelSheetName}?key=${apiKey}`;
 
 			// Fetch and populate the running text
-			      // Fetch and populate the running text
-                $.get(reelUrl, function(data) {
-                    const rows = data.values;
-                    let runningText = '';
+			$.get(reelUrl, function(data) {
+				const rows = data.values;
+				let runningText = '';
 
-                    // Combine all text from column A2:A into a single string
-                    rows.slice(1).forEach(row => {
-                        if (row[0]) {
-                            runningText += row[0] + ' • '; // Add a separator between items
-                        }
-                    });
+				// Combine all text from column A2:A into a single string
+				rows.slice(1).forEach(row => {
+					if (row[0]) {
+						runningText += row[0] + ' • '; // Add a separator between items
+					}
+				});
 
-                    // Set the running text content
-                    $('#news-reel').text(runningText);
-                });
+				// Set the running text content
+				$('#news-reel').text(runningText);
+			});
 
 			// Fetch and populate the sidebar menu
 			fetch(menuUrl)
