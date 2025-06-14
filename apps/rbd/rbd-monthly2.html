@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monthly RBD Report</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- DataTables CSS -->
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        .panel-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status-badge {
+            font-size: 1.2em;
+        }
+        .green-status {
+            color: #28a745;
+        }
+        .red-status {
+            color: #dc3545;
+        }
+        .panel {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+           box-shadow: 0 3px 10px rgba(0, 0, 0, .05);
+        }
+        .panel-heading {
+            padding: 10px 15px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #ddd;
+            border-top-left-radius: 3px;
+            border-top-right-radius: 3px;
+        }
+        .panel-body {
+            padding: 15px;
+            background-color: #fff;
+            box-shadow: 0 10px 10px rgb(0 0 0 / 2%);
+        }
+        .table-footer {
+            font-weight: bold;
+            background-color: #f5f5f5;
+        }
+        .btn-view {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+        .select2-container--default .select2-selection--single {
+            min-height: 35px;
+        }
+        /* New styles for footer totals */
+        .footer-receipt {
+            color: #28a745 !important;
+            font-weight: bold !important;
+        }
+        .footer-payment {
+            color: #dc3545 !important;
+            font-weight: bold !important;
+        }
+        /* Styles for Cash & LOP table */
+        .receipt-amount {
+            color: #28a745 !important;
+            font-weight: bold !important;
+        }
+        .payment-amount {
+            color: #dc3545 !important;
+            font-weight: bold !important;
+        }
+        .difference-amount {
+            color: #007bff !important;
+            font-weight: bold !important;
+        }
+    </style>
+</head>
+<body style="background-color: #ecf0f5;">
+    <div class="container mt-4" style="min-width:100%">
+       
+        <div class="panel panel-default">
+            <div class="panel-body">
+                <h5 class="panel-title">Monthly RBD Report (New) June 2025 onwards</h5><hr>
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <label for="monthSelect" class="form-label">RBD Month</label>
+                        <select id="monthSelect" class="form-select select2">
+                            <option value="January">January</option>
+                            <option value="February">February</option>
+                            <option value="March">March</option>
+                            <option value="April">April</option>
+                            <option value="May">May</option>
+                            <option value="June">June</option>
+                            <option value="July">July</option>
+                            <option value="August">August</option>
+                            <option value="September">September</option>
+                            <option value="October">October</option>
+                            <option value="November">November</option>
+                            <option value="December">December</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="yearInput" class="form-label">Year</label>
+                        <input type="text" id="yearInput" class="form-control" value="" placeholder="Enter year (e.g. 2023)">
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button id="viewBtn" class="btn btn-primary">View Report</button>
+                        <button id="pdfBtn" class="btn btn-danger ms-2">Generate PDF</button>
+                        <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="margin-left:10px">
+                            Menu
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" target="_blank" href="https://docs.google.com/forms/d/e/1FAIpQLSfPNWLZstoRPtqptNDPHVGHeLYn9LTzqwr6b_5xjx9eTcBrow/viewform">Cash&amp;LOP Updation- Form</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="https://docs.google.com/spreadsheets/d/1Nfv3GvplDB0v6lI8PQ4fTks8KVClH6C8_0lddbfaesc/edit?gid=0#gid=0">RBD Resp. Data-Sheet</a></li>
+                            <li><a class="dropdown-item" target="_blank" href="https://docs.google.com/spreadsheets/d/1t5190MSMyK6mQoAGAoiDoEaq8xiiUnmwg7Bou1H7K6c/edit?gid=1763626814#gid=1763626814">Cash&amp;LOP- Sheet</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="reportContainer" style="display: none;">
+            <!-- RBD Data Table Panel -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h5 class="panel-title">RBD Updation Details</h5>
+                    <span id="rbdStatus" class="status-badge"></span>
+                </div>
+                <div class="panel-body">
+                    <table id="rbdTable" class="table table-striped table-bordered" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>SL.No</th>
+                                <th>Treasury Name</th>
+                                <th>Treasury Receipt</th>
+                                <th>Treasury Payment</th>
+                                <th>Treasury Net</th>
+                                <th>Bank Receipt</th>
+                                <th>Bank Payment</th>
+                                <th>Bank Net</th>
+                                <th>Difference</th>
+                                <th>Remark</th>
+                                <th>Doc.Upload</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rbdTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                        <tfoot id="rbdTableFooter" class="table-footer">
+                            <!-- Footer totals will be populated by JavaScript -->
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- Cash and LOP Data Table Panel -->
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h5 class="panel-title">Cash and LOP Details</h5>
+                </div>
+                <div class="panel-body">
+                    <table id="cashLopTable" class="table table-striped table-bordered" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>Treasury</th>
+                                <th>Month</th>
+                                <th>Year</th>
+                                <th>Receipt Amount</th>
+                                <th>Payment Amount</th>
+                                <th>Difference</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cashLopTableBody">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery, Bootstrap, Select2, DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    
+    <script>
+        // Global variables to store DataTable instances
+        let rbdDataTable = null;
+        let cashLopDataTable = null;
+        let currentRBDData = [];
+        
+        // Initialize jsPDF
+        const { jsPDF } = window.jspdf;
+        
+        $(document).ready(function() {
+            // Initialize Select2
+            $('.select2').select2();
+            
+            // Set current year as default in the text input
+            const currentYear = new Date().getFullYear().toString();
+            $('#yearInput').val(currentYear);
+            
+            // Set current month as default
+            const months = ["January", "February", "March", "April", "May", "June", 
+                           "July", "August", "September", "October", "November", "December"];
+            const currentMonth = months[new Date().getMonth()];
+            $('#monthSelect').val(currentMonth).trigger('change');
+            
+            // Function to open document in popup
+            function openDocumentPopup(url) {
+                if (url) {
+                    window.open(url, 'documentPopup', 'width=800,height=600,scrollbars=yes,resizable=yes');
+                } else {
+                    alert('No document available');
+                }
+            }
+            
+            // Function to destroy existing DataTables if they exist
+            function destroyDataTables() {
+                if (rbdDataTable) {
+                    rbdDataTable.destroy();
+                    rbdDataTable = null;
+                }
+                if (cashLopDataTable) {
+                    cashLopDataTable.destroy();
+                    cashLopDataTable = null;
+                }
+            }
+            
+            // Function to remove duplicates and keep the last entry
+            function removeDuplicates(data, keyField) {
+                const uniqueEntries = {};
+                
+                // Iterate through the data and keep the last entry for each key
+                data.forEach(item => {
+                    const key = item[keyField];
+                    uniqueEntries[key] = item;
+                });
+                
+                // Convert the object back to an array
+                return Object.values(uniqueEntries);
+            }
+            
+            // Function to merge RBD data with document URLs
+            function mergeRBDWithDocuments(rbdData, documentData) {
+                // Create a map of document URLs by treasury name
+                const documentMap = {};
+                documentData.forEach(doc => {
+                    const key = `${doc['Treasury Name']}|${doc['RBD Month']}|${doc['Year']}`;
+                    documentMap[key] = doc['file url'];
+                });
+                
+                // Merge the data
+                return rbdData.map(item => {
+                    const key = `${item['Treasury Name']}|${item['RBD Month']}|${item['Year']}`;
+                    return {
+                        ...item,
+                        'Copy of RBD Document': documentMap[key] || ''
+                    };
+                });
+            }
+            
+            // View button click handler
+            $('#viewBtn').click(function() {
+                const month = $('#monthSelect').val();
+                const year = $('#yearInput').val();
+                
+                // Basic validation for year input
+                if (!year || !/^\d{4}$/.test(year)) {
+                    alert('Please enter a valid 4-digit year (e.g. 2023)');
+                    return;
+                }
+                
+                // Show loading state
+                const viewBtn = $('#viewBtn');
+                viewBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...');
+                viewBtn.prop('disabled', true);
+                
+                // Destroy existing tables before loading new data
+                destroyDataTables();
+                
+                // Fetch data from all sheets
+                Promise.all([
+                    fetchRBDSheetData(month, year),
+                    fetchDocumentUrls(month, year),
+                    fetchCashLopSheetData(month, year)
+                ]).then(([rbdData, documentData, cashLopData]) => {
+                    // Merge RBD data with document URLs
+                    const mergedRBDData = mergeRBDWithDocuments(rbdData, documentData);
+                    
+                    // Remove duplicates from datasets
+                    const uniqueRBDData = removeDuplicates(mergedRBDData, 'Treasury Name');
+                    const uniqueCashLopData = removeDuplicates(cashLopData, 'Treasury');
+                    
+                    // Store the current RBD data for PDF generation
+                    currentRBDData = uniqueRBDData;
+                    
+                    populateRBDTable(uniqueRBDData);
+                    populateCashLopTable(uniqueCashLopData);
+                    checkRBDStatus(uniqueRBDData, uniqueCashLopData);
+                    $('#reportContainer').show();
+                    viewBtn.html('View Report');
+                    viewBtn.prop('disabled', false);
+                }).catch(error => {
+                    console.error('Error:', error);
+                    alert('Error fetching data. Please check console for details.');
+                    viewBtn.html('View Report');
+                    viewBtn.prop('disabled', false);
+                });
+            });
+            
+            // PDF button click handler
+$('#pdfBtn').click(function() {
+    const selectedMonth = $('#monthSelect').val();
+    const selectedYear = $('#yearInput').val();
+    
+    if (!selectedYear || !/^\d{4}$/.test(selectedYear)) {
+        alert('Please enter a valid 4-digit year (e.g. 2023)');
+        return;
+    }
+    
+    if (currentRBDData.length === 0) {
+        alert('Please view the report first before generating PDF');
+        return;
+    }
+    
+    generatePDF(selectedMonth, selectedYear, currentRBDData);
+});
+            
+            // Function to generate PDF with updated requirements
+            function generatePDF(selectedMonth, selectedYear, data) {
+        // Create a new PDF document in portrait mode, A4 size
+        const doc = new jsPDF({
+            orientation: 'portrait',
+            unit: 'mm',
+            format: 'a4'
+        });
+        
+        // Set font and size for the document
+        doc.setFont('helvetica');
+        
+        // Add heading
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Consolidated Report of Receipts, Payments and Net Amount', 105, 20, { align: 'center' });
+        
+        // Add sub-heading
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`for the Month of ${selectedMonth} ${selectedYear}`, 105, 28, { align: 'center' });
+        
+        // Add district treasury name
+        doc.text('Name of District Treasury: District Treasury Trivandrum', 105, 35, { align: 'center' });
+        
+        // Calculate totals
+        let totalTreasuryReceipt = 0;
+        let totalTreasuryPayment = 0;
+        let totalTreasuryNet = 0;
+        let totalBankReceipt = 0;
+        let totalBankPayment = 0;
+        let totalBankNet = 0;
+        let totalDifference = 0;
+        
+        // Prepare data for the table (excluding SL.No and Remark columns)
+        const tableData = data.map((item) => {
+            const treasuryReceipt = parseFloat(item['Total Receipt amount of the Treasury']) || 0;
+            const treasuryPayment = parseFloat(item['Total Payment amount of the Treasury']) || 0;
+            const treasuryNet = parseFloat(item['Total Net amount in Treasury']) || 0;
+            const bankReceipt = parseFloat(item['Total Receipt amount of the Bank']) || 0;
+            const bankPayment = parseFloat(item['Total Payment amount of the Bank']) || 0;
+            const bankNet = parseFloat(item['Total Net amount of the Bank']) || 0;
+            const difference = parseFloat(item['Difference']) || 0;
+            
+            // Update totals
+            totalTreasuryReceipt += treasuryReceipt;
+            totalTreasuryPayment += treasuryPayment;
+            totalTreasuryNet += treasuryNet;
+            totalBankReceipt += bankReceipt;
+            totalBankPayment += bankPayment;
+            totalBankNet += bankNet;
+            totalDifference += difference;
+            
+            return [
+                item['Treasury Name'],
+                treasuryReceipt.toLocaleString(),
+                treasuryPayment.toLocaleString(),
+                treasuryNet.toLocaleString(),
+                bankReceipt.toLocaleString(),
+                bankPayment.toLocaleString(),
+                bankNet.toLocaleString(),
+                difference.toLocaleString()
+            ];
+        });
+        
+        // Add totals row
+        tableData.push([
+            'Total',
+            totalTreasuryReceipt.toLocaleString(),
+            totalTreasuryPayment.toLocaleString(),
+            totalTreasuryNet.toLocaleString(),
+            totalBankReceipt.toLocaleString(),
+            totalBankPayment.toLocaleString(),
+            totalBankNet.toLocaleString(),
+            totalDifference.toLocaleString()
+        ]);
+        
+        // Define table headers (only include relevant columns)
+        const headers = [
+            ['Name of Treasury', 'Treasury Receipt', 'Treasury Payment', 'Treasury Net', 
+             'Bank Receipt', 'Bank Payment', 'Bank Net', 'Difference']
+        ];
+        
+        // Get current date in DD/MM/YYYY format
+        const today = new Date();
+        const day = String(today.getDate()).padStart(2, '0');
+        const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
+        const currentYear = today.getFullYear();
+        const formattedDate = `${day}/${currentMonth}/${currentYear}`;
+        
+        // Add the table to the PDF with normal borders
+        doc.autoTable({
+            head: headers,
+            body: tableData,
+            startY: 40,
+            margin: { left: 10, right: 10 },
+            styles: {
+                fontSize: 8,
+                cellPadding: 2,
+                valign: 'middle',
+                halign: 'center',
+                overflow: 'linebreak',
+                lineColor: [0, 0, 0], // Black borders
+                lineWidth: 0.2, // Normal border width
+                fillColor: false, // No background color
+                textColor: [0, 0, 0] // Black text
+            },
+            headStyles: {
+                fillColor: false, // No background color
+                textColor: [0, 0, 0],
+                fontStyle: 'bold',
+                lineWidth: 0.2
+            },
+            bodyStyles: {
+                fillColor: false, // No background color
+                lineWidth: 0.2
+            },
+            columnStyles: {
+                0: { cellWidth: 30, halign: 'left' },
+                1: { cellWidth: 20 },
+                2: { cellWidth: 20 },
+                3: { cellWidth: 20 },
+                4: { cellWidth: 20 },
+                5: { cellWidth: 20 },
+                6: { cellWidth: 20 },
+                7: { cellWidth: 20 }
+            },
+            didDrawPage: function(data) {
+                // Footer content
+                const pageCount = doc.internal.getNumberOfPages();
+                const currentPage = doc.internal.getCurrentPageInfo().pageNumber;
+                
+                if (currentPage === pageCount) {
+                    // Add date and place
+                    doc.setFontSize(10);
+                    doc.text(`Date: ${formattedDate}`, 20, doc.internal.pageSize.height - 30);
+                    doc.text('Place: Trivandrum', 20, doc.internal.pageSize.height - 20);
+                    
+                    // Add signature space
+                    doc.text('Signature:', doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 30);
+                    doc.line(doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 25, 
+                             doc.internal.pageSize.width - 10, doc.internal.pageSize.height - 25);
+                    
+                    // Add designation
+                    doc.text('District Treasury Officer, Trivandrum', 
+                             doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 15);
+                }
+            }
+        });
+        
+        // Save the PDF
+        doc.save(`RBD_Report_${selectedMonth}_${selectedYear}.pdf`);
+    }
+
+    
+// Function to fetch RBD sheet data
+            function fetchRBDSheetData(month, year) {
+                const sheetId = '1Nfv3GvplDB0v6lI8PQ4fTks8KVClH6C8_0lddbfaesc';
+                const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+                const range = 'DB!c2:M'; // Updated range
+                
+                return new Promise((resolve, reject) => {
+                    $.get(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`)
+                        .done(response => {
+                            const rows = response.values || [];
+                            const headers = [
+                                'RBD Month', 'Year', 'Treasury Name', 
+                                'Total Receipt amount of the Treasury', 
+                                'Total Payment amount of the Treasury', 
+                                'Total Net amount in Treasury', 
+                                'Total Receipt amount of the Bank', 
+                                'Total Payment amount of the Bank',
+                                'Total Net amount of the Bank', 
+                                'Difference', 
+                                'Remark'
+                            ];
+                            
+                            // Filter data for selected month and year
+                            const filteredData = rows.filter(row => {
+                                return row[0] === month && row[1] === year.toString();
+                            }).map(row => {
+                                const obj = {};
+                                headers.forEach((header, index) => {
+                                    obj[header] = row[index] || '';
+                                });
+                                return obj;
+                            });
+                            
+                            // Sort by Treasury Name column in ascending order
+                            filteredData.sort((a, b) => {
+                                const treasuryA = a['Treasury Name'] || '';
+                                const treasuryB = b['Treasury Name'] || '';
+                                return treasuryA.localeCompare(treasuryB);
+                            });
+                            
+                            resolve(filteredData);
+                        })
+                        .fail(reject);
+                });
+            }
+            
+            // Function to fetch document URLs
+            function fetchDocumentUrls(month, year) {
+                const sheetId = '1Nfv3GvplDB0v6lI8PQ4fTks8KVClH6C8_0lddbfaesc';
+                const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+                const range = 'File Uploads!B2:E'; // Document URLs range
+                
+                return new Promise((resolve, reject) => {
+                    $.get(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`)
+                        .done(response => {
+                            const rows = response.values || [];
+                            const headers = ['RBD Month', 'Year', 'Treasury Name', 'file url'];
+                            
+                            // Filter data for selected month and year
+                            const filteredData = rows.filter(row => {
+                                return row[0] === month && row[1] === year.toString();
+                            }).map(row => {
+                                const obj = {};
+                                headers.forEach((header, index) => {
+                                    obj[header] = row[index] || '';
+                                });
+                                return obj;
+                            });
+                            
+                            resolve(filteredData);
+                        })
+                        .fail(reject);
+                });
+            }
+            
+            // Function to fetch Cash & LOP sheet data
+            function fetchCashLopSheetData(month, year) {
+                const sheetId = '1t5190MSMyK6mQoAGAoiDoEaq8xiiUnmwg7Bou1H7K6c';
+                const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+                const range = 'DB!C2:G'; // Adjust range as needed
+                
+                return new Promise((resolve, reject) => {
+                    $.get(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`)
+                        .done(response => {
+                            const rows = response.values || [];
+                            const headers = ['Treasury', 'RBD Month', 'Year', 'Receipt Amount', 'Payment Amount'];
+                            
+                            // Filter data for selected month and year
+                            const filteredData = rows.filter(row => {
+                                return row[1] === month && row[2] === year.toString();
+                            }).map(row => {
+                                const obj = {};
+                                headers.forEach((header, index) => {
+                                    obj[header] = row[index] || '';
+                                });
+                                return obj;
+                            });
+                            
+                            // Sort by Treasury column in ascending order
+                            filteredData.sort((a, b) => {
+                                const treasuryA = a['Treasury'] || '';
+                                const treasuryB = b['Treasury'] || '';
+                                return treasuryA.localeCompare(treasuryB);
+                            });
+                            
+                            resolve(filteredData);
+                        })
+                        .fail(reject);
+                });
+            }
+            
+            // Function to populate RBD table with new structure
+            function populateRBDTable(data) {
+                const tableBody = $('#rbdTableBody');
+                tableBody.empty();
+                
+                let totalTreasuryReceipt = 0;
+                let totalTreasuryPayment = 0;
+                let totalTreasuryNet = 0;
+                let totalBankReceipt = 0;
+                let totalBankPayment = 0;
+                let totalBankNet = 0;
+                let totalDifference = 0;
+                
+                data.forEach((item, index) => {
+                    const treasuryReceipt = parseFloat(item['Total Receipt amount of the Treasury']) || 0;
+                    const treasuryPayment = parseFloat(item['Total Payment amount of the Treasury']) || 0;
+                    const treasuryNet = parseFloat(item['Total Net amount in Treasury']) || 0;
+                    const bankReceipt = parseFloat(item['Total Receipt amount of the Bank']) || 0;
+                    const bankPayment = parseFloat(item['Total Payment amount of the Bank']) || 0;
+                    const bankNet = parseFloat(item['Total Net amount of the Bank']) || 0;
+                    const difference = parseFloat(item['Difference']) || 0;
+                    const docUrl = item['Copy of RBD Document'];
+                    
+                    // Update totals
+                    totalTreasuryReceipt += treasuryReceipt;
+                    totalTreasuryPayment += treasuryPayment;
+                    totalTreasuryNet += treasuryNet;
+                    totalBankReceipt += bankReceipt;
+                    totalBankPayment += bankPayment;
+                    totalBankNet += bankNet;
+                    totalDifference += difference;
+                    
+                    const row = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${item['Treasury Name']}</td>
+                            <td>${treasuryReceipt.toLocaleString()}</td>
+                            <td>${treasuryPayment.toLocaleString()}</td>
+                            <td>${treasuryNet.toLocaleString()}</td>
+                            <td>${bankReceipt.toLocaleString()}</td>
+                            <td>${bankPayment.toLocaleString()}</td>
+                            <td>${bankNet.toLocaleString()}</td>
+                            <td>${difference.toLocaleString()}</td>
+                            <td>${item['Remark']}</td>
+                            <td>
+                                <button onclick="openDocumentPopup('${docUrl}')" class="btn btn-sm btn-primary btn-view" ${!docUrl ? 'disabled' : ''}>
+                                    <i class="fas fa-eye"></i> View
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                    tableBody.append(row);
+                });
+                
+                // Update footer with styled totals
+                const footer = `
+                    <tr>
+                        <td></td>
+                        <td><strong>Total</strong></td>
+                        <td class="footer-receipt">${totalTreasuryReceipt.toLocaleString()}</td>
+                        <td class="footer-payment">${totalTreasuryPayment.toLocaleString()}</td>
+                        <td>${totalTreasuryNet.toLocaleString()}</td>
+                        <td class="footer-receipt">${totalBankReceipt.toLocaleString()}</td>
+                        <td class="footer-payment">${totalBankPayment.toLocaleString()}</td>
+                        <td>${totalBankNet.toLocaleString()}</td>
+                        <td>${totalDifference.toLocaleString()}</td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                `;
+                $('#rbdTableFooter').html(footer);
+                
+                // Initialize DataTable
+                rbdDataTable = $('#rbdTable').DataTable({
+                    "order": [[1, "asc"]],
+                    "pageLength": 100,
+                    "columnDefs": [
+                        { "orderable": false, "targets": [0, 9, 10] }
+                    ]
+                });
+            }
+            
+            // Function to populate Cash & LOP table with styled amounts
+            function populateCashLopTable(data) {
+                const tableBody = $('#cashLopTableBody');
+                tableBody.empty();
+                
+                data.forEach(item => {
+                    const receipt = parseFloat(item['Receipt Amount']) || 0;
+                    const payment = parseFloat(item['Payment Amount']) || 0;
+                    const difference = receipt - payment;
+                    
+                    const row = `
+                        <tr>
+                            <td>${item['Treasury']}</td>
+                            <td>${item['RBD Month']}</td>
+                            <td>${item['Year']}</td>
+                            <td class="receipt-amount">${receipt.toLocaleString()}</td>
+                            <td class="payment-amount">${payment.toLocaleString()}</td>
+                            <td class="difference-amount">${difference.toLocaleString()}</td>
+                        </tr>
+                    `;
+                    tableBody.append(row);
+                });
+                
+                // Initialize DataTable
+                cashLopDataTable = $('#cashLopTable').DataTable({
+                    "order": [[0, "asc"]],
+                    "columnDefs": [
+                        { "orderable": false, "targets": [1, 2] }
+                    ]
+                });
+            }
+            
+            // Function to check RBD status (updated to compare with Treasury Net)
+            function checkRBDStatus(rbdData, cashLopData) {
+                // Calculate total Treasury Net from RBD data
+                let totalTreasuryNet = 0;
+                rbdData.forEach(item => {
+                    totalTreasuryNet += parseFloat(item['Total Net amount in Treasury']) || 0;
+                });
+                
+                // Calculate total difference from Cash & LOP data
+                let totalCashDiff = 0;
+                cashLopData.forEach(item => {
+                    const receipt = parseFloat(item['Receipt Amount']) || 0;
+                    const payment = parseFloat(item['Payment Amount']) || 0;
+                    totalCashDiff += (receipt - payment);
+                });
+                
+                // Compare the absolute values
+                const statusElement = $('#rbdStatus');
+                if (Math.abs(totalCashDiff) === Math.abs(totalTreasuryNet)) {
+                    statusElement.html('<i class="fas fa-check-circle green-status"></i> Agreed with Treasury RBD');
+                } else {
+                    statusElement.html(`<i class="fas fa-times-circle red-status"></i> RBD difference of ${Math.abs(totalCashDiff - totalTreasuryNet).toLocaleString()}`);
+                }
+            }
+            
+            // Make the openDocumentPopup function available globally
+            window.openDocumentPopup = function(url) {
+                if (url) {
+                    window.open(url, 'documentPopup', 'width=800,height=600,scrollbars=yes,resizable=yes');
+                } else {
+                    alert('No document available');
+                }
+            };
+        });
+    </script>
+</body>
+</html>
