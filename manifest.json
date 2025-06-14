@@ -1,0 +1,21 @@
+{
+  "name": "IT Cell Treasury",
+  "short_name": "eAdmin",
+  "start_url": "/try/", // Must match GitHub Pages path
+  "scope": "/try/", // Important for GitHub Pages
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3367D6",
+  "icons": [
+    {
+      "src": "/try/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/try/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
