@@ -37,7 +37,7 @@
             background: #fff;
             border-radius: 10px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            padding: 20px;
+            padding: 25px;
             display: flex;
             flex-direction: column;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -48,17 +48,15 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.15);
         }
         
-        .contact-card.coordinator {
-            border-top: 5px solid #3498db;
-        }
-        
-        .contact-card.admin1 {
-            border-top: 5px solid #e74c3c;
-        }
-        
-        .contact-card.admin2 {
-            border-top: 5px solid #2ecc71;
-        }
+        /* Dynamic color classes for contact cards */
+        .contact-card-color-0 { border-top: 5px solid #3498db; }
+        .contact-card-color-1 { border-top: 5px solid #e74c3c; }
+        .contact-card-color-2 { border-top: 5px solid #2ecc71; }
+        .contact-card-color-3 { border-top: 5px solid #9b59b6; }
+        .contact-card-color-4 { border-top: 5px solid #f39c12; }
+        .contact-card-color-5 { border-top: 5px solid #1abc9c; }
+        .contact-card-color-6 { border-top: 5px solid #d35400; }
+        .contact-card-color-7 { border-top: 5px solid #34495e; }
         
         .contact-name {
             font-size: 22px;
@@ -333,7 +331,7 @@
                 },
                 settings: {
                     name: 'Settings',
-                    range: 'H2:L4' // Designation, Name, Contact Personal, eMail, Contact CUG
+                    range: 'H2:L' // Designation, Name, Contact Personal, eMail, Contact CUG
                 }
             }
         };
@@ -416,59 +414,37 @@
         
         // Render Contact Cards
         function renderContactCards(container, rows) {
-            const contactCardsHTML = `
-                <div class="contact-cards">
-                    <div class="contact-card coordinator">
-                        <div class="contact-name">${rows[0][1]}</div>
-                        <div class="contact-designation">${rows[0][0]}</div>
-                        <div class="contact-detail">
-                            <i class="fa fa-phone"></i>
-                            <span>CUG: ${rows[0][4]}</span>
-                        </div>
-                        <div class="contact-detail">
-                            <i class="fa fa-mobile"></i>
-                            <span>Personal: ${rows[0][2]}</span>
-                        </div>
-                        <div class="contact-detail">
-                            <i class="fa fa-envelope"></i>
-                            <a href="mailto:${rows[0][3]}">${rows[0][3]}</a>
-                        </div>
-                    </div>
-                    <div class="contact-card admin1">
-                        <div class="contact-name">${rows[1][1]}</div>
-                        <div class="contact-designation">${rows[1][0]}</div>
-                        <div class="contact-detail">
-                            <i class="fa fa-phone"></i>
-                            <span>CUG: ${rows[1][4]}</span>
-                        </div>
-                        <div class="contact-detail">
-                            <i class="fa fa-mobile"></i>
-                            <span>Personal: ${rows[1][2]}</span>
-                        </div>
-                        <div class="contact-detail">
-                            <i class="fa fa-envelope"></i>
-                            <a href="mailto:${rows[1][3]}">${rows[1][3]}</a>
-                        </div>
-                    </div>
-                    <div class="contact-card admin2">
-                        <div class="contact-name">${rows[2][1]}</div>
-                        <div class="contact-designation">${rows[2][0]}</div>
-                        <div class="contact-detail">
-                            <i class="fa fa-phone"></i>
-                            <span>CUG: ${rows[2][4]}</span>
-                        </div>
-                        <div class="contact-detail">
-                            <i class="fa fa-mobile"></i>
-                            <span>Personal: ${rows[2][2]}</span>
-                        </div>
-                        <div class="contact-detail">
-                            <i class="fa fa-envelope"></i>
-                            <a href="mailto:${rows[2][3]}">${rows[2][3]}</a>
-                        </div>
-                    </div>
-                </div>
-            `;
+            if (!rows || rows.length === 0) return;
             
+            let contactCardsHTML = '<div class="contact-cards">';
+            
+            rows.forEach((row, index) => {
+                // Skip empty rows
+                if (!row || row.length < 5 || !row[1]) return;
+                
+                const colorClass = `contact-card-color-${index % 8}`; // Cycle through 8 color classes
+                
+                contactCardsHTML += `
+                    <div class="contact-card ${colorClass}">
+                        <div class="contact-name">${row[1] || ''}</div>
+                        <div class="contact-designation">${row[0] || ''}</div>
+                        <div class="contact-detail">
+                            <i class="fa fa-phone"></i>
+                            <span>CUG: ${row[4] || ''}</span>
+                        </div>
+                        <div class="contact-detail">
+                            <i class="fa fa-mobile"></i>
+                            <span>Personal: ${row[2] || ''}</span>
+                        </div>
+                        <div class="contact-detail">
+                            <i class="fa fa-envelope"></i>
+                            <a href="mailto:${row[3] || ''}">${row[3] || ''}</a>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            contactCardsHTML += '</div>';
             container.innerHTML += contactCardsHTML;
         }
         
