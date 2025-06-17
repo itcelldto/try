@@ -152,7 +152,7 @@
                 </select>
                 <span class="toggle-new-value" onclick="toggleNewInput('subject')">+ Add new subject</span>
                 <div id="newSubjectContainer" class="new-value-container">
-                    <input type="text" id="newSubjectInput" placeholder="Enter new subject" onkeyup="">
+                    <input type="text" id="newSubjectInput" placeholder="Enter new subject" onkeyup="this.value = this.value.toUpperCase()">
                     <button type="button" onclick="addNewSubject()">Add</button>
                 </div>
             </div>
@@ -162,7 +162,7 @@
                 <label>Check Points</label>
                 <div id="checkPointsContainer">
                     <div class="check-point-item">
-                        <input type="text" name="checkPoint" placeholder="Enter check point" required onkeyup="this.value = this.value.toUpperCase()">
+                        <input type="text" name="checkPoint" placeholder="Enter check point" required onkeyup="">
                         <button type="button" class="add-btn" onclick="addCheckPointField()" style="font-size:20px; ">＋</button>
                     </div>
                 </div>
@@ -351,6 +351,7 @@
                 });
                 
                 // Create form data
+
                 var formData = new FormData();
                 formData.append('section', document.getElementById('section').value);
                 formData.append('subject', document.getElementById('subject').value);
@@ -362,7 +363,7 @@
                 formData.append('checkPointCount', checkPoints.length);
                 
                 var xhr = new XMLHttpRequest();
-                xhr.open("POST", "https://script.google.com/macros/s/AKfycbxSVRvEDYe4qwQhzfTOZWacrxu_1jeG5Zvu87wzs_KpQqKhspLm26UfWYMtecT_OZH0/exec", true);
+                xhr.open("POST", "https://script.google.com/macros/s/AKfycbwqAhiMHvVRFy9R03CKEuFUkWLp7ptF3QUk_WivE9YKKNiyqEC9hYU1fcLD_tRafTks/exec", true);
                 xhr.onload = function() {
                     // Hide spinner and show the submit button after response
                     spinner.style.display = "none";
