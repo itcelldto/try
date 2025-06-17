@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ Data Entry Form</title>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+               body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .check-point-item {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .check-point-item input {
+            flex-grow: 1;
+            margin-right: 10px;
+            text-transform: uppercase;
+        }
+        .add-btn, .remove-btn {
+            padding: 8px 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .remove-btn {
+            background-color: #f44336;
+        }
+        .form-actions {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .submit-btn, .reset-btn {
+            padding: 10px 20px;
+            margin: 0 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .submit-btn {
+            background-color: #2196F3;
+            color: white;
+        }
+        .reset-btn {
+            background-color: #ff9800;
+            color: white;
+        }
+        .spinner {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .spinner:after {
+            content: " ";
+            display: block;
+            width: 20px;
+            height: 20px;
+            margin: 8px;
+            border-radius: 50%;
+            border: 3px solid #2196F3;
+            border-color: #2196F3 transparent #2196F3 transparent;
+            animation: spinner 1.2s linear infinite;
+        }
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .select2-container--default .select2-selection--single {
+            height: 38px;
+            padding: 5px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px;
+        }
+
+        
+        .new-value-container {
+            margin-top: 5px;
+            display: none;
+        }
+        .toggle-new-value {
+            color: #2196F3;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 5px;
+            display: inline-block;
+        }
+        .toggle-new-value:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h3>FAQ Entry </h3><hr>
+        <form id="faqForm">
+            <div class="form-group">
+                <label for="section">Section</label>
+                <select id="section" name="section" class="section-select" required>
+                    <option value="">Select a section</option>
+                </select>
+                <span class="toggle-new-value" onclick="toggleNewInput('section')">+ Add new section</span>
+                <div id="newSectionContainer" class="new-value-container">
+                    <input type="text" id="newSectionInput" placeholder="Enter new section" onkeyup="this.value = this.value.toUpperCase()">
+                    <button type="button" onclick="addNewSection()">Add</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="subject">Subject</label>
+                <select id="subject" name="subject" class="subject-select" required>
+                    <option value="">Select a subject</option>
+                </select>
+                <span class="toggle-new-value" onclick="toggleNewInput('subject')">+ Add new subject</span>
+                <div id="newSubjectContainer" class="new-value-container">
+                    <input type="text" id="newSubjectInput" placeholder="Enter new subject" onkeyup="this.value = this.value.toUpperCase()">
+                    <button type="button" onclick="addNewSubject()">Add</button>
+                </div>
+            </div>
+            
+            <!-- (Keep the rest of your form the same) -->
+			   <div class="form-group">
+                <label>Check Points</label>
+                <div id="checkPointsContainer">
+                    <div class="check-point-item">
+                        <input type="text" name="checkPoint" placeholder="Enter check point" required onkeyup="this.value = this.value.toUpperCase()">
+                        <button type="button" class="add-btn" onclick="addCheckPointField()" style="font-size:20px; ">＋</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="spinner" id="spinner"></div>
+            
+            <div class="form-actions">
+                <button type="submit" class="submit-btn" id="submitBtn">Save</button>
+                <button type="button" class="reset-btn" onclick="resetForm()">Reset</button>
+            </div>
+        </form>
+    </div>
+        </form>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        // Your Google Sheet ID and API Key
+        const SPREADSHEET_ID = '1AkpDV2-cBT6UNgYRIoyI0QHh8L814PExTGxt2sCm7y4';
+        const API_KEY = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+        
+        $(document).ready(function() {
+            // Initialize Select2 with tags enabled
+            $('.section-select').select2({
+                tags: true,
+                placeholder: "Select or type a new section",
+                allowClear: true
+            });
+            
+            $('.subject-select').select2({
+                tags: true,
+                placeholder: "Select or type a new subject",
+                allowClear: true
+            });
+            
+            // Fetch sections and subjects from Google Sheet
+            fetchSections();
+            
+            // When section changes, fetch corresponding subjects
+            $('#section').on('change', function() {
+                fetchSubjects();
+            });
+            
+            // (Keep your existing form submission handler)
+        });
+        
+        function fetchSections() {
+            // Fetch unique sections from column A
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/F.A.Q!A2:A?key=${API_KEY}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.values) {
+                        // Get unique sections
+                        const sections = [...new Set(data.values.flat())].filter(Boolean);
+                        
+                        // Add sections to dropdown
+                        const sectionSelect = $('#section');
+                        sections.forEach(section => {
+                            sectionSelect.append(new Option(section, section));
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching sections:', error);
+                    Swal.fire({
+                        title: 'Warning!',
+                        text: 'Could not load sections. You can still enter new ones.',
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                });
+        }
+        
+        function fetchSubjects() {
+            const selectedSection = $('#section').val();
+            if (!selectedSection) return;
+            
+            // Fetch all data to filter subjects by section
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/F.A.Q!A2:B?key=${API_KEY}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.values) {
+                        // Filter subjects by selected section
+                        const subjects = data.values
+                            .filter(row => row[0] === selectedSection && row[1])
+                            .map(row => row[1]);
+                        
+                        // Get unique subjects
+                        const uniqueSubjects = [...new Set(subjects)];
+                        
+                        // Update subjects dropdown
+                        const subjectSelect = $('#subject');
+                        subjectSelect.empty().append('<option value="">Select a subject</option>');
+                        uniqueSubjects.forEach(subject => {
+                            subjectSelect.append(new Option(subject, subject));
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching subjects:', error);
+                    Swal.fire({
+                        title: 'Warning!',
+                        text: 'Could not load subjects. You can still enter new ones.',
+                        icon: 'warning',
+                        confirmButtonText: 'OK'
+                    });
+                });
+        }
+        
+        function toggleNewInput(type) {
+            const container = $(`#new${type.charAt(0).toUpperCase() + type.slice(1)}Container`);
+            container.toggle();
+        }
+        
+        function addNewSection() {
+            const newSection = $('#newSectionInput').val().trim().toUpperCase();
+            if (!newSection) return;
+            
+            // Add to Select2 dropdown
+            const sectionSelect = $('#section');
+            const option = new Option(newSection, newSection, true, true);
+            sectionSelect.append(option).trigger('change');
+            
+            // Hide the input and clear it
+            $('#newSectionContainer').hide();
+            $('#newSectionInput').val('');
+        }
+        
+        function addNewSubject() {
+            const newSubject = $('#newSubjectInput').val().trim().toUpperCase();
+            if (!newSubject) return;
+            
+            // Add to Select2 dropdown
+            const subjectSelect = $('#subject');
+            const option = new Option(newSubject, newSubject, true, true);
+            subjectSelect.append(option).trigger('change');
+            
+            // Hide the input and clear it
+            $('#newSubjectContainer').hide();
+            $('#newSubjectInput').val('');
+        }
+        
+        // (Keep all your other existing functions)
+		  $(document).ready(function() {
+            // Initialize Select2
+            $('.section-select').select2({
+                tags: true,
+                placeholder: "Select or type a new section",
+                allowClear: true
+            });
+            
+            $('.subject-select').select2({
+                tags: true,
+                placeholder: "Select or type a new subject",
+                allowClear: true
+            });
+            
+            // Fetch existing sections and subjects from Google Sheet
+            fetchSheetData();
+            
+            // Form submission handler - EXACTLY AS YOU REQUESTED
+            document.getElementById("faqForm").onsubmit = function(e) {
+                e.preventDefault(); // Prevent default form submission
+                var submitButton = document.getElementById("submitBtn");
+                var spinner = document.getElementById("spinner");
+                
+                // Show spinner and hide the button
+                spinner.style.display = "flex";
+                submitButton.style.display = "none";
+                
+                // Get all check points
+                var checkPoints = [];
+                document.querySelectorAll('input[name="checkPoint"]').forEach(function(input) {
+                    checkPoints.push(input.value);
+                });
+                
+                // Create form data
+                var formData = new FormData();
+                formData.append('section', document.getElementById('section').value);
+                formData.append('subject', document.getElementById('subject').value);
+                
+                // Add each check point as a separate parameter
+                checkPoints.forEach(function(point, index) {
+                    formData.append('checkPoint' + index, point);
+                });
+                formData.append('checkPointCount', checkPoints.length);
+                
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", "https://script.google.com/macros/s/AKfycbxxc3o42JvRoN6t8-1FWEEaudZZ39KxaaIETgSagxA0OfD5pRMrjoZ7TrEk2UO2gidI/exec", true);
+                xhr.onload = function() {
+                    // Hide spinner and show the submit button after response
+                    spinner.style.display = "none";
+                    submitButton.style.display = "inline-block";
+                    
+                    if (xhr.status == 200) {
+                        var referenceId = xhr.responseText; // Receive reference ID from the server
+                        // Show SweetAlert success message with the reference ID
+                        Swal.fire({
+                            title: 'Success!',
+                            html: 'Your FAQ data has been saved successfully.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then(function() {
+                            // Don't reset form after submission as requested
+                        });
+                    } else {
+                        // Error handling if the form submission fails
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'There was an issue submitting your form. Please try again.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                };
+                xhr.send(formData);
+            };
+        });
+        
+        function fetchSheetData() {
+            // In a real implementation, you would make an AJAX call to your Google Apps Script
+            // that returns the sections and subjects from the sheet
+            
+            // Simulated data - replace with actual AJAX call
+            setTimeout(function() {
+                // These would come from your Google Sheet
+                var sections = ["GENERAL", "ACCOUNT", "PAYMENT"];
+                var subjects = {
+                    "GENERAL": ["REGISTRATION", "LOGIN", "PASSWORD"],
+                    "ACCOUNT": ["VERIFICATION", "UPDATE", "CLOSURE"],
+                    "PAYMENT": ["METHODS", "FAILURE", "REFUND"]
+                };
+                
+                // Populate sections dropdown
+                var sectionSelect = $('#section');
+                sections.forEach(function(section) {
+                    sectionSelect.append(new Option(section, section));
+                });
+                
+                // Update subjects when section changes
+                $('#section').on('change', function() {
+                    var selectedSection = $(this).val();
+                    var subjectSelect = $('#subject');
+                    
+                    // Clear existing options except the first one
+                    subjectSelect.empty();
+                    subjectSelect.append(new Option("Select a subject", ""));
+                    
+                    if (selectedSection && subjects[selectedSection]) {
+                        subjects[selectedSection].forEach(function(subject) {
+                            subjectSelect.append(new Option(subject, subject));
+                        });
+                    }
+                });
+            }, 500);
+        }
+        
+        function addCheckPointField() {
+            var container = document.getElementById('checkPointsContainer');
+            var newField = document.createElement('div');
+            newField.className = 'check-point-item';
+            newField.innerHTML = `
+                <input type="text" name="checkPoint" placeholder="Enter check point" required onkeyup="this.value = this.value.toUpperCase()">
+                <button type="button" class="remove-btn" onclick="removeCheckPointField(this)" style="font-size:20px; ">‒</button>
+            `;
+            container.appendChild(newField);
+        }
+        
+        function removeCheckPointField(button) {
+            var container = document.getElementById('checkPointsContainer');
+            if (container.children.length > 1) {
+                button.parentNode.remove();
+            } else {
+                Swal.fire({
+                    title: 'Warning!',
+                    text: 'You must have at least one check point.',
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+            }
+        }
+        
+        function resetForm() {
+            document.getElementById('faqForm').reset();
+            
+            // Reset Select2 dropdowns
+            $('#section').val(null).trigger('change');
+            $('#subject').val(null).trigger('change');
+            
+            // Reset check points to just one field
+            var container = document.getElementById('checkPointsContainer');
+            while (container.children.length > 1) {
+                container.removeChild(container.lastChild);
+            }
+            
+            // Reset the first check point field
+            container.children[0].querySelector('input').value = '';
+        }
+    </script>
+</body>
+</html>
