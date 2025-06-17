@@ -50,7 +50,7 @@
         .check-point-item input {
             flex-grow: 1;
             margin-right: 10px;
-           
+            
         }
         .add-btn, .remove-btn {
             padding: 8px 12px;
@@ -140,7 +140,7 @@
                 </select>
                 <span class="toggle-new-value" onclick="toggleNewInput('section')">+ Add new section</span>
                 <div id="newSectionContainer" class="new-value-container">
-                    <input type="text" id="newSectionInput" placeholder="Enter new section" onkeyup="">
+                    <input type="text" id="newSectionInput" placeholder="Enter new section" onkeyup="this.value = this.value.toUpperCase()">
                     <button type="button" onclick="addNewSection()">Add</button>
                 </div>
             </div>
@@ -162,7 +162,7 @@
                 <label>Check Points</label>
                 <div id="checkPointsContainer">
                     <div class="check-point-item">
-                        <input type="text" name="checkPoint" placeholder="Enter check point" required onkeyup="">
+                        <input type="text" name="checkPoint" placeholder="Enter check point" required onkeyup="this.value = this.value.toUpperCase()">
                         <button type="button" class="add-btn" onclick="addCheckPointField()" style="font-size:20px; ">＋</button>
                     </div>
                 </div>
@@ -284,12 +284,12 @@
         }
         
         function toggleNewInput(type) {
-            const container = $(`#new${type.charAt(0) + type.slice(1)}Container`);
+            const container = $(`#new${type.charAt(0).toUpperCase() + type.slice(1)}Container`);
             container.toggle();
         }
         
         function addNewSection() {
-            const newSection = $('#newSectionInput').val().trim();
+            const newSection = $('#newSectionInput').val().trim().toUpperCase();
             if (!newSection) return;
             
             // Add to Select2 dropdown
@@ -303,7 +303,7 @@
         }
         
         function addNewSubject() {
-            const newSubject = $('#newSubjectInput').val().trim();
+            const newSubject = $('#newSubjectInput').val().trim().toUpperCase();
             if (!newSubject) return;
             
             // Add to Select2 dropdown
@@ -436,7 +436,7 @@
             var newField = document.createElement('div');
             newField.className = 'check-point-item';
             newField.innerHTML = `
-                <input type="text" name="checkPoint" placeholder="Enter check point" required onkeyup="">
+                <input type="text" name="checkPoint" placeholder="Enter check point" required onkeyup="this.value = this.value.toUpperCase()">
                 <button type="button" class="remove-btn" onclick="removeCheckPointField(this)" style="font-size:20px; ">‒</button>
             `;
             container.appendChild(newField);
