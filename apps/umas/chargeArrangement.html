@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Charge Arrangement Request Form</title>
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+  <!-- Flatpickr CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <!-- SweetAlert2 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <style>
+    .dot-spinner {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #0d6efd;
+      animation: dot-pulse 1.5s infinite ease-in-out;
+    }
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+    @keyframes dot-pulse {
+      0%, 100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+      }
+      50% {
+        transform: scale(1.2);
+        opacity: 1;
+      }
+    }
+    .form-control[readonly] {
+      background-color: #f8f9fa;
+    }
+    /* Fix for Select2 borders */
+    .select2-container--bootstrap-5 .select2-selection {
+      border: 1px solid #dee2e6 !important;
+      padding: 0.375rem 0.75rem;
+      min-height: calc(1.5em + 0.75rem + 2px);
+    }
+    .select2-container--bootstrap-5 .select2-selection:focus {
+      border-color: #86b7fe !important;
+      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+    }
+    .select2-container--bootstrap-5 .select2-dropdown {
+      border: 1px solid #dee2e6 !important;
+    }
+    .form-label {
+      margin-bottom: .5rem;
+      font-weight: 500;
+    }
+    .section-header {
+      background-color: #f0f7ff;
+      padding: 10px 15px;
+      margin: 25px 0 15px 0;
+      border-left: 4px solid #4285f4;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .readonly-select2 {
+      background-color: #e9ecef !important;
+    }
+    .alert-danger {
+      color: #a94442;
+      background-color: #f2dede;
+      border-color: #ebccd1;
+      padding: 15px;
+      margin-bottom: 20px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-5" style="min-width:100%;background-color: rgba(215, 226, 255, 0.43);">
+    <div id="loginAlert" class="alert-danger" style="display: none;">
+      <strong>Error:</strong> session expired. Please <a href="https://itcelldto.github.io/try/" target="_blank">login</a> again.
+    </div>
+    
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="card shadow">
+          <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">User Charge Arrangement Request Form</h4>
+          </div>
+          <div class="card-body">
+            <form id="changeRequestForm" method="post" class="php-email-form">
+              <div class="row gy-3">
+                <!-- Option For -->
+                <div class="col-md-12" style="display:none">
+                  <label for="optionFor" class="form-label">Option For</label>
+                  <select id="optionFor" name="optionFor" class="form-select select2" required>
+                    <option value="Charge Arrangement" selected>Charge Arrangement</option>
+                  </select>
+                </div>
+                <!-- Treasury Name -->
+                <div class="col-md-12">
+                  <label for="treasuryName" class="form-label">Treasury Name</label>
+                  <select id="treasuryName" name="treasuryName" class="form-select select2" required>
+                    <option value="">Select Treasury</option>
+                  </select>
+                </div>
+                
+                <!-- From Section -->
+                <div class="col-md-12 mt-4">
+                  <div class="section-header">From Employee Details</div>
+                  <hr>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="fromDesignation" class="form-label">Designation</label>
+                  <select id="fromDesignation" name="fromDesignation" class="form-select select2" required>
+                    <option value="">Select Designation</option>
+                  </select>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="fromRole" class="form-label">Role</label>
+                  <select id="fromRole" name="fromRole" class="form-select select2" required>
+                    <option value="">Select Role</option>
+                  </select>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="fromName" class="form-label">Employee Name</label>
+                  <select id="fromName" name="fromName" class="form-select select2" required>
+                    <option value="">Select Employee</option>
+                  </select>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="fromPEN" class="form-label">PEN</label>
+                  <input type="text" id="fromPEN" name="fromPEN" class="form-control" readonly>
+                </div>
+                
+                <!-- To Section -->
+                <div class="col-md-12 mt-4">
+                  <div class="section-header to-employee-section">To Employee Details</div>
+                  <hr>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="toDesignation" class="form-label">Designation</label>
+                  <select id="toDesignation" name="toDesignation" class="form-select select2" required>
+                    <option value="">Select Designation</option>
+                  </select>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="toRole" class="form-label">Role</label>
+                  <select id="toRole" name="toRole" class="form-select select2" required>
+                    <option value="">Select Role</option>
+                  </select>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="toName" class="form-label">Employee Name</label>
+                  <select id="toName" name="toName" class="form-select select2" required>
+                    <option value="">Select Employee</option>
+                  </select>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="toPEN" class="form-label">PEN</label>
+                  <input type="text" id="toPEN" name="toPEN" class="form-control" readonly>
+                </div>
+                
+                <!-- Dates -->
+                <div class="col-md-6">
+                  <label for="fromDate" class="form-label">From Date</label>
+                  <input type="text" id="fromDate" name="fromDate" class="form-control datepicker" required>
+                </div>
+                
+                <div class="col-md-6">
+                  <label for="toDate" class="form-label">To Date</label>
+                  <input type="text" id="toDate" name="toDate" class="form-control datepicker" required>
+                </div>
+                
+                <!-- Hidden Fields -->
+                <input type="hidden" id="status" name="status" value="Pending">
+                <input type="hidden" id="requestId" name="requestId">
+                
+                <!-- Submit Button -->
+                <div class="col-12 text-center mt-4">
+                  <!-- Color Dot Spinner hidden by default -->
+                  <div id="spinner" class="dot-spinner" style="display: none;">
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                  </div>
+                  <!-- Submit Button -->
+                  <button type="submit" id="submitBtn" class="btn btn-primary me-2">Submit Request</button>
+                  <button type="reset" class="btn btn-secondary">Reset</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- jQuery, Bootstrap, Select2, Flatpickr, SweetAlert2 -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
+    $(document).ready(function() {
+      // Check for treasury name in session storage
+      const treasuryName = sessionStorage.getItem('treasuryName');
+      if (!treasuryName) {
+        $('#loginAlert').show();
+        $('.card').hide();
+        return;
+      }
+      
+      // Initialize Select2 with proper theme and borders
+      $('.select2').select2({
+        theme: 'bootstrap-5',
+        width: '100%',
+        dropdownAutoWidth: true
+      });
+      
+      // Set the treasury name as the only option and select it
+      $('#treasuryName').empty().append(`<option value="${treasuryName}" selected>${treasuryName}</option>`);
+      $('#treasuryName').trigger('change');
+      
+      // Make the Select2 control look disabled but keep it functional for form submission
+      $('#treasuryName').next('.select2-container').find('.select2-selection').addClass('readonly-select2');
+      $('#treasuryName').prop('disabled', false); // Ensure it's not disabled
+      
+      // Initialize Datepicker
+      flatpickr(".datepicker", {
+        dateFormat: "d/m/Y",
+        minDate: "today",
+        defaultDate: "today"
+      });
+      
+      // Set today's date
+      setToday();
+      
+      // Generate Request ID
+      generateRequestId();
+      
+      // Load Designations for the treasury from session storage
+      loadDesignations(treasuryName, 'fromDesignation');
+      loadDesignations(treasuryName, 'toDesignation');
+      
+      // From Designation change event
+      $('#fromDesignation').on('change', function() {
+        const designation = $(this).val();
+        if (treasuryName && designation) {
+          loadRoles(treasuryName, designation, 'fromRole');
+        } else {
+          resetDependentFields('fromRole');
+        }
+      });
+      
+      // From Role change event
+      $('#fromRole').on('change', function() {
+        const designation = $('#fromDesignation').val();
+        const role = $(this).val();
+        if (treasuryName && designation && role) {
+          loadEmployees(treasuryName, designation, role, 'fromName');
+        } else {
+          resetDependentFields('fromName');
+        }
+      });
+      
+      // From Name change event
+      $('#fromName').on('change', function() {
+        const designation = $('#fromDesignation').val();
+        const role = $('#fromRole').val();
+        const name = $(this).val();
+        if (treasuryName && designation && role && name) {
+          const selectedOption = $(this).find('option:selected');
+          $('#fromPEN').val(selectedOption.data('pen') || '');
+        } else {
+          $('#fromPEN').val('');
+        }
+      });
+      
+      // To Designation change event
+      $('#toDesignation').on('change', function() {
+        const designation = $(this).val();
+        if (treasuryName && designation) {
+          loadRoles(treasuryName, designation, 'toRole');
+        } else {
+          resetDependentFields('toRole');
+        }
+      });
+      
+      // To Role change event
+      $('#toRole').on('change', function() {
+        const designation = $('#toDesignation').val();
+        const role = $(this).val();
+        if (treasuryName && designation && role) {
+          loadEmployees(treasuryName, designation, role, 'toName');
+        } else {
+          resetDependentFields('toName');
+        }
+      });
+      
+      // To Name change event
+      $('#toName').on('change', function() {
+        const designation = $('#toDesignation').val();
+        const role = $('#toRole').val();
+        const name = $(this).val();
+        if (treasuryName && designation && role && name) {
+          const selectedOption = $(this).find('option:selected');
+          $('#toPEN').val(selectedOption.data('pen') || '');
+        } else {
+          $('#toPEN').val('');
+        }
+      });
+      
+      // Form submission
+      $('#changeRequestForm').on('submit', function(e) {
+        e.preventDefault();
+        const submitButton = $('#submitBtn');
+        const spinner = $('#spinner');
+        
+        // Show spinner and hide the button
+        spinner.show();
+        submitButton.hide();
+        
+        // Create a hidden input to ensure treasuryName is submitted
+        if (!$('#hiddenTreasuryName').length) {
+          $('<input>').attr({
+            type: 'hidden',
+            id: 'hiddenTreasuryName',
+            name: 'treasuryName',
+            value: treasuryName
+          }).appendTo('#changeRequestForm');
+        }
+        
+        const formData = new FormData(this);
+        
+        $.ajax({
+          url: 'https://script.google.com/macros/s/AKfycbzxsRjmQEfee76HxlMYNN_26-PBOkNX0K5bCEsXzGBJ1twu4S2qGShb--g-iAF2Xg9ZEA/exec',
+          method: 'POST',
+          data: formData,
+          processData: false,
+          contentType: false,
+          success: function(response) {
+            // Hide spinner and show the submit button after response
+            spinner.hide();
+            submitButton.show();
+            
+            // Show success message with reference ID
+            Swal.fire({
+              title: 'Success!',
+              html: 'Your request has been submitted successfully.<br><br><b>Request ID:</b> ' + response,
+              icon: 'success',
+              confirmButtonText: 'OK'
+            }).then(function() {
+              // Reset the form after submission
+              $('#changeRequestForm')[0].reset();
+              generateRequestId();
+              setToday();
+              resetAllSelects();
+              // Reset treasury name to the session value
+              $('#treasuryName').empty().append(`<option value="${treasuryName}" selected>${treasuryName}</option>`);
+              $('#treasuryName').trigger('change');
+              $('#treasuryName').next('.select2-container').find('.select2-selection').addClass('readonly-select2');
+            });
+          },
+          error: function() {
+            // Hide spinner and show the submit button after response
+            spinner.hide();
+            submitButton.show();
+            
+            // Error handling if the form submission fails
+            Swal.fire({
+              title: 'Error!',
+              text: 'There was an issue submitting your request. Please try again.',
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
+          }
+        });
+      });
+    });
+    
+    function setToday() {
+      const today = new Date();
+      const dd = String(today.getDate()).padStart(2, '0');
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const yyyy = today.getFullYear();
+      
+      const formattedDate = dd + '/' + mm + '/' + yyyy;
+      $('#fromDate').val(formattedDate);
+      $('#toDate').val(formattedDate);
+    }
+    
+    function generateRequestId() {
+      const now = new Date();
+      const year = now.getFullYear().toString().slice(-2);
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const date = String(now.getDate()).padStart(2, '0');
+      const hour = String(now.getHours()).padStart(2, '0');
+      const minute = String(now.getMinutes()).padStart(2, '0');
+      const second = String(now.getSeconds()).padStart(2, '0');
+      
+      const requestId = year + month + date + hour + minute + second;
+      $('#requestId').val(requestId);
+    }
+    
+    function loadDesignations(treasuryName, targetId) {
+      $.ajax({
+        url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/umas-onboard!A2:D',
+        method: 'GET',
+        data: {
+          key: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
+        },
+        success: function(response) {
+          if (response.values) {
+            const designations = new Set();
+            response.values.forEach(row => {
+              if (row[0] === treasuryName && row[3]) {
+                designations.add(row[3]);
+              }
+            });
+            
+            const select = $(`#${targetId}`);
+            select.empty().append('<option value="">Select Designation</option>');
+            designations.forEach(designation => {
+              select.append(`<option value="${designation}">${designation}</option>`);
+            });
+            
+            // Reset dependent fields
+            if (targetId === 'fromDesignation') {
+              resetDependentFields('fromRole');
+            } else {
+              resetDependentFields('toRole');
+            }
+          }
+        },
+        error: function() {
+          Swal.fire({
+            title: 'Error!',
+            text: 'Failed to load designations. Please try again.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+        }
+      });
+    }
+    
+    function loadRoles(treasuryName, designation, targetId) {
+      $.ajax({
+        url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/umas-onboard!A2:E',
+        method: 'GET',
+        data: {
+          key: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
+        },
+        success: function(response) {
+          if (response.values) {
+            const roles = new Set();
+            response.values.forEach(row => {
+              if (row[0] === treasuryName && row[3] === designation && row[4]) {
+                roles.add(row[4]);
+              }
+            });
+            
+            const select = $(`#${targetId}`);
+            select.empty().append('<option value="">Select Role</option>');
+            roles.forEach(role => {
+              select.append(`<option value="${role}">${role}</option>`);
+            });
+            
+            // Reset dependent fields
+            if (targetId === 'fromRole') {
+              resetDependentFields('fromName');
+            } else {
+              resetDependentFields('toName');
+            }
+          }
+        },
+        error: function() {
+          Swal.fire({
+            title: 'Error!',
+            text: 'Failed to load roles. Please try again.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+        }
+      });
+    }
+    
+    function loadEmployees(treasuryName, designation, role, targetId) {
+      $.ajax({
+        url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/umas-onboard!A2:E',
+        method: 'GET',
+        data: {
+          key: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
+        },
+        success: function(response) {
+          if (response.values) {
+            const employees = [];
+            response.values.forEach(row => {
+              // Columns: A=Treasury, B=PEN, C=Name, D=Designation, E=Role
+              if (row[0] === treasuryName && 
+                  row[3] === designation && 
+                  row[4] === role && 
+                  row[2]) { // Name exists
+                employees.push({
+                  name: row[2],
+                  pen: row[1]
+                });
+              }
+            });
+            
+            const select = $(`#${targetId}`);
+            select.empty().append('<option value="">Select Employee</option>');
+            
+            // Store employee data in data attributes
+            employees.forEach(employee => {
+              select.append(`<option value="${employee.name}" data-pen="${employee.pen}">${employee.name}</option>`);
+            });
+          }
+        },
+        error: function() {
+          Swal.fire({
+            title: 'Error!',
+            text: 'Failed to load employees. Please try again.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+        }
+      });
+    }
+    
+    function resetDependentFields(startFromId) {
+      const fields = {
+        'fromDesignation': ['fromRole', 'fromName', 'fromPEN'],
+        'fromRole': ['fromName', 'fromPEN'],
+        'fromName': ['fromPEN'],
+        'toDesignation': ['toRole', 'toName', 'toPEN'],
+        'toRole': ['toName', 'toPEN'],
+        'toName': ['toPEN']
+      };
+      
+      if (fields[startFromId]) {
+        fields[startFromId].forEach(fieldId => {
+          if (fieldId.endsWith('PEN')) {
+            $(`#${fieldId}`).val('');
+          } else {
+            $(`#${fieldId}`).empty().append('<option value="">Select ' + fieldId.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).replace('From ', '').replace('To ', '') + '</option>');
+          }
+        });
+      }
+    }
+    
+    function resetAllSelects() {
+      $('.select2').val(null).trigger('change');
+      $('#optionFor').val('Charge Arrangement').trigger('change');
+    }
+  </script>
+</body>
+</html>
