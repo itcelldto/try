@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>OAuth 2.0 Callback</title>
+  <script>
+    if (window.opener) {
+      window.opener.postMessage('oauth_callback', '*');
+      window.close();
+    }
+  </script>
+</head>
+<body>
+  <p>Authentication complete. You can close this window.</p>
+</body>
+</html>
