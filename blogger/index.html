@@ -3,66 +3,321 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My Blogger Web App</title>
+  <title>My Beautiful Blog</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      line-height: 1.6;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      color: #333;
+    :root {
+      --primary-color: #4361ee;
+      --secondary-color: #3a0ca3;
+      --accent-color: #f72585;
+      --light-color: #f8f9fa;
+      --dark-color: #212529;
+      --gray-color: #6c757d;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Roboto', sans-serif;
+      line-height: 1.6;
+      color: var(--dark-color);
+      background-color: #f5f7ff;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      padding: 2rem 0;
+      margin-bottom: 2rem;
+      box-shadow: var(--box-shadow);
+    }
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    .logo span {
+      color: var(--accent-color);
+    }
+
+    .search-box {
+      display: flex;
+      align-items: center;
+    }
+
+    .search-box input {
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: var(--border-radius) 0 0 var(--border-radius);
+      width: 250px;
+    }
+
+    .search-box button {
+      background-color: var(--accent-color);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 0 var(--border-radius) var(--border-radius) 0;
+      cursor: pointer;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 2rem;
+      margin-bottom: 3rem;
+    }
+
+    @media (max-width: 768px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .posts-container {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      overflow: hidden;
+    }
+
     .post {
-      margin-bottom: 40px;
-      padding-bottom: 20px;
+      padding: 2rem;
       border-bottom: 1px solid #eee;
     }
+
+    .post:last-child {
+      border-bottom: none;
+    }
+
+    .post-featured-image {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+      border-radius: var(--border-radius);
+      margin-bottom: 1.5rem;
+    }
+
     .post-title {
-      color: #1a73e8;
-      margin-bottom: 10px;
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--secondary-color);
     }
-    .post-date {
-      color: #70757a;
-      font-size: 0.9em;
+
+    .post-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      color: var(--gray-color);
+      font-size: 0.9rem;
     }
-    #loading {
+
+    .post-meta i {
+      margin-right: 0.3rem;
+    }
+
+    .post-content {
+      margin-bottom: 1.5rem;
+      line-height: 1.7;
+    }
+
+    .read-more {
+      display: inline-block;
+      background-color: var(--primary-color);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: var(--border-radius);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .read-more:hover {
+      background-color: var(--secondary-color);
+      transform: translateY(-2px);
+    }
+
+    .sidebar {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 1.5rem;
+      height: fit-content;
+    }
+
+    .sidebar-title {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--accent-color);
+    }
+
+    .categories-list, .popular-posts {
+      list-style: none;
+      margin-bottom: 2rem;
+    }
+
+    .categories-list li, .popular-posts li {
+      margin-bottom: 0.5rem;
+    }
+
+    .categories-list a, .popular-posts a {
+      color: var(--dark-color);
+      text-decoration: none;
+      transition: all 0.3s ease;
+      display: block;
+      padding: 0.5rem;
+      border-radius: var(--border-radius);
+    }
+
+    .categories-list a:hover, .popular-posts a:hover {
+      background-color: #f0f0f0;
+      color: var(--primary-color);
+      padding-left: 1rem;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 2rem;
+    }
+
+    .pagination a {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      background-color: white;
+      color: var(--primary-color);
+      border-radius: var(--border-radius);
+      text-decoration: none;
+      box-shadow: var(--box-shadow);
+      transition: all 0.3s ease;
+    }
+
+    .pagination a.active, .pagination a:hover {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    footer {
+      background-color: var(--dark-color);
+      color: white;
       text-align: center;
-      padding: 20px;
+      padding: 2rem 0;
+      margin-top: 3rem;
     }
-    #content {
-      min-height: 300px;
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      font-size: 1.2rem;
+      color: var(--gray-color);
+    }
+
+    .error {
+      color: #dc3545;
+      padding: 2rem;
+      text-align: center;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>My Blogger Posts</h1>
+    <div class="container header-content">
+      <div class="logo">My<span>Blog</span></div>
+      <div class="search-box">
+        <input type="text" placeholder="Search posts...">
+        <button><i class="fas fa-search"></i></button>
+      </div>
+    </div>
   </header>
 
-  <main id="content">
-    <div id="loading">Loading posts...</div>
-  </main>
+  <div class="container">
+    <main>
+      <div class="posts-container">
+        <div id="loading" class="loading">
+          <i class="fas fa-spinner fa-spin"></i> Loading posts...
+        </div>
+        <div id="content"></div>
+        <div class="pagination" id="pagination">
+          <a href="#" id="prev-page"><i class="fas fa-chevron-left"></i> Previous</a>
+          <span id="page-numbers"></span>
+          <a href="#" id="next-page">Next <i class="fas fa-chevron-right"></i></a>
+        </div>
+      </div>
+
+      <aside class="sidebar">
+        <h3 class="sidebar-title"><i class="fas fa-folder-open"></i> Categories</h3>
+        <ul class="categories-list" id="categories">
+          <!-- Categories will be loaded here -->
+        </ul>
+
+        <h3 class="sidebar-title"><i class="fas fa-fire"></i> Popular Posts</h3>
+        <ul class="popular-posts" id="popular-posts">
+          <!-- Popular posts will be loaded here -->
+        </ul>
+      </aside>
+    </main>
+  </div>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2023 MyBlog. All rights reserved.</p>
+    </div>
+  </footer>
 
   <script>
     // API Configuration
     const API_KEY = 'AIzaSyDOIvQINYwseIEwl-OAjuLtjkKmrjUcimw';
     const BLOG_ID = '6657782769345602418';
-    const API_URL = `https://www.googleapis.com/blogger/v3/blogs/${BLOG_ID}/posts?key=${API_KEY}&fetchBodies=true&fetchImages=true&maxResults=10`;
+    let currentPage = 1;
+    const postsPerPage = 5;
 
     // DOM Elements
     const contentEl = document.getElementById('content');
     const loadingEl = document.getElementById('loading');
+    const paginationEl = document.getElementById('pagination');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+    const pageNumbersEl = document.getElementById('page-numbers');
 
-    // Fetch posts from Blogger API
-    async function fetchBloggerPosts() {
+    // Fetch posts from Blogger API with pagination
+    async function fetchBloggerPosts(page = 1) {
+      loadingEl.style.display = 'block';
+      contentEl.innerHTML = '';
+      
       try {
-        const response = await fetch(API_URL);
+        const startIndex = (page - 1) * postsPerPage + 1;
+        const response = await fetch(
+          `https://www.googleapis.com/blogger/v3/blogs/${BLOG_ID}/posts?key=${API_KEY}` +
+          `&fetchBodies=true&fetchImages=true&maxResults=${postsPerPage}&startIndex=${startIndex}`
+        );
+        
         const data = await response.json();
         
         if (data.items && data.items.length > 0) {
           renderPosts(data.items);
+          updatePagination(data.totalItems || 0, page);
         } else {
           showError("No posts found.");
         }
@@ -78,24 +333,107 @@
     function renderPosts(posts) {
       let html = '';
       posts.forEach(post => {
+        // Extract first image from content for featured image
+        const content = post.content || '';
+        const imgMatch = content.match(/<img[^>]+src="([^">]+)"/);
+        const featuredImage = imgMatch ? imgMatch[1] : 'https://via.placeholder.com/800x400?text=No+Image';
+        
+        // Clean content by removing images and truncating
+        const cleanContent = content.replace(/<img[^>]*>/g, '').substring(0, 200) + '...';
+        
         html += `
           <article class="post">
+            ${imgMatch ? `<img src="${featuredImage}" alt="${post.title}" class="post-featured-image">` : ''}
             <h2 class="post-title">${post.title}</h2>
-            <div class="post-content">${post.content}</div>
-            <p class="post-date">Published: ${new Date(post.published).toLocaleDateString()}</p>
+            <div class="post-meta">
+              <span><i class="far fa-calendar-alt"></i> ${new Date(post.published).toLocaleDateString()}</span>
+              <span><i class="far fa-comments"></i> ${post.replies && post.replies.totalItems ? post.replies.totalItems : 0} comments</span>
+            </div>
+            <div class="post-content">${cleanContent}</div>
+            <a href="${post.url}" class="read-more" target="_blank">Read More</a>
           </article>
         `;
       });
       contentEl.innerHTML = html;
     }
 
-    // Show error message
-    function showError(message) {
-      contentEl.innerHTML = `<div style="color: #d32f2f;">${message}</div>`;
+    // Update pagination controls
+    function updatePagination(totalItems, currentPage) {
+      const totalPages = Math.ceil(totalItems / postsPerPage);
+      
+      prevPageBtn.style.display = currentPage > 1 ? 'block' : 'none';
+      nextPageBtn.style.display = currentPage < totalPages ? 'block' : 'none';
+      
+      // Update page numbers
+      pageNumbersEl.innerHTML = '';
+      const maxPagesToShow = 5;
+      let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+      let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+      
+      if (endPage - startPage + 1 < maxPagesToShow) {
+        startPage = Math.max(1, endPage - maxPagesToShow + 1);
+      }
+      
+      for (let i = startPage; i <= endPage; i++) {
+        const pageLink = document.createElement('a');
+        pageLink.href = '#';
+        pageLink.textContent = i;
+        if (i === currentPage) {
+          pageLink.classList.add('active');
+        }
+        pageLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          navigateToPage(i);
+        });
+        pageNumbersEl.appendChild(pageLink);
+      }
     }
 
+    // Navigate to specific page
+    function navigateToPage(page) {
+      currentPage = page;
+      fetchBloggerPosts(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Show error message
+    function showError(message) {
+      contentEl.innerHTML = `<div class="error"><i class="fas fa-exclamation-circle"></i> ${message}</div>`;
+    }
+
+    // Event listeners for pagination
+    prevPageBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (currentPage > 1) {
+        navigateToPage(currentPage - 1);
+      }
+    });
+
+    nextPageBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      navigateToPage(currentPage + 1);
+    });
+
     // Start fetching posts when the page loads
-    window.onload = fetchBloggerPosts;
+    window.onload = () => {
+      fetchBloggerPosts(currentPage);
+      
+      // Simulate loading categories and popular posts (you can replace with actual API calls)
+      setTimeout(() => {
+        document.getElementById('categories').innerHTML = `
+          <li><a href="#">Technology</a></li>
+          <li><a href="#">Travel</a></li>
+          <li><a href="#">Food</a></li>
+          <li><a href="#">Lifestyle</a></li>
+        `;
+        
+        document.getElementById('popular-posts').innerHTML = `
+          <li><a href="#">10 Tips for Better Productivity</a></li>
+          <li><a href="#">My Journey Through Asia</a></li>
+          <li><a href="#">The Best Coffee Shops in Town</a></li>
+        `;
+      }, 1000);
+    };
   </script>
 </body>
 </html>
