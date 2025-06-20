@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Blogger Web App</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      color: #333;
+    }
+    .post {
+      margin-bottom: 40px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .post-title {
+      color: #1a73e8;
+      margin-bottom: 10px;
+    }
+    .post-date {
+      color: #70757a;
+      font-size: 0.9em;
+    }
+    #loading {
+      text-align: center;
+      padding: 20px;
+    }
+    #content {
+      min-height: 300px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>My Blogger Posts</h1>
+  </header>
+
+  <main id="content">
+    <div id="loading">Loading posts...</div>
+  </main>
+
+  <script>
+    // API Configuration
+    const API_KEY = 'AIzaSyDOIvQINYwseIEwl-OAjuLtjkKmrjUcimw';
+    const BLOG_ID = '6657782769345602418';
+    const API_URL = `https://www.googleapis.com/blogger/v3/blogs/${BLOG_ID}/posts?key=${API_KEY}&fetchBodies=true&fetchImages=true&maxResults=10`;
+
+    // DOM Elements
+    const contentEl = document.getElementById('content');
+    const loadingEl = document.getElementById('loading');
+
+    // Fetch posts from Blogger API
+    async function fetchBloggerPosts() {
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        
+        if (data.items && data.items.length > 0) {
+          renderPosts(data.items);
+        } else {
+          showError("No posts found.");
+        }
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+        showError("Failed to load posts. Check console for details.");
+      } finally {
+        loadingEl.style.display = 'none';
+      }
+    }
+
+    // Render posts to the page
+    function renderPosts(posts) {
+      let html = '';
+      posts.forEach(post => {
+        html += `
+          <article class="post">
+            <h2 class="post-title">${post.title}</h2>
+            <div class="post-content">${post.content}</div>
+            <p class="post-date">Published: ${new Date(post.published).toLocaleDateString()}</p>
+          </article>
+        `;
+      });
+      contentEl.innerHTML = html;
+    }
+
+    // Show error message
+    function showError(message) {
+      contentEl.innerHTML = `<div style="color: #d32f2f;">${message}</div>`;
+    }
+
+    // Start fetching posts when the page loads
+    window.onload = fetchBloggerPosts;
+  </script>
+</body>
+</html>
