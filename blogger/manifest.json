@@ -3,8 +3,8 @@
   "short_name": "Gokul's Blog",
   "start_url": "https://thegokulliveblog.blogspot.com/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#4285f4",
+  "background_color": "#f4292a",
+  "theme_color": "#f4292a",
   "icons": [
     {
       "src": "https://itcelldto.github.io/try/blogger/assets/icon-192.png",
