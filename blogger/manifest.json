@@ -1,7 +1,7 @@
 {
   "name": "Gokullive Blog App",
   "short_name": "Gokullive BlogApp",
-  "start_url": "/try/blogger/",
+  "start_url": "https://thegokulliveblog.blogspot.com/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4285f4",
