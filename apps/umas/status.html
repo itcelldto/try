@@ -35,7 +35,8 @@
 <body style="background-color: #d7e2ff6e;"><div style="background-color: white;padding: 25px;border-radius: 8px;box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);">
     <div class="container-fluid">
         <h4 class="my-4">UMAS Data Change Requests</h4><hr>
-	    <p style="color:red; font-weight:500;"> *Initiated Status : F1 Initiated But Officer Level Confirm Pending. </p>
+	    <p style="color:red; font-weight:500;"> *Initiated Status : F1 Initiated But Officer Level Confirm Pending. </p> 
+	    <a href="#" class="btn btn-light" onclick="openPopup()">PDF</a> 
         <table id="dataTable" class="display table table-hover" style="width:100%">
             <thead>
                 <tr>
@@ -57,21 +58,11 @@
             </tbody>
         </table>
     </div>
-	<a href="#" class="btn btn-light" onclick="openPopup()">PDF</a>  
+	 
 
-	 <script>
-    function openPopup() {
-    const url = "https://script.google.com/macros/s/AKfycbzywjcUltvzofjDglUovicJfcWWN1oe0jFZCRwhCgA/dev";
-    const windowFeatures = "width=600,height=400,resizable=yes,scrollbars=yes";
-    const popup = window.open(url, "PopupWindow", windowFeatures);
-
-    if (!popup || popup.closed || typeof popup.closed === "undefined") {
-        // Pop-up blocked, open in the same tab
-        window.location.href = url;
-    }
-}
-</script>
  </div>
+	
+	
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap JS -->
@@ -160,6 +151,16 @@
                 alert('Failed to load data from Google Sheets. Please check console for details.');
             });
         });
+	    function openPopup() {
+    const url = "https://script.google.com/macros/s/AKfycbzywjcUltvzofjDglUovicJfcWWN1oe0jFZCRwhCgA/dev";
+    const windowFeatures = "width=600,height=400,resizable=yes,scrollbars=yes";
+    const popup = window.open(url, "PopupWindow", windowFeatures);
+
+    if (!popup || popup.closed || typeof popup.closed === "undefined") {
+        // Pop-up blocked, open in the same tab
+        window.location.href = url;
+    }
+}
     </script>
 </body>
 </html>
