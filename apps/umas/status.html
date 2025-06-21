@@ -57,6 +57,18 @@
             </tbody>
         </table>
     </div>
+	 <script>
+    function openPopup() {
+    const url = "https://script.google.com/macros/s/AKfycbzywjcUltvzofjDglUovicJfcWWN1oe0jFZCRwhCgA/dev";
+    const windowFeatures = "width=600,height=400,resizable=yes,scrollbars=yes";
+    const popup = window.open(url, "PopupWindow", windowFeatures);
+
+    if (!popup || popup.closed || typeof popup.closed === "undefined") {
+        // Pop-up blocked, open in the same tab
+        window.location.href = url;
+    }
+}
+</script>
  </div>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
