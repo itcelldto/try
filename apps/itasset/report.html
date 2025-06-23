@@ -48,10 +48,8 @@
             height: 3rem;
         }
 		.form-select {
-   
-    padding: 2px 8px !important;
-    
-}
+            padding: 2px 8px !important;
+        }
     </style>
 </head>
 <body>
@@ -109,6 +107,7 @@
                             <thead class="table-dark">
                                 <tr>
                                     <th>Asset ID</th>
+                                    <th>Serial No</th>
                                     <th>Employee Name</th>
                                     <th>Product</th>
                                     <th>PEN</th>
@@ -116,7 +115,7 @@
                                     <th>IP Assigned</th>
                                     <th>Issue Confirmed</th>
                                     <th>Return Confirmed</th>
-			            <th>Remarks</th>
+			                        <th>Remarks</th>
                                     <th>Call Details</th>
                                 </tr>
                             </thead>
@@ -149,6 +148,10 @@
         const SPREADSHEET_ID = "1uLkxG7dmVDo5YVPX5XDphwc7Yy6p1Bq00p3vW43tTs4";
         const API_KEY = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
         const SHEET_NAME = "Asset Distribution Data";
+        const FMS_SHEET_NAME = "FMS Asset Data";
+        
+        // Cache for asset ID to serial number mapping
+        let assetSerialCache = {};
         
         $(document).ready(function() {
             // Initialize Select2 dropdowns
@@ -215,6 +218,29 @@
             }
         }
         
+        async function loadAssetSerialNumbers() {
+            showLoading();
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${FMS_SHEET_NAME}!B2:G?key=${API_KEY}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.values) {
+                    assetSerialCache = {};
+                    data.values.forEach(row => {
+                        if (row[0] && row[5]) { // Column B (Asset ID) and Column G (Serial No)
+                            assetSerialCache[row[0]] = row[5];
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error("Failed to load asset serial numbers:", error);
+                // Don't show error to user as this is a background process
+            } finally {
+                hideLoading();
+            }
+        }
+        
         async function generateReport() {
             const treasury = $('#reportTreasury').val();
             const product = $('#reportProduct').val();
@@ -225,7 +251,10 @@
             $('#generateReport').html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...');
             
             try {
-                // First get all data from the sheet
+                // First load the asset serial numbers
+                await loadAssetSerialNumbers();
+                
+                // Then get all data from the sheet
                 const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!A1:Z?key=${API_KEY}`;
                 const response = await fetch(url);
                 const data = await response.json();
@@ -253,8 +282,10 @@
                 
                 // Format the data for display
                 const reportData = filteredData.map(row => {
+                    const assetId = row[headerMap["Asset_ID"]] || '';
                     return {
-                        assetId: row[headerMap["Asset_ID"]] || '',
+                        assetId: assetId,
+                        serialNo: assetSerialCache[assetId] || 'N/A',
                         employeeName: row[headerMap["Issued to Emp name"]] || '',
                         product: row[headerMap["Product"]] || '',
                         pen: row[headerMap["Pen"]] || '',
@@ -262,8 +293,8 @@
                         ipAssigned: row[headerMap["IP Assigned"]] || '',
                         issueConfirmed: row[headerMap["Issue Confirmed ?"]] || '',
                         returnConfirmed: row[headerMap["Return Confirmed?"]] || '',
-			remarks: row[headerMap["Remarks"]] || '',       // Add this line
-                        callDetails: row[headerMap["Call Details"]] || ''  // Add this line
+                        remarks: row[headerMap["Remarks"]] || '',
+                        callDetails: row[headerMap["Call Details"]] || ''
                     };
                 });
                 
@@ -282,18 +313,19 @@
             const $table = $('#reportTable').DataTable({
                 destroy: true,
                 data: data,
-               columns: [
-    { data: 'assetId' },
-    { data: 'employeeName' },
-    { data: 'product' },
-    { data: 'pen' },
-    { data: 'seat' },
-    { data: 'ipAssigned' },
-    { data: 'issueConfirmed' },
-    { data: 'returnConfirmed' },
-    { data: 'remarks' },       // Add this line
-    { data: 'callDetails' }    // Add this line
-],
+                columns: [
+                    { data: 'assetId' },
+                    { data: 'serialNo' },
+                    { data: 'employeeName' },
+                    { data: 'product' },
+                    { data: 'pen' },
+                    { data: 'seat' },
+                    { data: 'ipAssigned' },
+                    { data: 'issueConfirmed' },
+                    { data: 'returnConfirmed' },
+                    { data: 'remarks' },
+                    { data: 'callDetails' }
+                ],
                 pageLength: 10,
                 dom: '<"top"f>rt<"bottom"lip>',
                 language: {
@@ -313,56 +345,83 @@
             $results.removeClass('d-none');
         }
         
-        function exportToPDF() {
-            const doc = new jsPDF();
-            const title = $('#reportTitle').text();
-            const date = new Date().toLocaleDateString();
-            
-            // Add title and date
-            doc.setFontSize(16);
-            doc.text(title, 14, 15);
-            doc.setFontSize(10);
-            doc.text(`Generated on: ${date}`, 14, 22);
-            
-            // Get table data
-            const table = $('#reportTable').DataTable();
-            const data = table.rows().data().toArray();
-            
-            // Prepare data for PDF
-            const pdfData = data.map(item => [
-                item.assetId,
-                item.employeeName,
-                item.product,
-                item.pen,
-                item.seat,
-                item.ipAssigned,
-                item.issueConfirmed,
-                item.returnConfirmed
-            ]);
-            
-            // Add table to PDF
-            doc.autoTable({
-                head: [['Asset ID', 'Employee', 'Product', 'Pen', 'Seat', 'IP Address', 'Issue Confirmed', 'Return Confirmed']],
-                body: pdfData,
-                startY: 30,
-                styles: {
-                    fontSize: 8,
-                    cellPadding: 2,
-                    overflow: 'linebreak'
-                },
-                headStyles: {
-                    fillColor: [13, 110, 253],
-                    textColor: 255,
-                    fontStyle: 'bold'
-                },
-                alternateRowStyles: {
-                    fillColor: [240, 240, 240]
-                }
-            });
-            
-            // Save the PDF
-            doc.save(`Asset_Report_${date.replace(/\//g,'-')}.pdf`);
-        }
+       function exportToPDF() {
+    const doc = new jsPDF('landscape'); // Set landscape mode
+    
+    const title = $('#reportTitle').text();
+    const date = new Date().toLocaleDateString();
+    
+    // Add title and date
+    doc.setFontSize(16);
+    doc.text(title, 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${date}`, 14, 22);
+    
+    // Get table data
+    const table = $('#reportTable').DataTable();
+    const data = table.rows().data().toArray();
+    
+    // Prepare data for PDF
+    const pdfData = data.map(item => [
+        item.assetId,
+        item.serialNo,
+        item.employeeName,
+        item.product,
+        item.pen,
+        item.seat,
+        item.ipAssigned,
+        item.issueConfirmed,
+        item.returnConfirmed,
+        item.remarks,
+        item.callDetails
+    ]);
+    
+    // Define column widths (in units that make sense for landscape)
+    const columnStyles = {
+        0: { cellWidth: 25 },  // Asset ID
+        1: { cellWidth: 25 },  // Serial No
+        2: { cellWidth: 25 }, // Employee Name
+        3: { cellWidth: 20 },  // Product
+        4: { cellWidth: 15 },  // PEN
+        5: { cellWidth: 25 }, // Section/Seat
+        6: { cellWidth: 20 },  // IP Assigned
+        7: { cellWidth: 15 },  // Issue Confirmed
+        8: { cellWidth: 15 },  // Return Confirmed
+        9: { cellWidth: 30 },  // Remarks
+        10: { cellWidth: 30 },
+        11: { cellWidth: 30 }
+         		
+    };
+    
+    // Add table to PDF
+    doc.autoTable({
+        head: [['Asset ID', 'Serial No', 'Employee', 'Product', 'PEN', 'Section/Seat', 'IP Address', 'Issue Confirmed', 'Return Confirmed', 'Remarks', 'Call Details','Sign & Date']],
+        body: pdfData,
+        startY: 30,
+        styles: {
+            fontSize: 8,
+            cellPadding: 2,
+            overflow: 'linebreak',
+            valign: 'middle'
+        },
+        headStyles: {
+            fillColor: [13, 110, 253],
+            textColor: 255,
+            fontStyle: 'bold',
+            halign: 'center'
+        },
+        columnStyles: columnStyles,
+        alternateRowStyles: {
+            fillColor: [240, 240, 240]
+        },
+        margin: { top: 30 },
+        pageBreak: 'auto',
+        tableWidth: 'wrap'
+    });
+    
+    // Save the PDF
+    doc.save(`Asset_Report_${date.replace(/\//g,'-')}.pdf`);
+}
     </script>
 </body>
 </html>
