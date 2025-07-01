@@ -638,7 +638,7 @@
       document.getElementById("add_button").disabled = input.value.length !== 10;
     }
 
-    function addRow() {
+      function addRow() {
       var addButton = document.getElementById("add_button");
       addButton.disabled = true;
       addButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
@@ -657,7 +657,7 @@
       values[4] = amount % 1 === 0 ? amount.toString() : amount.toFixed(2);
       
       // Append pen number to remarks
-      values[6] = values[6] + " - Entered by " + penNumber +  ".";
+      values[6] = values[6] + " - Entered by " + penNumber + " (Mobile: " + mobileNumber + ")";
       
       if(values.some(function(v) { return !v; })) {
         Swal.fire({
@@ -704,8 +704,10 @@
         // Clear form fields
         document.getElementById("secondInp").value = '';
         document.getElementById("fifthInp").value = '';
+        document.getElementById("seventhInp").value = "***"; // Reset remarks to "***"
+        
         addButton.disabled = false;
-        addButton.innerHTML = 'Add';
+        addButton.innerHTML = 'Add Details';
         
         // Immediately try to fetch the token number
         fetchTokenNumber(uniqueId);
@@ -716,14 +718,13 @@
       .catch(error => {
         console.error('Submission error:', error);
         addButton.disabled = false;
-        addButton.innerHTML = 'Add';
+        addButton.innerHTML = 'Add Details';
         
         // Even if there's an error, try to fetch the token as it might have been saved
         fetchTokenNumber(uniqueId);
         loadRecentTokens();
       });
     }
-
     // Function to generate UUID
     function generateUUID() {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
