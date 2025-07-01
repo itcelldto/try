@@ -705,7 +705,7 @@
         document.getElementById("secondInp").value = '';
         document.getElementById("fifthInp").value = '';
         addButton.disabled = false;
-        addButton.innerHTML = 'Add Details';
+        addButton.innerHTML = 'Add';
         
         // Immediately try to fetch the token number
         fetchTokenNumber(uniqueId);
@@ -716,7 +716,7 @@
       .catch(error => {
         console.error('Submission error:', error);
         addButton.disabled = false;
-        addButton.innerHTML = 'Add Details';
+        addButton.innerHTML = 'Add';
         
         // Even if there's an error, try to fetch the token as it might have been saved
         fetchTokenNumber(uniqueId);
