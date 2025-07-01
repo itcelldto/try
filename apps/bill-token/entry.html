@@ -657,7 +657,7 @@
       values[4] = amount % 1 === 0 ? amount.toString() : amount.toFixed(2);
       
       // Append pen number to remarks
-      values[6] = values[6] + " - Entered by " + penNumber + " (Mobile: " + mobileNumber + ")";
+      values[6] = values[6] + " - Entered by " + penNumber +  ".";
       
       if(values.some(function(v) { return !v; })) {
         Swal.fire({
