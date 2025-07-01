@@ -261,10 +261,10 @@
                     <tr>
                       <th>Token No.</th>
                       <th>DDO Code</th>
-                      <th>Bill Ref No.</th>
+                      <th>BRN</th>
                       <th>Bill Type</th>
                       <th>Amount</th>
-                      <th>Date</th>
+                      <th>Date & Time</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -316,7 +316,7 @@
     // Store pen number globally
     var penNumber = '';
     var mobileNumber = '';
-    var scriptUrl = 'https://script.google.com/macros/s/AKfycbzAU3xIXD6h6SKYFKEC5KBc9bxFm63zHMRkiWk02LoN4oTe9AraJ1PmspRVgI-h-43E4Q/exec';
+    var scriptUrl = 'https://script.google.com/macros/s/AKfycbywUhP-P3OpgbS7n_pUtwztFrKEcNdd25_ODunSmHJrVvVCqeWjapDpNojwdjfISTwjpQ/exec';
     var uniqueId = '';
 
     // Initialize when page loads
@@ -587,16 +587,16 @@
 
     function validate_BRN(value) {
       // Check for repeated digits like 1111, 2222, etc.
-      if (/^(\d)\1{3,}$/.test(value)) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Invalid BRN',
-          text: 'Repeated digits are not allowed in Bill Reference Number',
-        });
-        document.getElementById("secondInp").value = '';
-        document.getElementById("secondInp").focus();
-        return false;
-      }
+     // if (/^(\d)\1{3,}$/.test(value)) {
+    ///    Swal.fire({
+     ////     icon: 'warning',
+     //     title: 'Invalid BRN',
+    //      text: 'Repeated digits are not allowed in Bill Reference Number',
+      //  });
+     //   document.getElementById("secondInp").value = '';
+     //   document.getElementById("secondInp").focus();
+     //   return false;
+    //  }
       
       if(isNaN(value) || value.length < 4) {
         Swal.fire({
@@ -817,23 +817,57 @@
     }
 
     function updateTokenInfo(tokenNumber) {
-      // Get all the current form values
-      var ddoCode = document.getElementById("firstInp").value;
-      var brn = document.getElementById("secondInp").value;
-      var amount = document.getElementById("fifthInp").value;
-      
-      // Remove .00 from amount if present
-      amount = amount.replace(/\.00$/, '');
-      
-      // Format the token info display with all details
-      const infoHTML = `
-        <p><strong>Token No:</strong> ${tokenNumber || "-"}</p>
-        <p><strong>DDO Code:</strong> ${ddoCode || "-"}</p>
-        <p><strong>BRN:</strong> ${brn || "-"}</p>
-        <p><strong>Amount:</strong> ${amount || "-"}</p>
-      `;
-      document.getElementById("tokenInfo").innerHTML = infoHTML;
-    }
+    // First try to get the data from the sheet
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!A2:O?key=${apiKey}`;
+    
+    $.get(url, function(data) {
+        let ddoCode = "-";
+        let brn = "-";
+        let amount = "-";
+        
+        if (data.values && data.values.length > 0) {
+            // Find the row with matching token number (column K/index 10)
+            for (let i = 0; i < data.values.length; i++) {
+                const row = data.values[i];
+                if (row[10] === tokenNumber) { // Column K is index 10
+                    ddoCode = row[1] || "-";    // Column B is index 1
+                    brn = row[14] || row[2] || "-"; // Column O is index 14, fallback to Column C (index 2)
+                    amount = row[5] || "-";      // Column F is index 5
+                    
+                    // Remove .00 from amount if present
+                    amount = amount.toString().replace(/\.00$/, '');
+                    break;
+                }
+            }
+        }
+        
+        // Format the token info display with all details
+        const infoHTML = `
+            <p><strong>Token No:</strong> ${tokenNumber || "-"}</p>
+            <p><strong>DDO Code:</strong> ${ddoCode}</p>
+            <p><strong>BRN:</strong> ${brn}</p>
+            <p><strong>Amount:</strong> ${amount}</p>
+        `;
+        document.getElementById("tokenInfo").innerHTML = infoHTML;
+        
+    }).fail(function(error) {
+        console.error('Error fetching token details:', error);
+        // Fallback to form values if API fails
+        var ddoCode = document.getElementById("firstInp").value;
+        var brn = document.getElementById("secondInp").value;
+        var amount = document.getElementById("fifthInp").value;
+        
+        amount = amount.replace(/\.00$/, '');
+        
+        const infoHTML = `
+            <p><strong>Token No:</strong> ${tokenNumber || "-"}</p>
+            <p><strong>DDO Code:</strong> ${ddoCode || "-"}</p>
+            <p><strong>BRN:</strong> ${brn || "-"}</p>
+            <p><strong>Amount:</strong> ${amount || "-"}</p>
+        `;
+        document.getElementById("tokenInfo").innerHTML = infoHTML;
+    });
+}
 
     function clearRecord() {
       ["firstInp", "secondInp", "thirdInp", "billNature", "fifthInp", "sixthInp", "seventhInp"]
@@ -853,48 +887,51 @@
       `;
     }
 
-    // Function to load recent tokens for the table view
-    function loadRecentTokens() {
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!B2:K?key=${apiKey}`;
+ // Function to load recent tokens for the table view
+function loadRecentTokens() {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!B2:O?key=${apiKey}`;
+  
+  $.get(url, function(data) {
+    var table = $('#tokenTable').DataTable();
+    table.clear();
+    
+    if (data.values && data.values.length > 0) {
+      // Get last 1000 entries (most recent first)
+      const recentTokens = data.values.slice(-1000).reverse();
       
-      $.get(url, function(data) {
-        var table = $('#tokenTable').DataTable();
-        table.clear();
-        
-        if (data.values && data.values.length > 0) {
-          // Get last 50 entries (most recent first)
-          const recentTokens = data.values.slice(-50).reverse();
+      recentTokens.forEach(row => {
+        if (row[9]) { // Column K is Token
+          // Format amount to remove .00 if present
+          let amount = row[4];
+          if (amount && amount.includes('.00')) {
+            amount = amount.replace('.00', '');
+          }
           
-          recentTokens.forEach(row => {
-            if (row[9]) { // Column K is Token
-              // Format amount to remove .00 if present
-              let amount = row[4];
-              if (amount && amount.includes('.00')) {
-                amount = amount.replace('.00', '');
-              }
-              
-              table.row.add([
-                row[9], // Token
-                row[0], // DDO Code
-                row[1], // Bill Ref No
-                row[2], // Bill Type
-                amount,  // Amount (formatted)
-                formatDate(row[7]) // Date
-              ]);
-            }
-          });
-        } else {
-          table.row.add(['No records found', '', '', '', '', '']);
+          // Column O (index 13) is the BRN
+          let brn = row[13] || row[1]; // Fallback to column C if O is empty
+          
+          table.row.add([
+            row[9],  // Token (Column K)
+            row[0],  // DDO Code (Column B)
+            brn,     // BRN (Column O, fallback to Column C)
+            row[2],  // Bill Type (Column D)
+            amount,  // Amount (Column F)
+            row[7]   // Date (Column I)
+          ]);
         }
-        
-        table.draw();
-      }).fail(function(error) {
-        console.error('Error loading token data:', error);
-        var table = $('#tokenTable').DataTable();
-        table.clear().draw();
-        table.row.add(['Error loading data', '', '', '', '', '']);
       });
+    } else {
+      table.row.add(['No records found', '', '', '', '', '']);
     }
+    
+    table.draw();
+  }).fail(function(error) {
+    console.error('Error loading token data:', error);
+    var table = $('#tokenTable').DataTable();
+    table.clear().draw();
+    table.row.add(['Error loading data', '', '', '', '', '']);
+  });
+}
 
     // Helper function to format date
     function formatDate(dateStr) {
