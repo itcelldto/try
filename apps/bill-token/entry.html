@@ -66,13 +66,43 @@
       display: block;
     }
     
+    /* Select2 styling to match form inputs */
     .select2-container {
       width: 100% !important;
+    }
+    
+    .select2-container--default .select2-selection--single {
+      height: 38px !important;
+      border: 1px solid #ced4da !important;
+      border-radius: 0.25rem !important;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 36px !important;
+    }
+    
+    .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 36px !important;
     }
     
     #tokenTable {
       width: 100%;
       margin-top: 20px;
+    }
+    
+    /* Remove padding from amount cells */
+    #tokenTable td:nth-child(5) {
+      padding-right: 0 !important;
+      text-align: right !important;
+    }
+    
+    /* Token info box styling */
+    #tokenInfo p {
+      margin-bottom: 5px;
+    }
+    #tokenInfo strong {
+      display: inline-block;
+      width: 80px;
     }
   </style>
   
@@ -203,7 +233,12 @@
                       <h5 class="card-title">📝 Token Info</h5>
                     </div>
                     <div class="card-body">
-                      <div id="tokenInfo">No token generated yet</div>
+                      <div id="tokenInfo">
+                        <p><strong>Token No:</strong> -</p>
+                        <p><strong>DDO Code:</strong> -</p>
+                        <p><strong>BRN:</strong> -</p>
+                        <p><strong>Amount:</strong> -</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -502,7 +537,52 @@
         return false;
       }
       
+      // Check if this DDO+BRN combination already exists
+      var brn = document.getElementById("secondInp").value;
+      if (brn && brn.length >= 4) {
+        checkExistingEntry(ddoCode, brn);
+      }
+      
       return true;
+    }
+
+    // New function to check for existing DDO+BRN combination
+    function checkExistingEntry(ddoCode, brn) {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!B2:C?key=${apiKey}`;
+      
+      Swal.fire({
+        title: 'Checking records...',
+        html: 'Verifying if this bill already exists',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      $.get(url, function(data) {
+        Swal.close();
+        if (data.values && data.values.length > 0) {
+          for (let i = 0; i < data.values.length; i++) {
+            const row = data.values[i];
+            if (row[0] === ddoCode && row[1] === brn) {
+              Swal.fire({
+                icon: 'warning',
+                title: 'Duplicate Entry Found',
+                html: `This DDO Code and BRN combination already exists in our records.<br><br>
+                      <strong>DDO Code:</strong> ${ddoCode}<br>
+                      <strong>BRN:</strong> ${brn}`,
+                confirmButtonText: 'OK'
+              });
+              document.getElementById("add_button").disabled = true;
+              return;
+            }
+          }
+          document.getElementById("add_button").disabled = false;
+        }
+      }).fail(function(error) {
+        Swal.close();
+        console.error('Error checking existing entries:', error);
+      });
     }
 
     function validate_BRN(value) {
@@ -527,6 +607,12 @@
         document.getElementById("secondInp").value = '';
         document.getElementById("secondInp").focus();
         return false;
+      }
+      
+      // Check if this BRN+DDO combination already exists
+      var ddoCode = document.getElementById("firstInp").value;
+      if (ddoCode && ddoCode.length === 10) {
+        checkExistingEntry(ddoCode, value);
       }
       
       return true;
@@ -566,8 +652,9 @@
         return document.getElementById(id).value;
       });
       
-      // Format amount to 2 decimal places
-      values[4] = parseFloat(values[4]).toFixed(2);
+      // Format amount to remove decimals if .00
+      var amount = parseFloat(values[4]);
+      values[4] = amount % 1 === 0 ? amount.toString() : amount.toFixed(2);
       
       // Append pen number to remarks
       values[6] = values[6] + " - Entered by " + penNumber + " (Mobile: " + mobileNumber + ")";
@@ -586,7 +673,7 @@
       
       Swal.fire({
         title: 'Processing Request',
-        html: 'Please wait while we save your bill details...',
+        html: 'Please wait while we generate your token...',
         allowOutsideClick: false,
         didOpen: () => {
           Swal.showLoading();
@@ -607,49 +694,33 @@
       params.append('billModule', values[5]);
       params.append('remarks', values[6]);
       
-      // Submit the data using fetch API
+      // Submit the data using fetch API with no-cors mode
       fetch(scriptUrl + '?' + params.toString(), {
         method: 'POST',
-        redirect: 'follow'
+        redirect: 'follow',
+        mode: 'no-cors'
       })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Network response was not ok');
-        }
-        return response.text();
-      })
-      .then(text => {
-        try {
-          return JSON.parse(text);
-        } catch {
-          return { success: true, uuid: uniqueId };
-        }
-      })
-      .then(data => {
-        if (data.success) {
-          // Clear form fields
-          document.getElementById("secondInp").value = '';
-          document.getElementById("fifthInp").value = '';
-          addButton.disabled = false;
-          addButton.innerHTML = 'Add Details';
-          
-          // Fetch the token number from the DATA sheet
-          fetchTokenNumber(uniqueId);
-          
-          // Refresh the token table
-          loadRecentTokens();
-        } else {
-          throw new Error(data.message || 'Submission failed');
-        }
-      })
-      .catch(error => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Submission Failed',
-          text: error.message
-        });
+      .then(() => {
+        // Clear form fields
+        document.getElementById("secondInp").value = '';
+        document.getElementById("fifthInp").value = '';
         addButton.disabled = false;
         addButton.innerHTML = 'Add Details';
+        
+        // Immediately try to fetch the token number
+        fetchTokenNumber(uniqueId);
+        
+        // Refresh the token table
+        loadRecentTokens();
+      })
+      .catch(error => {
+        console.error('Submission error:', error);
+        addButton.disabled = false;
+        addButton.innerHTML = 'Add Details';
+        
+        // Even if there's an error, try to fetch the token as it might have been saved
+        fetchTokenNumber(uniqueId);
+        loadRecentTokens();
       });
     }
 
@@ -677,20 +748,15 @@
             }
           }
         }
-        // If token not found immediately, check again after delay
-        setTimeout(() => {
-          checkForToken(uuid);
-        }, 3000);
+        // If token not found, check again after delay
+        setTimeout(() => checkForToken(uuid), 3000);
       }).fail(function(error) {
         console.error('Error fetching token:', error);
         // Still try again after delay
-        setTimeout(() => {
-          checkForToken(uuid);
-        }, 3000);
+        setTimeout(() => checkForToken(uuid), 3000);
       });
     }
 
-    // Function to check for token after delay
     function checkForToken(uuid) {
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!A2:K?key=${apiKey}`;
       
@@ -705,19 +771,19 @@
             }
           }
         }
-        // If still not found, show message
+        // If still not found after second attempt
         Swal.fire({
           icon: 'info',
           title: 'Token Pending',
-          text: 'Your token number is being generated. Please check back later.',
+          text: 'Your token is being generated. Please check the table view later.',
           confirmButtonText: 'OK'
         });
       }).fail(function(error) {
         console.error('Error checking for token:', error);
         Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Could not retrieve token number at this time',
+          icon: 'info',
+          title: 'Token Pending',
+          text: 'Your token is being generated. Please check the table view later.',
           confirmButtonText: 'OK'
         });
       });
@@ -751,12 +817,20 @@
     }
 
     function updateTokenInfo(tokenNumber) {
-      // Format the token info display
+      // Get all the current form values
+      var ddoCode = document.getElementById("firstInp").value;
+      var brn = document.getElementById("secondInp").value;
+      var amount = document.getElementById("fifthInp").value;
+      
+      // Remove .00 from amount if present
+      amount = amount.replace(/\.00$/, '');
+      
+      // Format the token info display with all details
       const infoHTML = `
-        <p><strong>Token No:</strong> ${tokenNumber || "Not Assigned"}</p>
-        <p><strong>DDO Code:</strong> ${document.getElementById("firstInp").value}</p>
-        <p><strong>Bill Ref:</strong> ${document.getElementById("secondInp").value}</p>
-        <p><strong>Amount:</strong> ${document.getElementById("fifthInp").value}</p>
+        <p><strong>Token No:</strong> ${tokenNumber || "-"}</p>
+        <p><strong>DDO Code:</strong> ${ddoCode || "-"}</p>
+        <p><strong>BRN:</strong> ${brn || "-"}</p>
+        <p><strong>Amount:</strong> ${amount || "-"}</p>
       `;
       document.getElementById("tokenInfo").innerHTML = infoHTML;
     }
@@ -769,6 +843,14 @@
       
       // Reset Select2 dropdowns
       $('#thirdInp, #billNature, #sixthInp').val(null).trigger('change');
+      
+      // Reset token info display
+      document.getElementById("tokenInfo").innerHTML = `
+        <p><strong>Token No:</strong> -</p>
+        <p><strong>DDO Code:</strong> -</p>
+        <p><strong>BRN:</strong> -</p>
+        <p><strong>Amount:</strong> -</p>
+      `;
     }
 
     // Function to load recent tokens for the table view
@@ -785,12 +867,18 @@
           
           recentTokens.forEach(row => {
             if (row[9]) { // Column K is Token
+              // Format amount to remove .00 if present
+              let amount = row[4];
+              if (amount && amount.includes('.00')) {
+                amount = amount.replace('.00', '');
+              }
+              
               table.row.add([
                 row[9], // Token
                 row[0], // DDO Code
                 row[1], // Bill Ref No
                 row[2], // Bill Type
-                row[4], // Amount
+                amount,  // Amount (formatted)
                 formatDate(row[8]) // Date
               ]);
             }
