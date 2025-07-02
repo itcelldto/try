@@ -66,25 +66,6 @@
       display: block;
     }
     
-    /* Select2 styling to match form inputs */
-    .select2-container {
-      width: 100% !important;
-    }
-    
-    .select2-container--default .select2-selection--single {
-      height: 38px !important;
-      border: 1px solid #ced4da !important;
-      border-radius: 0.25rem !important;
-    }
-    
-    .select2-container--default .select2-selection--single .select2-selection__rendered {
-      line-height: 36px !important;
-    }
-    
-    .select2-container--default .select2-selection--single .select2-selection__arrow {
-      height: 36px !important;
-    }
-    
     #tokenTable {
       width: 100%;
       margin-top: 20px;
@@ -108,12 +89,10 @@
   
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.min.css">
-  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
   <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 </head>
 
@@ -162,7 +141,7 @@
                           <div class="col-md-2">
                             <div class="mb-3">
                               <label for="sixthInp" class="form-label">Bill Module</label>
-                              <select id="sixthInp" class="form-select select2" required disabled>
+                              <select id="sixthInp" class="form-select" required disabled>
                                 <option value=""></option>
                                 <option value="1-BIMS">1-BIMS</option>
                                 <option value="2-SAANKHYA">2-SAANKHYA</option>
@@ -174,7 +153,7 @@
                           <div class="col-md-3">
                             <div class="mb-3">
                               <label for="thirdInp" class="form-label">Bill Type</label>
-                              <select id="thirdInp" class="form-select select2" onchange="getBillNature(this.value)" required disabled>
+                              <select id="thirdInp" class="form-select" onchange="getBillNature(this.value)" required disabled>
                                 <option value=""></option>
                                 <!-- Bill types will be loaded dynamically -->
                               </select>
@@ -199,7 +178,7 @@
                           <div class="col-md-4">
                             <div class="mb-2">
                               <label for="billNature" class="form-label">Bill Nature</label>
-                              <select id="billNature" class="form-select select2" required disabled>
+                              <select id="billNature" class="form-select" required disabled>
                                 <option value=""></option>
                               </select>
                             </div>
@@ -321,12 +300,6 @@
 
     // Initialize when page loads
     $(document).ready(function() {
-      // Initialize Select2 dropdowns
-      $('.select2').select2({
-        placeholder: "Select an option",
-        allowClear: true
-      });
-      
       // Initialize DataTable
       $('#tokenTable').DataTable({
         paging: true,
@@ -440,14 +413,6 @@
         document.getElementById(id).disabled = disabled;
       });
       document.getElementById('add_button').disabled = disabled;
-      
-      // Reinitialize Select2 for enabled dropdowns
-      if (!disabled) {
-        $('.select2').select2({
-          placeholder: "Select an option",
-          allowClear: true
-        });
-      }
     }
 
     // Function to load bill types from Google Sheets
@@ -477,9 +442,6 @@
         billTypes.forEach(type => {
           $('#thirdInp').append(`<option value="${type}">${type}</option>`);
         });
-        
-        // Refresh Select2
-        $('#thirdInp').trigger('change');
       }).fail(function(error) {
         console.error('Error loading bill types:', error);
         $('#thirdInp').empty().append('<option value="">Error loading bill types</option>');
@@ -490,7 +452,6 @@
     function getBillNature(billType) {
       if (!billType) {
         $('#billNature').empty().append('<option value=""></option>');
-        $('#billNature').trigger('change');
         return;
       }
       
@@ -512,9 +473,6 @@
         billNatures.forEach(nature => {
           $('#billNature').append(`<option value="${nature}">${nature}</option>`);
         });
-        
-        // Refresh Select2
-        $('#billNature').trigger('change');
       }).fail(function(error) {
         console.error('Error loading bill natures:', error);
         $('#billNature').empty().append('<option value="">Error loading natures</option>');
@@ -586,18 +544,6 @@
     }
 
     function validate_BRN(value) {
-      // Check for repeated digits like 1111, 2222, etc.
-     // if (/^(\d)\1{3,}$/.test(value)) {
-    ///    Swal.fire({
-     ////     icon: 'warning',
-     //     title: 'Invalid BRN',
-    //      text: 'Repeated digits are not allowed in Bill Reference Number',
-      //  });
-     //   document.getElementById("secondInp").value = '';
-     //   document.getElementById("secondInp").focus();
-     //   return false;
-    //  }
-      
       if(isNaN(value) || value.length < 4) {
         Swal.fire({
           icon: 'warning',
@@ -638,7 +584,7 @@
       document.getElementById("add_button").disabled = input.value.length !== 10;
     }
 
-      function addRow() {
+    function addRow() {
       var addButton = document.getElementById("add_button");
       addButton.disabled = true;
       addButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
@@ -725,6 +671,7 @@
         loadRecentTokens();
       });
     }
+    
     // Function to generate UUID
     function generateUUID() {
       return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
@@ -818,66 +765,63 @@
     }
 
     function updateTokenInfo(tokenNumber) {
-    // First try to get the data from the sheet
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!A2:O?key=${apiKey}`;
-    
-    $.get(url, function(data) {
-        let ddoCode = "-";
-        let brn = "-";
-        let amount = "-";
-        
-        if (data.values && data.values.length > 0) {
-            // Find the row with matching token number (column K/index 10)
-            for (let i = 0; i < data.values.length; i++) {
-                const row = data.values[i];
-                if (row[10] === tokenNumber) { // Column K is index 10
-                    ddoCode = row[1] || "-";    // Column B is index 1
-                    brn = row[14] || row[2] || "-"; // Column O is index 14, fallback to Column C (index 2)
-                    amount = row[5] || "-";      // Column F is index 5
-                    
-                    // Remove .00 from amount if present
-                    amount = amount.toString().replace(/\.00$/, '');
-                    break;
-                }
-            }
-        }
-        
-        // Format the token info display with all details
-        const infoHTML = `
-            <p><strong>Token No:</strong> ${tokenNumber || "-"}</p>
-            <p><strong>DDO Code:</strong> ${ddoCode}</p>
-            <p><strong>BRN:</strong> ${brn}</p>
-            <p><strong>Amount:</strong> ${amount}</p>
-        `;
-        document.getElementById("tokenInfo").innerHTML = infoHTML;
-        
-    }).fail(function(error) {
-        console.error('Error fetching token details:', error);
-        // Fallback to form values if API fails
-        var ddoCode = document.getElementById("firstInp").value;
-        var brn = document.getElementById("secondInp").value;
-        var amount = document.getElementById("fifthInp").value;
-        
-        amount = amount.replace(/\.00$/, '');
-        
-        const infoHTML = `
-            <p><strong>Token No:</strong> ${tokenNumber || "-"}</p>
-            <p><strong>DDO Code:</strong> ${ddoCode || "-"}</p>
-            <p><strong>BRN:</strong> ${brn || "-"}</p>
-            <p><strong>Amount:</strong> ${amount || "-"}</p>
-        `;
-        document.getElementById("tokenInfo").innerHTML = infoHTML;
-    });
-}
+      // First try to get the data from the sheet
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!A2:O?key=${apiKey}`;
+      
+      $.get(url, function(data) {
+          let ddoCode = "-";
+          let brn = "-";
+          let amount = "-";
+          
+          if (data.values && data.values.length > 0) {
+              // Find the row with matching token number (column K/index 10)
+              for (let i = 0; i < data.values.length; i++) {
+                  const row = data.values[i];
+                  if (row[10] === tokenNumber) { // Column K is index 10
+                      ddoCode = row[1] || "-";    // Column B is index 1
+                      brn = row[14] || row[2] || "-"; // Column O is index 14, fallback to Column C (index 2)
+                      amount = row[5] || "-";      // Column F is index 5
+                      
+                      // Remove .00 from amount if present
+                      amount = amount.toString().replace(/\.00$/, '');
+                      break;
+                  }
+              }
+          }
+          
+          // Format the token info display with all details
+          const infoHTML = `
+              <p><strong>Token No:</strong> ${tokenNumber || "-"}</p>
+              <p><strong>DDO Code:</strong> ${ddoCode}</p>
+              <p><strong>BRN:</strong> ${brn}</p>
+              <p><strong>Amount:</strong> ${amount}</p>
+          `;
+          document.getElementById("tokenInfo").innerHTML = infoHTML;
+          
+      }).fail(function(error) {
+          console.error('Error fetching token details:', error);
+          // Fallback to form values if API fails
+          var ddoCode = document.getElementById("firstInp").value;
+          var brn = document.getElementById("secondInp").value;
+          var amount = document.getElementById("fifthInp").value;
+          
+          amount = amount.replace(/\.00$/, '');
+          
+          const infoHTML = `
+              <p><strong>Token No:</strong> ${tokenNumber || "-"}</p>
+              <p><strong>DDO Code:</strong> ${ddoCode || "-"}</p>
+              <p><strong>BRN:</strong> ${brn || "-"}</p>
+              <p><strong>Amount:</strong> ${amount || "-"}</p>
+          `;
+          document.getElementById("tokenInfo").innerHTML = infoHTML;
+      });
+    }
 
     function clearRecord() {
       ["firstInp", "secondInp", "thirdInp", "billNature", "fifthInp", "sixthInp", "seventhInp"]
         .forEach(function(id) {
           document.getElementById(id).value = id === "seventhInp" ? "***" : "";
         });
-      
-      // Reset Select2 dropdowns
-      $('#thirdInp, #billNature, #sixthInp').val(null).trigger('change');
       
       // Reset token info display
       document.getElementById("tokenInfo").innerHTML = `
@@ -888,51 +832,51 @@
       `;
     }
 
- // Function to load recent tokens for the table view
-function loadRecentTokens() {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!B2:O?key=${apiKey}`;
-  
-  $.get(url, function(data) {
-    var table = $('#tokenTable').DataTable();
-    table.clear();
-    
-    if (data.values && data.values.length > 0) {
-      // Get last 1000 entries (most recent first)
-      const recentTokens = data.values.slice(-1000).reverse();
+    // Function to load recent tokens for the table view
+    function loadRecentTokens() {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!B2:O?key=${apiKey}`;
       
-      recentTokens.forEach(row => {
-        if (row[9]) { // Column K is Token
-          // Format amount to remove .00 if present
-          let amount = row[4];
-          if (amount && amount.includes('.00')) {
-            amount = amount.replace('.00', '');
-          }
+      $.get(url, function(data) {
+        var table = $('#tokenTable').DataTable();
+        table.clear();
+        
+        if (data.values && data.values.length > 0) {
+          // Get last 1000 entries (most recent first)
+          const recentTokens = data.values.slice(-1000).reverse();
           
-          // Column O (index 13) is the BRN
-          let brn = row[13] || row[1]; // Fallback to column C if O is empty
-          
-          table.row.add([
-            row[9],  // Token (Column K)
-            row[0],  // DDO Code (Column B)
-            brn,     // BRN (Column O, fallback to Column C)
-            row[2],  // Bill Type (Column D)
-            amount,  // Amount (Column F)
-            row[7]   // Date (Column I)
-          ]);
+          recentTokens.forEach(row => {
+            if (row[9]) { // Column K is Token
+              // Format amount to remove .00 if present
+              let amount = row[4];
+              if (amount && amount.includes('.00')) {
+                amount = amount.replace('.00', '');
+              }
+              
+              // Column O (index 13) is the BRN
+              let brn = row[13] || row[1]; // Fallback to column C if O is empty
+              
+              table.row.add([
+                row[9],  // Token (Column K)
+                row[0],  // DDO Code (Column B)
+                brn,     // BRN (Column O, fallback to Column C)
+                row[2],  // Bill Type (Column D)
+                amount,  // Amount (Column F)
+                row[7]   // Date (Column I)
+              ]);
+            }
+          });
+        } else {
+          table.row.add(['No records found', '', '', '', '', '']);
         }
+        
+        table.draw();
+      }).fail(function(error) {
+        console.error('Error loading token data:', error);
+        var table = $('#tokenTable').DataTable();
+        table.clear().draw();
+        table.row.add(['Error loading data', '', '', '', '', '']);
       });
-    } else {
-      table.row.add(['No records found', '', '', '', '', '']);
     }
-    
-    table.draw();
-  }).fail(function(error) {
-    console.error('Error loading token data:', error);
-    var table = $('#tokenTable').DataTable();
-    table.clear().draw();
-    table.row.add(['Error loading data', '', '', '', '', '']);
-  });
-}
 
     // Helper function to format date
     function formatDate(dateStr) {
