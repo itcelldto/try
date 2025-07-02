@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bill Token System</title>
+  
+  <style>
+    body {
+      font-family: 'Source Sans Pro', sans-serif;
+    }
+    
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255,255,255,0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    
+    .spinner {
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3c8dbc;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .spinner-border {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      vertical-align: text-bottom;
+      border: 0.25em solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spinner-border .75s linear infinite;
+    }
+    
+    .btn-primary:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+    
+    .is-invalid {
+      border-color: #dc3545;
+    }
+    
+    .invalid-feedback {
+      color: #dc3545;
+      display: none;
+    }
+    
+    .is-invalid ~ .invalid-feedback {
+      display: block;
+    }
+    
+    #tokenTable {
+      width: 100%;
+      margin-top: 20px;
+    }
+    
+    /* Remove padding from amount cells */
+    #tokenTable td:nth-child(5) {
+      padding-right: 0 !important;
+      text-align: right !important;
+    }
+    
+    /* Token info box styling */
+    #tokenInfo p {
+      margin-bottom: 5px;
+    }
+    #tokenInfo strong {
+      display: inline-block;
+      width: 80px;
+    }
+  </style>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bootstrap-4/bootstrap-4.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+</head>
+
+<body style="background-color: #ecf0f591;">
+  <div id="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <div class="wrapper">
+    <section class="content" style="margin: 15px;">
+      <div class="card">
+        <div class="card-body">
+          <h5> Bill Token Entry</h5><hr>
+          <ul class="nav nav-tabs">
+            <li class="nav-item">
+              <a class="nav-link active" href="#tab_1" data-bs-toggle="tab">Token Entry</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#tab_2" data-bs-toggle="tab">Scroll View</a>
+            </li>
+          </ul>
+          
+          <div class="tab-content">
+            <div class="tab-pane active" id="tab_1">
+              <div class="row">
+                <div class="col-md-9">
+                  <div class="">
+                    <div class="card-body">
+                      <form id="tokenEntryForm">
+                        <div class="row">
+                          <div class="col-md-2">
+                            <div class="mb-3">
+                              <label class="form-label" for="firstInp">DDO Code</label>
+                              <input type="text" id="firstInp" class="form-control" 
+                                     maxlength="10" 
+                                     onchange="validate_DDO_Code(this); checkLength(this)" 
+                                     onkeyup="str_to_upper(this)"
+                                     pattern="[A-Z0-9]{10}" 
+                                     title="10 character alphanumeric code" 
+                                     required disabled />
+                              <small id="ddoError" class="text-danger" style="display:none;">
+                                DDO Code must be exactly 10 characters
+                              </small>
+                            </div>
+                          </div>
+                          <div class="col-md-2">
+                            <div class="mb-3">
+                              <label for="sixthInp" class="form-label">Bill Module</label>
+                              <select id="sixthInp" class="form-select" required disabled>
+                                <option value=""></option>
+                                <option value="1-BIMS">1-BIMS</option>
+                                <option value="2-SAANKHYA">2-SAANKHYA</option>
+                                <option value="3-EMLI">3-EMLI</option>
+                                <option value="4-SPARK">4-SPARK</option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="col-md-3">
+                            <div class="mb-3">
+                              <label for="thirdInp" class="form-label">Bill Type</label>
+                              <select id="thirdInp" class="form-select" onchange="getBillNature(this.value)" required disabled>
+                                <option value=""></option>
+                                <!-- Bill types will be loaded dynamically -->
+                              </select>
+                            </div>
+                          </div>
+                          <div class="col-md-3">
+                            <div class="mb-2">
+                              <label for="secondInp" class="form-label">Bill Reference No.</label>
+                              <input type="text" id="secondInp" class="form-control" maxlength="20" minlength="4"
+                                     onchange="validate_BRN(this.value)" onkeyup="str_to_upper(this)" required disabled>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div class="row">
+                          <div class="col-md-3">
+                            <div class="mb-3">
+                              <label for="fifthInp" class="form-label">Bill Gross</label>
+                              <input type="text" id="fifthInp" class="form-control" onchange="validate_amount(this.value)" required disabled>
+                            </div>
+                          </div>
+                          <div class="col-md-4">
+                            <div class="mb-2">
+                              <label for="billNature" class="form-label">Bill Nature</label>
+                              <select id="billNature" class="form-select" required disabled>
+                                <option value=""></option>
+                              </select>
+                            </div>
+                          </div>
+                          <div class="col-md-3">
+                            <div class="mb-3">
+                              <label for="seventhInp" class="form-label">Remarks</label>
+                              <input type="text" id="seventhInp" class="form-control" value="" disabled>
+                            </div>
+                          </div>
+                        </div>
+                     
+                        <div class="row">
+                          <div class="col-md-4">
+                            <button type="button" id="add_button" class="btn btn-primary" onclick="addRow()" disabled>
+                              Add
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="clearRecord()">
+                              Clear
+                            </button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-md-3"><br>
+                  <div class="card " style="background-color: #fff3cd;border-color: #ffeeba;">
+                    <div class="card-header">
+                      <h5 class="card-title">📝 Token Info</h5>
+                    </div>
+                    <div class="card-body">
+                      <div id="tokenInfo">
+                        <p><strong>Token No:</strong> -</p>
+                        <p><strong>DDO Code:</strong> -</p>
+                        <p><strong>BRN:</strong> -</p>
+                        <p><strong>Amount:</strong> -</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="tab-pane" id="tab_2">
+              <br>
+              <div class="alert alert-info">
+               <strong>! Info: </strong> 
+                Following are the bill tokens allotted recently.
+                <button class="btn btn-danger" onclick="refreshTable()">
+                  Refresh Table
+                </button>
+              </div>
+              
+              <div id="tokenTableContainer">
+                <table id="tokenTable" class="table table-striped table-bordered" style="width:100%">
+                  <thead>
+                    <tr>
+                      <th>Token No.</th>
+                      <th>DDO Code</th>
+                      <th>BRN</th>
+                      <th>Bill Type</th>
+                      <th>Amount</th>
+                      <th>Date & Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Data will be loaded dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Pen Number Modal -->
+  <div class="modal fade" id="penNumberModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="penNumberModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="penNumberModalLabel"> User Verification</h5>
+        </div>
+        <div class="modal-body"> 
+          <div class="mb-3">
+            <label for="penNumberInput" class="form-label">PEN :</label>
+            <input type="text" class="form-control" id="penNumberInput" required>
+            <div class="invalid-feedback">Please enter your PEN</div>
+          </div>
+          <div class="mb-3">
+            <label for="mobileNumberInput" class="form-label">Mobile Number :</label>
+            <input type="text" class="form-control" id="mobileNumberInput" required>
+            <div class="invalid-feedback">Please enter your registered mobile number</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" onclick="validatePenNumber()">Verify</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // API Configuration
+    const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+    const spreadsheetId = '1qFF1DVQeBJO8yWY1RDQn7ot1ayMkesS5H_YQ0eBXFM8';
+    const penSheetId = '1srOLLRSL7CLlQgmuMUIaRh7EcDg5pfNx6Pdo8Qq2J5Q';
+    const dataSheetName = 'DATA';
+    const listSheetName = 'List';
+    
+    // Store pen number globally
+    var penNumber = '';
+    var mobileNumber = '';
+    var scriptUrl = 'https://script.google.com/macros/s/AKfycbywUhP-P3OpgbS7n_pUtwztFrKEcNdd25_ODunSmHJrVvVCqeWjapDpNojwdjfISTwjpQ/exec';
+    var uniqueId = '';
+
+    // Initialize when page loads
+    $(document).ready(function() {
+      // Initialize DataTable
+      $('#tokenTable').DataTable({
+        paging: true,
+        pageLength: 10,
+        lengthChange: false,
+        searching: true,
+        ordering: true,
+        info: true,
+        autoWidth: false
+      });
+      
+      // Hide loading spinner after 1 second
+      setTimeout(function() {
+        document.getElementById('loading').style.display = 'none';
+        // Show the pen number modal
+        var penModal = new bootstrap.Modal(document.getElementById('penNumberModal'));
+        penModal.show();
+        
+        // Load initial data
+        loadBillTypes();
+        loadRecentTokens();
+      }, 1000);
+    });
+
+    // Function to validate PEN number against Google Sheet
+    function validatePenNumber() {
+      var penInput = document.getElementById('penNumberInput');
+      var mobileInput = document.getElementById('mobileNumberInput');
+      var penValue = penInput.value.trim();
+      var mobileValue = mobileInput.value.trim();
+      
+      if (!penValue) {
+        penInput.classList.add('is-invalid');
+        return;
+      }
+      if (!mobileValue) {
+        mobileInput.classList.add('is-invalid');
+        return;
+      }
+      
+      // Show loading while checking PEN
+      Swal.fire({
+        title: 'Validating Credentials',
+        html: 'Please wait while we verify your details...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // Check PEN and mobile against the PEN sheet (mobile in column K)
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${penSheetId}/values/Data!D2:K?key=${apiKey}`;
+      
+      $.get(url, function(data) {
+        if (data.values && data.values.length > 0) {
+          let isValid = false;
+          for (let i = 0; i < data.values.length; i++) {
+            const row = data.values[i];
+            // Column D is PEN, Column K is mobile
+            if (row[0] && row[0].trim() === penValue && row[7] && row[7].toString().trim() === mobileValue.toString().trim()) {
+              isValid = true;
+              break;
+            }
+          }
+          
+          if (isValid) {
+            penNumber = penValue;
+            mobileNumber = mobileValue;
+            
+            // Hide modal and enable form
+            var penModal = bootstrap.Modal.getInstance(document.getElementById('penNumberModal'));
+            penModal.hide();
+            disableFormInputs(false);
+            
+            Swal.fire({
+              icon: 'success',
+              title: 'Verification Successful',
+              text: 'You can now proceed with bill token entry',
+              confirmButtonText: 'OK'
+            });
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Verification Failed',
+              text: 'PEN number or mobile number does not match our records',
+              confirmButtonText: 'OK'
+            });
+          }
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Could not verify credentials at this time',
+            confirmButtonText: 'OK'
+          });
+        }
+      }).fail(function(error) {
+        console.error('Error verifying credentials:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Could not verify credentials at this time',
+          confirmButtonText: 'OK'
+        });
+      });
+    }
+
+    function disableFormInputs(disabled) {
+      var inputs = ['firstInp', 'secondInp', 'thirdInp', 'billNature', 'fifthInp', 'sixthInp', 'seventhInp'];
+      inputs.forEach(function(id) {
+        document.getElementById(id).disabled = disabled;
+      });
+      document.getElementById('add_button').disabled = disabled;
+    }
+
+    // Function to load bill types from Google Sheets
+    function loadBillTypes() {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${listSheetName}!A2:A?key=${apiKey}`;
+      
+      $.get(url, function(data) {
+        const billTypes = [];
+        const uniqueTypes = new Set();
+        
+        if (data.values && data.values.length > 0) {
+          data.values.forEach(row => {
+            if (row[0] && !uniqueTypes.has(row[0])) {
+              uniqueTypes.add(row[0]);
+              billTypes.push(row[0]);
+            }
+          });
+          
+          // Sort bill types
+          billTypes.sort(function(a, b) {
+            return a.localeCompare(b);
+          });
+        }
+        
+        $('#thirdInp').empty();
+        $('#thirdInp').append('<option value=""></option>');
+        billTypes.forEach(type => {
+          $('#thirdInp').append(`<option value="${type}">${type}</option>`);
+        });
+      }).fail(function(error) {
+        console.error('Error loading bill types:', error);
+        $('#thirdInp').empty().append('<option value="">Error loading bill types</option>');
+      });
+    }
+
+    // Function to get bill nature based on selected bill type
+    function getBillNature(billType) {
+      if (!billType) {
+        $('#billNature').empty().append('<option value=""></option>');
+        return;
+      }
+      
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${listSheetName}!A2:B?key=${apiKey}`;
+      
+      $.get(url, function(data) {
+        const billNatures = [];
+        
+        if (data.values && data.values.length > 0) {
+          data.values.forEach(row => {
+            if (row[0] === billType && row[1]) {
+              billNatures.push(row[1]);
+            }
+          });
+        }
+        
+        $('#billNature').empty();
+        $('#billNature').append('<option value=""></option>');
+        billNatures.forEach(nature => {
+          $('#billNature').append(`<option value="${nature}">${nature}</option>`);
+        });
+      }).fail(function(error) {
+        console.error('Error loading bill natures:', error);
+        $('#billNature').empty().append('<option value="">Error loading natures</option>');
+      });
+    }
+
+    function validate_DDO_Code(input) {
+      var ddoCode = input.value;
+      ddoCode = ddoCode.replace(/\s+/g, '');
+      
+      if (ddoCode.length !== 10) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Invalid DDO Code',
+          html: 'DDO Code must be exactly <strong>10 characters</strong> long.<br>Current length: ' + ddoCode.length,
+          confirmButtonText: 'OK'
+        });
+        input.value = '';
+        input.focus();
+        return false;
+      }
+      
+      // Check if this DDO+BRN combination already exists
+      var brn = document.getElementById("secondInp").value;
+      if (brn && brn.length >= 4) {
+        checkExistingEntry(ddoCode, brn);
+      }
+      
+      return true;
+    }
+
+    // New function to check for existing DDO+BRN combination
+    function checkExistingEntry(ddoCode, brn) {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!B2:C?key=${apiKey}`;
+      
+      Swal.fire({
+        title: 'Checking records...',
+        html: 'Verifying if this bill already exists',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      $.get(url, function(data) {
+        Swal.close();
+        if (data.values && data.values.length > 0) {
+          for (let i = 0; i < data.values.length; i++) {
+            const row = data.values[i];
+            if (row[0] === ddoCode && row[1] === brn) {
+              Swal.fire({
+                icon: 'warning',
+                title: 'Duplicate Entry Found',
+                html: `This DDO Code and BRN combination already exists in our records.<br><br>
+                      <strong>DDO Code:</strong> ${ddoCode}<br>
+                      <strong>BRN:</strong> ${brn}`,
+                confirmButtonText: 'OK'
+              });
+              document.getElementById("add_button").disabled = true;
+              return;
+            }
+          }
+          document.getElementById("add_button").disabled = false;
+        }
+      }).fail(function(error) {
+        Swal.close();
+        console.error('Error checking existing entries:', error);
+      });
+    }
+
+    function validate_BRN(value) {
+      if(isNaN(value) || value.length < 4) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Invalid BRN',
+          text: 'Please provide at least last 4 digits',
+        });
+        document.getElementById("secondInp").value = '';
+        document.getElementById("secondInp").focus();
+        return false;
+      }
+      
+      // Check if this BRN+DDO combination already exists
+      var ddoCode = document.getElementById("firstInp").value;
+      if (ddoCode && ddoCode.length === 10) {
+        checkExistingEntry(ddoCode, value);
+      }
+      
+      return true;
+    }
+
+    function validate_amount(value) {
+      if(!value.match(/^[1-9]\d*(\.\d+)?$/)) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Invalid Amount',
+          text: 'Please enter a valid amount',
+        });
+        document.getElementById("fifthInp").value = '';
+        document.getElementById("fifthInp").focus();
+      }
+    }
+
+    function str_to_upper(input) {
+      input.value = input.value.toUpperCase();
+    }
+
+    function checkLength(input) {
+      document.getElementById("add_button").disabled = input.value.length !== 10;
+    }
+
+    function addRow() {
+      var addButton = document.getElementById("add_button");
+      addButton.disabled = true;
+      addButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+
+      var inputs = [
+        "firstInp", "secondInp", "thirdInp", "billNature", 
+        "fifthInp", "sixthInp", "seventhInp"
+      ];
+      
+      var values = inputs.map(function(id) {
+        return document.getElementById(id).value;
+      });
+      
+      // Format amount to remove decimals if .00
+      var amount = parseFloat(values[4]);
+      values[4] = amount % 1 === 0 ? amount.toString() : amount.toFixed(2);
+      
+      // Append pen number to remarks
+      values[6] = values[6] + " - Entered by " + penNumber +  ".";
+      
+      if(values.some(function(v) { return !v; })) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Incomplete Form',
+          text: 'Please fill all required fields',
+        });
+        
+        addButton.disabled = false;
+        addButton.innerHTML = 'Add';
+        return;
+      }
+      
+      Swal.fire({
+        title: 'Processing Request',
+        html: 'Please wait while we generate your token...',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // Generate a unique ID for this submission
+      uniqueId = generateUUID();
+      
+      // Create URL parameters
+      var params = new URLSearchParams();
+      params.append('uuid', uniqueId);
+      params.append('ddoCode', values[0]);
+      params.append('billRefNo', values[1]);
+      params.append('billType', values[2]);
+      params.append('billNature', values[3]);
+      params.append('amount', values[4]);
+      params.append('billModule', values[5]);
+      params.append('remarks', values[6]);
+      
+      // Submit the data using fetch API with no-cors mode
+      fetch(scriptUrl + '?' + params.toString(), {
+        method: 'POST',
+        redirect: 'follow',
+        mode: 'no-cors'
+      })
+      .then(() => {
+        // Clear form fields
+        document.getElementById("secondInp").value = '';
+        document.getElementById("fifthInp").value = '';
+        document.getElementById("seventhInp").value = ""; // Reset remarks to "***"
+        
+        addButton.disabled = false;
+        addButton.innerHTML = 'Add';
+        
+        // Immediately try to fetch the token number
+        fetchTokenNumber(uniqueId);
+        
+        // Refresh the token table
+        loadRecentTokens();
+      })
+      .catch(error => {
+        console.error('Submission error:', error);
+        addButton.disabled = false;
+        addButton.innerHTML = 'Add';
+        
+        // Even if there's an error, try to fetch the token as it might have been saved
+        fetchTokenNumber(uniqueId);
+        loadRecentTokens();
+      });
+    }
+    
+    // Function to generate UUID
+    function generateUUID() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0,
+            v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    // Function to fetch token number using the unique ID
+    function fetchTokenNumber(uuid) {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!A2:K?key=${apiKey}`;
+      
+      $.get(url, function(data) {
+        if (data.values && data.values.length > 0) {
+          for (let i = 0; i < data.values.length; i++) {
+            const row = data.values[i];
+            if (row[0] === uuid && row[10]) { // Column A is UUID, Column K is Token
+              showTokenSuccess(row[10]);
+              updateTokenInfo(row[10]);
+              return;
+            }
+          }
+        }
+        // If token not found, check again after delay
+        setTimeout(() => checkForToken(uuid), 3000);
+      }).fail(function(error) {
+        console.error('Error fetching token:', error);
+        // Still try again after delay
+        setTimeout(() => checkForToken(uuid), 3000);
+      });
+    }
+
+    function checkForToken(uuid) {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!A2:K?key=${apiKey}`;
+      
+      $.get(url, function(data) {
+        if (data.values && data.values.length > 0) {
+          for (let i = 0; i < data.values.length; i++) {
+            const row = data.values[i];
+            if (row[0] === uuid && row[10]) {
+              showTokenSuccess(row[10]);
+              updateTokenInfo(row[10]);
+              return;
+            }
+          }
+        }
+        // If still not found after second attempt
+        Swal.fire({
+          icon: 'info',
+          title: 'Token Pending',
+          text: 'Your token is being generated. Please check the table view later.',
+          confirmButtonText: 'OK'
+        });
+      }).fail(function(error) {
+        console.error('Error checking for token:', error);
+        Swal.fire({
+          icon: 'info',
+          title: 'Token Pending',
+          text: 'Your token is being generated. Please check the table view later.',
+          confirmButtonText: 'OK'
+        });
+      });
+    }
+
+    function showTokenSuccess(tokenNumber) {
+      var now = new Date();
+      var dateStr = now.getDate().toString().padStart(2, '0') + '-' + 
+                   (now.getMonth()+1).toString().padStart(2, '0') + '-' + 
+                   now.getFullYear();
+      
+      Swal.fire({
+        title: 'Token Generated Successfully!',
+        icon: 'success',
+        html: `
+          <table style="width:100%; font-weight:bold;">
+            <tr>
+              <td width="40%">Token No.</td>
+              <td>:</td>
+              <td>${tokenNumber || "Not Assigned"}</td>
+            </tr>
+            <tr>
+              <td>Date</td>
+              <td>:</td>
+              <td>${dateStr}</td>
+            </tr>
+          </table>
+        `,
+        confirmButtonText: 'OK'
+      });
+    }
+
+    function updateTokenInfo(tokenNumber) {
+      // First try to get the data from the sheet
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!A2:O?key=${apiKey}`;
+      
+      $.get(url, function(data) {
+          let ddoCode = "-";
+          let brn = "-";
+          let amount = "-";
+          
+          if (data.values && data.values.length > 0) {
+              // Find the row with matching token number (column K/index 10)
+              for (let i = 0; i < data.values.length; i++) {
+                  const row = data.values[i];
+                  if (row[10] === tokenNumber) { // Column K is index 10
+                      ddoCode = row[1] || "-";    // Column B is index 1
+                      brn = row[14] || row[2] || "-"; // Column O is index 14, fallback to Column C (index 2)
+                      amount = row[5] || "-";      // Column F is index 5
+                      
+                      // Remove .00 from amount if present
+                      amount = amount.toString().replace(/\.00$/, '');
+                      break;
+                  }
+              }
+          }
+          
+          // Format the token info display with all details
+          const infoHTML = `
+              <p><strong>Token No:</strong> ${tokenNumber || "-"}</p>
+              <p><strong>DDO Code:</strong> ${ddoCode}</p>
+              <p><strong>BRN:</strong> ${brn}</p>
+              <p><strong>Amount:</strong> ${amount}</p>
+          `;
+          document.getElementById("tokenInfo").innerHTML = infoHTML;
+          
+      }).fail(function(error) {
+          console.error('Error fetching token details:', error);
+          // Fallback to form values if API fails
+          var ddoCode = document.getElementById("firstInp").value;
+          var brn = document.getElementById("secondInp").value;
+          var amount = document.getElementById("fifthInp").value;
+          
+          amount = amount.replace(/\.00$/, '');
+          
+          const infoHTML = `
+              <p><strong>Token No:</strong> ${tokenNumber || "-"}</p>
+              <p><strong>DDO Code:</strong> ${ddoCode || "-"}</p>
+              <p><strong>BRN:</strong> ${brn || "-"}</p>
+              <p><strong>Amount:</strong> ${amount || "-"}</p>
+          `;
+          document.getElementById("tokenInfo").innerHTML = infoHTML;
+      });
+    }
+
+    function clearRecord() {
+      ["firstInp", "secondInp", "thirdInp", "billNature", "fifthInp", "sixthInp", "seventhInp"]
+        .forEach(function(id) {
+          document.getElementById(id).value = id === "seventhInp" ? "***" : "";
+        });
+      
+      // Reset token info display
+      document.getElementById("tokenInfo").innerHTML = `
+        <p><strong>Token No:</strong> -</p>
+        <p><strong>DDO Code:</strong> -</p>
+        <p><strong>BRN:</strong> -</p>
+        <p><strong>Amount:</strong> -</p>
+      `;
+    }
+
+    // Function to load recent tokens for the table view
+    function loadRecentTokens() {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!B2:O?key=${apiKey}`;
+      
+      $.get(url, function(data) {
+        var table = $('#tokenTable').DataTable();
+        table.clear();
+        
+        if (data.values && data.values.length > 0) {
+          // Get last 1000 entries (most recent first)
+          const recentTokens = data.values.slice(-1000).reverse();
+          
+          recentTokens.forEach(row => {
+            if (row[9]) { // Column K is Token
+              // Format amount to remove .00 if present
+              let amount = row[4];
+              if (amount && amount.includes('.00')) {
+                amount = amount.replace('.00', '');
+              }
+              
+              // Column O (index 13) is the BRN
+              let brn = row[13] || row[1]; // Fallback to column C if O is empty
+              
+              table.row.add([
+                row[9],  // Token (Column K)
+                row[0],  // DDO Code (Column B)
+                brn,     // BRN (Column O, fallback to Column C)
+                row[2],  // Bill Type (Column D)
+                amount,  // Amount (Column F)
+                row[7]   // Date (Column I)
+              ]);
+            }
+          });
+        } else {
+          table.row.add(['No records found', '', '', '', '', '']);
+        }
+        
+        table.draw();
+      }).fail(function(error) {
+        console.error('Error loading token data:', error);
+        var table = $('#tokenTable').DataTable();
+        table.clear().draw();
+        table.row.add(['Error loading data', '', '', '', '', '']);
+      });
+    }
+
+    // Helper function to format date
+    function formatDate(dateStr) {
+      if (!dateStr) return '';
+      try {
+        const date = new Date(dateStr);
+        return date.toLocaleDateString();
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    function refreshTable() {
+      loadRecentTokens();
+      Swal.fire({
+        position: 'top-end',
+        icon: 'success',
+        title: 'Table refreshed',
+        showConfirmButton: false,
+        timer: 1500
+      });
+    }
+  </script>
+</body>
+</html>
