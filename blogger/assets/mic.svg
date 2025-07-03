@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#d9e2f0">
+  <!-- Speaker shape -->
+  <path d="M5 9v6h4l5 5V4l-5 5H5z"/>
+  
+  <!-- Sound wave (inner) -->
+  <path d="M15.5 8.5a1 1 0 0 1 1.4-1.4 5 5 0 0 1 0 7.1 1 1 0 0 1-1.4-1.4 3 3 0 0 0 0-4.3z"/>
+  
+  <!-- Sound wave (outer) -->
+  <path d="M17.5 6.5a1 1 0 0 1 1.4-1.4 8 8 0 0 1 0 11.3 1 1 0 0 1-1.4-1.4 6 6 0 0 0 0-8.5z"/>
+</svg>
