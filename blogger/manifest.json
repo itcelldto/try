@@ -7,14 +7,14 @@
   "theme_color": "#f4292a",
   "icons": [
     {
-      "src": "https://itcelldto.github.io/try/blogger/assets/icon-192.png",
+      "src": "https://itcelldto.github.io/try/blogger/assets/icon-192.svg",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "https://itcelldto.github.io/try/blogger/assets/icon-512.png",
+      "src": "https://itcelldto.github.io/try/blogger/assets/icon-512.svg",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/svg"
     }
   ]
 }
