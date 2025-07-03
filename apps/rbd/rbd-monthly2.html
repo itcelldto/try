@@ -436,7 +436,7 @@ $('#pdfBtn').click(function() {
             margin: { left: 10, right: 10 },
             styles: {
                 fontSize: 8,
-                cellPadding: 2,
+                cellPadding: 1,
                 valign: 'middle',
                 halign: 'center',
                 overflow: 'linebreak',
@@ -478,8 +478,8 @@ $('#pdfBtn').click(function() {
                     
                     // Add signature space
                     doc.text('Signature:', doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 30);
-                    doc.line(doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 25, 
-                             doc.internal.pageSize.width - 10, doc.internal.pageSize.height - 25);
+                  //  doc.line(doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 25, 
+                          //   doc.internal.pageSize.width - 10, doc.internal.pageSize.height - 25);
                     
                     // Add designation
                     doc.text('District Treasury Officer, Trivandrum', 
