@@ -339,159 +339,159 @@ $('#pdfBtn').click(function() {
 });
             
             // Function to generate PDF with updated requirements
-            function generatePDF(selectedMonth, selectedYear, data) {
-        // Create a new PDF document in portrait mode, A4 size
-        const doc = new jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4'
-        });
+// Function to generate PDF with updated requirements
+function generatePDF(selectedMonth, selectedYear, data) {
+    // Create a new PDF document in portrait mode, A4 size
+    const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
+    
+    // Set font and size for the document
+    doc.setFont('helvetica');
+    
+    // Add heading
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Consolidated Report of Receipts, Payments and Net Amount', 105, 20, { align: 'center' });
+    
+    // Add sub-heading
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`for the Month of ${selectedMonth} ${selectedYear}`, 105, 28, { align: 'center' });
+    
+    // Add district treasury name
+    doc.text('Name of District Treasury: District Treasury Trivandrum', 105, 35, { align: 'center' });
+    
+    // Calculate totals
+    let totalTreasuryReceipt = 0;
+    let totalTreasuryPayment = 0;
+    let totalTreasuryNet = 0;
+    let totalBankReceipt = 0;
+    let totalBankPayment = 0;
+    let totalBankNet = 0;
+    let totalDifference = 0;
+    
+    // Prepare data for the table (excluding SL.No and Remark columns)
+    const tableData = data.map((item) => {
+        const treasuryReceipt = parseFloat(item['Total Receipt amount of the Treasury']) || 0;
+        const treasuryPayment = parseFloat(item['Total Payment amount of the Treasury']) || 0;
+        const treasuryNet = parseFloat(item['Total Net amount in Treasury']) || 0;
+        const bankReceipt = parseFloat(item['Total Receipt amount of the Bank']) || 0;
+        const bankPayment = parseFloat(item['Total Payment amount of the Bank']) || 0;
+        const bankNet = parseFloat(item['Total Net amount of the Bank']) || 0;
+        const difference = parseFloat(item['Difference']) || 0;
         
-        // Set font and size for the document
-        doc.setFont('helvetica');
+        // Update totals
+        totalTreasuryReceipt += treasuryReceipt;
+        totalTreasuryPayment += treasuryPayment;
+        totalTreasuryNet += treasuryNet;
+        totalBankReceipt += bankReceipt;
+        totalBankPayment += bankPayment;
+        totalBankNet += bankNet;
+        totalDifference += difference;
         
-        // Add heading
-        doc.setFontSize(16);
-        doc.setFont('helvetica', 'bold');
-        doc.text('Consolidated Report of Receipts, Payments and Net Amount', 105, 20, { align: 'center' });
-        
-        // Add sub-heading
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`for the Month of ${selectedMonth} ${selectedYear}`, 105, 28, { align: 'center' });
-        
-        // Add district treasury name
-        doc.text('Name of District Treasury: District Treasury Trivandrum', 105, 35, { align: 'center' });
-        
-        // Calculate totals
-        let totalTreasuryReceipt = 0;
-        let totalTreasuryPayment = 0;
-        let totalTreasuryNet = 0;
-        let totalBankReceipt = 0;
-        let totalBankPayment = 0;
-        let totalBankNet = 0;
-        let totalDifference = 0;
-        
-        // Prepare data for the table (excluding SL.No and Remark columns)
-        const tableData = data.map((item) => {
-            const treasuryReceipt = parseFloat(item['Total Receipt amount of the Treasury']) || 0;
-            const treasuryPayment = parseFloat(item['Total Payment amount of the Treasury']) || 0;
-            const treasuryNet = parseFloat(item['Total Net amount in Treasury']) || 0;
-            const bankReceipt = parseFloat(item['Total Receipt amount of the Bank']) || 0;
-            const bankPayment = parseFloat(item['Total Payment amount of the Bank']) || 0;
-            const bankNet = parseFloat(item['Total Net amount of the Bank']) || 0;
-            const difference = parseFloat(item['Difference']) || 0;
-            
-            // Update totals
-            totalTreasuryReceipt += treasuryReceipt;
-            totalTreasuryPayment += treasuryPayment;
-            totalTreasuryNet += treasuryNet;
-            totalBankReceipt += bankReceipt;
-            totalBankPayment += bankPayment;
-            totalBankNet += bankNet;
-            totalDifference += difference;
-            
-            return [
-                item['Treasury Name'],
-                treasuryReceipt.toLocaleString(),
-                treasuryPayment.toLocaleString(),
-                treasuryNet.toLocaleString(),
-                bankReceipt.toLocaleString(),
-                bankPayment.toLocaleString(),
-                bankNet.toLocaleString(),
-                difference.toLocaleString()
-            ];
-        });
-        
-        // Add totals row
-        tableData.push([
-            'Total',
-            totalTreasuryReceipt.toLocaleString(),
-            totalTreasuryPayment.toLocaleString(),
-            totalTreasuryNet.toLocaleString(),
-            totalBankReceipt.toLocaleString(),
-            totalBankPayment.toLocaleString(),
-            totalBankNet.toLocaleString(),
-            totalDifference.toLocaleString()
-        ]);
-        
-        // Define table headers (only include relevant columns)
-        const headers = [
-            ['Name of Treasury', 'Treasury Receipt', 'Treasury Payment', 'Treasury Net', 
-             'Bank Receipt', 'Bank Payment', 'Bank Net', 'Difference']
+        return [
+            item['Treasury Name'],
+            treasuryReceipt.toLocaleString(),
+            treasuryPayment.toLocaleString(),
+            treasuryNet.toLocaleString(),
+            bankReceipt.toLocaleString(),
+            bankPayment.toLocaleString(),
+            bankNet.toLocaleString(),
+            difference.toLocaleString()
         ];
-        
-        // Get current date in DD/MM/YYYY format
-        const today = new Date();
-        const day = String(today.getDate()).padStart(2, '0');
-        const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
-        const currentYear = today.getFullYear();
-        const formattedDate = `${day}/${currentMonth}/${currentYear}`;
-        
-        // Add the table to the PDF with normal borders
-        doc.autoTable({
-            head: headers,
-            body: tableData,
-            startY: 40,
-            margin: { left: 10, right: 10 },
-            styles: {
-                fontSize: 8,
-                cellPadding: 1,
-                valign: 'middle',
-                halign: 'center',
-                overflow: 'linebreak',
-                lineColor: [0, 0, 0], // Black borders
-                lineWidth: 0.2, // Normal border width
-                fillColor: false, // No background color
-                textColor: [0, 0, 0] // Black text
-            },
-            headStyles: {
-                fillColor: false, // No background color
-                textColor: [0, 0, 0],
-                fontStyle: 'bold',
-                lineWidth: 0.2
-            },
-            bodyStyles: {
-                fillColor: false, // No background color
-                lineWidth: 0.2
-            },
-            columnStyles: {
-                0: { cellWidth: 30, halign: 'left' },
-                1: { cellWidth: 20 },
-                2: { cellWidth: 20 },
-                3: { cellWidth: 20 },
-                4: { cellWidth: 20 },
-                5: { cellWidth: 20 },
-                6: { cellWidth: 20 },
-                7: { cellWidth: 20 }
-            },
-            didDrawPage: function(data) {
-                // Footer content
-                const pageCount = doc.internal.getNumberOfPages();
-                const currentPage = doc.internal.getCurrentPageInfo().pageNumber;
+    });
+    
+    // Add totals row with bold font
+    tableData.push([
+        { content: 'Total', styles: { fontStyle: 'bold' } },
+        { content: totalTreasuryReceipt.toLocaleString(), styles: { fontStyle: 'bold' } },
+        { content: totalTreasuryPayment.toLocaleString(), styles: { fontStyle: 'bold' } },
+        { content: totalTreasuryNet.toLocaleString(), styles: { fontStyle: 'bold' } },
+        { content: totalBankReceipt.toLocaleString(), styles: { fontStyle: 'bold' } },
+        { content: totalBankPayment.toLocaleString(), styles: { fontStyle: 'bold' } },
+        { content: totalBankNet.toLocaleString(), styles: { fontStyle: 'bold' } },
+        { content: totalDifference.toLocaleString(), styles: { fontStyle: 'bold' } }
+    ]);
+    
+    // Define table headers (only include relevant columns)
+    const headers = [
+        ['Name of Treasury', 'Treasury Receipt', 'Treasury Payment', 'Treasury Net', 
+         'Bank Receipt', 'Bank Payment', 'Bank Net', 'Difference']
+    ];
+    
+    // Get current date in DD/MM/YYYY format
+    const today = new Date();
+    const day = String(today.getDate()).padStart(2, '0');
+    const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
+    const currentYear = today.getFullYear();
+    const formattedDate = `${day}/${currentMonth}/${currentYear}`;
+    
+    // Add the table to the PDF with normal borders
+    doc.autoTable({
+        head: headers,
+        body: tableData,
+        startY: 40,
+        margin: { left: 10, right: 10 },
+        styles: {
+            fontSize: 8,
+            cellPadding: 1,
+            valign: 'middle',
+            halign: 'center',
+            overflow: 'linebreak',
+            lineColor: [0, 0, 0], // Black borders
+            lineWidth: 0.2, // Normal border width
+            fillColor: false, // No background color
+            textColor: [0, 0, 0] // Black text
+        },
+        headStyles: {
+            fillColor: false, // No background color
+            textColor: [0, 0, 0],
+            fontStyle: 'bold',
+            lineWidth: 0.2
+        },
+        bodyStyles: {
+            fillColor: false, // No background color
+            lineWidth: 0.2
+        },
+        columnStyles: {
+            0: { cellWidth: 30, halign: 'left' },
+            1: { cellWidth: 20 },
+            2: { cellWidth: 20 },
+            3: { cellWidth: 20 },
+            4: { cellWidth: 20 },
+            5: { cellWidth: 20 },
+            6: { cellWidth: 20 },
+            7: { cellWidth: 20 }
+        },
+        didDrawPage: function(data) {
+            // Footer content
+            const pageCount = doc.internal.getNumberOfPages();
+            const currentPage = doc.internal.getCurrentPageInfo().pageNumber;
+            
+            if (currentPage === pageCount) {
+                // Add date and place
+                doc.setFontSize(10);
+                doc.text(`Date: ${formattedDate}`, 20, doc.internal.pageSize.height - 30);
+                doc.text('Place: Trivandrum', 20, doc.internal.pageSize.height - 20);
                 
-                if (currentPage === pageCount) {
-                    // Add date and place
-                    doc.setFontSize(10);
-                    doc.text(`Date: ${formattedDate}`, 20, doc.internal.pageSize.height - 30);
-                    doc.text('Place: Trivandrum', 20, doc.internal.pageSize.height - 20);
-                    
-                    // Add signature space
-                    doc.text('Signature:', doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 30);
-                  //  doc.line(doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 25, 
-                          //   doc.internal.pageSize.width - 10, doc.internal.pageSize.height - 25);
-                    
-                    // Add designation
-                    doc.text('District Treasury Officer, Trivandrum', 
-                             doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 15);
-                }
+                // Add signature space
+                doc.text('Signature:', doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 30);
+                doc.line(doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 25, 
+                         doc.internal.pageSize.width - 10, doc.internal.pageSize.height - 25);
+                
+                // Add designation
+                doc.text('District Treasury Officer, Trivandrum', 
+                         doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 15);
             }
-        });
-        
-        // Save the PDF
-        doc.save(`RBD_Report_${selectedMonth}_${selectedYear}.pdf`);
-    }
-
+        }
+    });
+    
+    // Save the PDF
+    doc.save(`RBD_Report_${selectedMonth}_${selectedYear}.pdf`);
+}
     
 // Function to fetch RBD sheet data
             function fetchRBDSheetData(month, year) {
