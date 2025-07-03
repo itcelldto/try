@@ -3,7 +3,7 @@ const urlsToCache = [
   '/try/blogger/',
   '/try/blogger/index.html',
   '/try/blogger/styles.css',
-  '/try/blogger/assets/icon-192.svg'
+  '/try/blogger/assets/gokullive.svg'
 ];
 
 self.addEventListener('install', event => {
