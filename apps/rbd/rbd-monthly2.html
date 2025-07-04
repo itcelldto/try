@@ -114,6 +114,7 @@
                     <div class="col-md-4 d-flex align-items-end">
                         <button id="viewBtn" class="btn btn-primary">View</button>
                         <button id="pdfBtn" class="btn btn-danger ms-2">Report</button>
+						<button id="downloadBtn"class="btn btn-warning ms-2">AG CoverLetter</button>
                         <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="margin-left:10px">
                             Menu
                         </button>
@@ -193,7 +194,27 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    
+     <script>
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            const spreadsheetId = '1Nfv3GvplDB0v6lI8PQ4fTks8KVClH6C8_0lddbfaesc';
+            const sheetName = 'Report';
+            
+            // Construct the PDF download URL
+            const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?` +
+                `format=pdf&` +
+                `size=a4&` +
+                `portrait=true&` +
+                `fitw=true&` +
+                `sheetnames=false&` +
+                `printtitle=false&` +
+                `pagenumbers=false&` +
+                `gridlines=false&` +
+                `fzr=false`;
+            
+            // Open the PDF in a new tab
+            window.open(url, '_blank');
+        });
+    </script>
     <script>
         // Global variables to store DataTable instances
         let rbdDataTable = null;
