@@ -214,7 +214,8 @@
                     <div class="card-body">
                       <div id="tokenInfo">
                         <p><strong>Token No:</strong> -</p>
-                        <p><strong>DDO Code:</strong> -</p>
+                        <p><strong>DDO:</strong> -</p>
+						 <p><strong>Office:</strong> -</p>
                         <p><strong>BRN:</strong> -</p>
                         <p><strong>Amount:</strong> -</p>
                       </div>
@@ -240,6 +241,7 @@
                     <tr>
                       <th>Token No.</th>
                       <th>DDO Code</th>
+					  <th>Office</th>
                       <th>BRN</th>
                       <th>Bill Type</th>
                       <th>Amount</th>
@@ -779,7 +781,8 @@
               for (let i = 0; i < data.values.length; i++) {
                   const row = data.values[i];
                   if (row[10] === tokenNumber) { // Column K is index 10
-                      ddoCode = row[1] || "-";    // Column B is index 1
+                      ddoCode = row[1] || "-"; 
+                      ddoName= 	row[13]				  // Column B is index 1
                       brn = row[14] || row[2] || "-"; // Column O is index 14, fallback to Column C (index 2)
                       amount = row[5] || "-";      // Column F is index 5
                       
@@ -793,7 +796,8 @@
           // Format the token info display with all details
           const infoHTML = `
               <p><strong>Token No:</strong> ${tokenNumber || "-"}</p>
-              <p><strong>DDO Code:</strong> ${ddoCode}</p>
+              <p><strong>DDO:</strong> ${ddoCode}</p>
+			  <p><strong>Office:</strong> ${ddoName}</p>
               <p><strong>BRN:</strong> ${brn}</p>
               <p><strong>Amount:</strong> ${amount}</p>
           `;
@@ -855,10 +859,12 @@
               
               // Column O (index 13) is the BRN
               let brn = row[13] || row[1]; // Fallback to column C if O is empty
+			  let ddoname = row[12] ; // 
               
               table.row.add([
                 row[9],  // Token (Column K)
                 row[0],  // DDO Code (Column B)
+				ddoname,  // DDO Code (Column B)
                 brn,     // BRN (Column O, fallback to Column C)
                 row[2],  // Bill Type (Column D)
                 amount,  // Amount (Column F)
