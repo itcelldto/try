@@ -142,7 +142,13 @@
                 $('.loading').hide();
             });
     }
-
+    function updateResultHeading(officeName, totalBills, totalGrossAmount) {
+    if (totalBills > 0) {
+        $("#resultHeading").html(`${officeName} - Total Bills: ${totalBills}, Gross Total: ₹${totalGrossAmount.toFixed(2)}`);
+    } else {
+        $("#resultHeading").html("Results");
+    }
+}
     function parseDate(dateStr) {
         if (!dateStr) return new Date(0);
         let parts = dateStr.split('/');
