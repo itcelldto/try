@@ -167,6 +167,9 @@
             ordering: true,
             destroy: true
         });
+	     if (data.length === 0) {
+            Swal.fire('No Records Found', 'No matching records found for the selected criteria.', 'info');
+        }
     }
     </script>
 </body>
