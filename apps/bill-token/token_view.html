@@ -163,16 +163,15 @@
                 <td>${row[9]}</td>
             </tr>`);
         });
-
-        $('#grandTotal').text(totalGrossAmount.toFixed(2));
-        $('#billCount').text(`(${data.length} bills found)`);
-		
-		$('#resultTable').DataTable({
+ $('#grandTotal').text(totalGrossAmount.toFixed(2));
+            $('#billCount').text(`(${data.length} bills found)`);
+            $('#resultTable').DataTable({
             paging: true,
             pageLength: 10,
             lengthMenu: [10, 25, 50, 100],
             searching: true,
-            ordering: true
+            ordering: true,
+            destroy: true
         });
     }
     </script>
