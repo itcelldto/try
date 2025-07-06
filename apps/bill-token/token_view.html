@@ -136,6 +136,8 @@
 
                 displayResults(filteredRows);
                 $('.loading').hide();
+                 // Call the new function to update heading
+           // updateResultHeading(officeName, filteredRows.length, totalGrossAmount);
             })
             .catch(error => {
                 console.error("Error fetching data: ", error);
