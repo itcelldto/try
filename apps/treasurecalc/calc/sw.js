@@ -2,7 +2,7 @@ const CACHE_NAME = 'TreasureCALC-cache-v1';
 const urlsToCache = [
   '/treasurecalc/',
   '/treasurecalc/calc/',
-  '/treasurecalc/calc.html'
+  '/treasurecalc/calc/index.html'
 
 ];
 
