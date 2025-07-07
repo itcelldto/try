@@ -2,7 +2,7 @@ const CACHE_NAME = 'treasurecalc-v1';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './manifest.json',
+  './calc-manifest.json',
   // Add paths to any other assets you want to cache (CSS, JS, images)
 ];
 
