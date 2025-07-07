@@ -7,60 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 	 <!-- Link the manifest -->
     <link rel="manifest" href="/manifest.json">
-	<script>
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => {
-        console.log('Service Worker registered');
-        
-        // Show install prompt for PWA
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-          // Prevent the mini-infobar from appearing on mobile
-          e.preventDefault();
-          // Stash the event so it can be triggered later
-          deferredPrompt = e;
-          // Show the install button
-          showInstallPromotion();
-        });
-        
-        function showInstallPromotion() {
-          // You can show a custom install button here
-          const installButton = document.createElement('button');
-          installButton.textContent = 'Install TreasureCALC';
-          installButton.style.position = 'fixed';
-          installButton.style.bottom = '20px';
-          installButton.style.right = '20px';
-          installButton.style.zIndex = '9999';
-          installButton.style.padding = '10px 20px';
-          installButton.style.backgroundColor = '#2ecc71';
-          installButton.style.color = 'white';
-          installButton.style.border = 'none';
-          installButton.style.borderRadius = '5px';
-          installButton.style.cursor = 'pointer';
-          
-          installButton.addEventListener('click', () => {
-            // Show the install prompt
-            deferredPrompt.prompt();
-            // Wait for the user to respond to the prompt
-            deferredPrompt.userChoice.then((choiceResult) => {
-              if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted the install prompt');
-              } else {
-                console.log('User dismissed the install prompt');
-              }
-              deferredPrompt = null;
-            });
-          });
-          
-          document.body.appendChild(installButton);
-        }
-      })
-      .catch(err => console.log('Service Worker registration failed: ', err));
-  });
-}
-</script>
+	
     <style>
         * {
             margin: 0;
@@ -359,7 +306,60 @@ if ('serviceWorker' in navigator) {
           
         </div>
     </div>
-
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        console.log('Service Worker registered');
+        
+        // Show install prompt for PWA
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+          // Prevent the mini-infobar from appearing on mobile
+          e.preventDefault();
+          // Stash the event so it can be triggered later
+          deferredPrompt = e;
+          // Show the install button
+          showInstallPromotion();
+        });
+        
+        function showInstallPromotion() {
+          // You can show a custom install button here
+          const installButton = document.createElement('button');
+          installButton.textContent = 'Install TreasureCALC';
+          installButton.style.position = 'fixed';
+          installButton.style.bottom = '20px';
+          installButton.style.right = '20px';
+          installButton.style.zIndex = '9999';
+          installButton.style.padding = '10px 20px';
+          installButton.style.backgroundColor = '#2ecc71';
+          installButton.style.color = 'white';
+          installButton.style.border = 'none';
+          installButton.style.borderRadius = '5px';
+          installButton.style.cursor = 'pointer';
+          
+          installButton.addEventListener('click', () => {
+            // Show the install prompt
+            deferredPrompt.prompt();
+            // Wait for the user to respond to the prompt
+            deferredPrompt.userChoice.then((choiceResult) => {
+              if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+              } else {
+                console.log('User dismissed the install prompt');
+              }
+              deferredPrompt = null;
+            });
+          });
+          
+          document.body.appendChild(installButton);
+        }
+      })
+      .catch(err => console.log('Service Worker registration failed: ', err));
+  });
+}
+</script>
     <script>
         class Calculator {
             constructor(calculationElement, resultElement, memoryDisplayElement) {
