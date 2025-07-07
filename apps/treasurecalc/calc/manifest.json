@@ -1,7 +1,7 @@
 {
   "name": "TreasureCALC",
   "short_name": "TreasureCALC",
-  "start_url": "../index.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#f4292a",
   "theme_color": "#f4292a",
