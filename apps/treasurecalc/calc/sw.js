@@ -1,7 +1,8 @@
 const CACHE_NAME = 'TreasureCALC-cache-v1';
 const urlsToCache = [
-  './calc/',
-  '../calc.html'
+  '/treasurecalc/',
+  '/treasurecalc/calc/',
+  '/treasurecalc/calc.html'
 
 ];
 
