@@ -1,0 +1,20 @@
+{
+  "name": "TreasureCALC",
+  "short_name": "TreasureCALC",
+  "start_url": "../calc.html",
+  "display": "standalone",
+  "background_color": "#f4292a",
+  "theme_color": "#f4292a",
+  "icons": [
+    {
+      "src": "./icon192.svg",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon512.svg",
+      "sizes": "512x512",
+      "type": "image/svg"
+    }
+  ]
+}
