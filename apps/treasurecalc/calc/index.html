@@ -6,11 +6,11 @@
     <title>TreasureCALC</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 	 <!-- Link the manifest -->
-    <link rel="manifest" href="./calc/manifest.json">
+    <link rel="manifest" href="manifest.json">
 	<script>
     if ('serviceWorker' in navigator) {
      window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./calc/sw.js', { scope: './calc/' })
+      navigator.serviceWorker.register('sw.js', { scope: '/calc/' })
         .then(reg => console.log('Service Worker registered'))
         .catch(err => console.log('Registration failed:', err));
       });
