@@ -133,8 +133,8 @@
                                 <div class="col-md-12">
                                     <label for="optionFor" class="form-label">Option For*</label>
                                     <select id="optionFor" name="optionFor" class="form-select select2" required>
-                                        <option value="" selected>Select Option</option>
-                                        <option value="User Activation" >User Activation</option>
+                                        <option value="">Select Option</option>
+                                        <option value="User Activation" selected>User Activation</option>
                                         <option value="Charge Arrangement">Charge Arrangement</option>
                                         <option value="Role Change">Role Change</option>
                                         <option value="Designation Change">Designation Change</option>
@@ -329,32 +329,6 @@
                 }
             });
             
-            // From Name change event
-            $('#fromName').on('change', function() {
-                const selectedOption = $(this).find('option:selected');
-                if (selectedOption.val() === "Vacant") {
-                    $('#fromPEN').val('0');
-                } else {
-                    const treasuryName = sessionStorage.getItem('treasuryName');
-                    const designation = $('#fromDesignation').val();
-                    const role = $('#fromRole').val();
-                    const name = $(this).val();
-                    if (treasuryName && designation && role && name) {
-                        loadPEN(treasuryName, designation, role, name, 'fromPEN');
-                    } else {
-                        $('#fromPEN').val('');
-                    }
-                }
-                
-                // If Option For is "User Activation", copy to to employee details
-                if ($('#optionFor').val() === "User Activation") {
-                    $('#toPEN').val($('#fromPEN').val());
-                    $('#toName').val($('#fromName').val());
-                    $('#toDesignation').val($('#fromDesignation').val()).trigger('change');
-                    $('#toRole').val($('#fromRole').val()).trigger('change');
-                }
-            });
-            
             // To Designation change event
             $('#toDesignation').on('change', function() {
                 const designation = $(this).val();
@@ -373,19 +347,6 @@
                     loadEmployees(treasuryName, designation, role, 'toName');
                 } else {
                     resetDependentFields('toName');
-                }
-            });
-            
-            // To Name change event
-            $('#toName').on('change', function() {
-                const treasuryName = sessionStorage.getItem('treasuryName');
-                const designation = $('#toDesignation').val();
-                const role = $('#toRole').val();
-                const name = $(this).val();
-                if (treasuryName && designation && role && name) {
-                    loadPEN(treasuryName, designation, role, name, 'toPEN');
-                } else {
-                    $('#toPEN').val('');
                 }
             });
             
@@ -655,13 +616,14 @@
                     if (response.values) {
                         const employees = [];
                         response.values.forEach(row => {
+                            // Columns: A=Treasury, B=PEN, C=Name, D=Designation, E=Role
                             if (row[0] === treasuryName && 
                                 row[3] === designation && 
                                 row[4] === role && 
-                                row[2]) {
+                                row[2]) { // Name exists
                                 employees.push({
                                     name: row[2],
-                                    pen: row[1]
+                                    pen: row[1] || ''
                                 });
                             }
                         });
@@ -673,34 +635,28 @@
                             select.append('<option value="Vacant">Vacant</option>');
                         }
                         
+                        // Store employee data in data attributes
                         employees.forEach(employee => {
                             select.append(`<option value="${employee.name}" data-pen="${employee.pen}">${employee.name}</option>`);
                         });
-                    }
-                },
-                error: function() {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'Failed to load employees. Please try again.',
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    });
-                }
-            });
-        }
-        
-        function loadPEN(treasuryName, designation, role, name, targetId) {
-            $.ajax({
-                url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/umas-onboard!A2:B',
-                method: 'GET',
-                data: {
-                    key: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
-                },
-                success: function(response) {
-                    if (response.values) {
-                        response.values.forEach(row => {
-                            if (row[0] === treasuryName && row[3] === designation && row[4] === role && row[2] === name && row[1]) {
-                                $(`#${targetId}`).val(row[1]);
+                        
+                        // Update PEN immediately when selection changes
+                        select.off('change').on('change', function() {
+                            const selectedOption = $(this).find('option:selected');
+                            const penField = targetId === 'fromName' ? '#fromPEN' : '#toPEN';
+                            
+                            if (selectedOption.val() === "Vacant") {
+                                $(penField).val('0');
+                            } else {
+                                $(penField).val(selectedOption.data('pen') || '');
+                            }
+                            
+                            // If Option For is "User Activation", copy to to employee details
+                            if ($('#optionFor').val() === "User Activation") {
+                                $('#toPEN').val($('#fromPEN').val());
+                                $('#toName').val($('#fromName').val());
+                                $('#toDesignation').val($('#fromDesignation').val()).trigger('change');
+                                $('#toRole').val($('#fromRole').val()).trigger('change');
                             }
                         });
                     }
@@ -708,7 +664,7 @@
                 error: function() {
                     Swal.fire({
                         title: 'Error!',
-                        text: 'Failed to load PEN. Please try again.',
+                        text: 'Failed to load employees. Please try again.',
                         icon: 'error',
                         confirmButtonText: 'OK'
                     });
