@@ -333,7 +333,7 @@
             submitButton.show();
                             
             // Update Request ID label with server response
-            document.getElementById('requestIdLabel').textContent = `Request ID: ${response}`;
+            document.getElementById('requestIdLabel').textContent = `Please go through the status page to obtain our proforma and upload signed the same`;
 
             Swal.fire({
               title: 'Success!',
@@ -600,13 +600,7 @@
       // Clear Request ID label on reset
      // document.getElementById('requestIdLabel').textContent = '';
     }
-function resetAllSelects2() {
-      $('.select2').val(null).trigger('change');
-      $('#treasuryName').val(null).trigger('change');
-      $('#optionFor').val('Charge Arrangement').trigger('change');
-      // Clear Request ID label on reset
-      document.getElementById('requestIdLabel').textContent = '';
-    }
+
   </script>
 </body>
 </html>
