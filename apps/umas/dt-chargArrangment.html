@@ -342,9 +342,10 @@
             // Hide spinner and show the submit button after response
             spinner.hide();
             submitButton.show();
-             document.getElementById('requestIdLabel').textContent = `Request ID: ${formData.requestId}`;
                             
             // Show success message with reference ID
+		               document.getElementById('requestIdLabel').textContent = `Request ID: ${response}`;
+
             Swal.fire({
               title: 'Success!',
               html: 'Your request has been submitted successfully.<br><br><b>Request ID:</b> ' + response,
