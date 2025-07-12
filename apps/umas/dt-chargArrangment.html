@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
- 
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Select2 CSS -->
@@ -59,38 +58,37 @@
     .select2-container--bootstrap-5 .select2-dropdown {
       border: 1px solid #dee2e6 !important;
     }
-	.form-label {
-    margin-bottom: .5rem;
-    font-weight: 500;
-}
-.section-header {
-    background-color: #f0f7ff;
-    padding: 10px 15px;
-    margin: 25px 0 15px 0;
-    border-left: 4px solid #4285f4;
-    font-weight: bold;
-    color: #2c3e50;
-}
+    .form-label {
+      margin-bottom: .5rem;
+      font-weight: 500;
+    }
+    .section-header {
+      background-color: #f0f7ff;
+      padding: 10px 15px;
+      margin: 25px 0 15px 0;
+      border-left: 4px solid #4285f4;
+      font-weight: bold;
+      color: #2c3e50;
+    }
   </style>
 </head>
 <body style="background-color: #d7e2ff6e;">
-  <div class="container " style="min-width:100%;margin-top: 25px !important; margin-bottom: 25px !important;">
+  <div class="container" style="min-width:100%; margin-top: 25px !important; margin-bottom: 25px !important;">
     <div class="row justify-content-center">
       <div class="col-lg-12">
         <div class="card shadow">
-       
           <div class="card-body">
-		   <h5>User Charge Arrangement Request Form</h5><hr>
+            <h5>User Charge Arrangement Request Form</h5><hr>
             <form id="changeRequestForm" method="post" class="php-email-form">
               <div class="row gy-3">
-			    <!-- Option For -->
-			       <div class="col-md-12" style="display:none">
+                <!-- Option For (Hidden) -->
+                <div class="col-md-12" style="display:none">
                   <label for="optionFor" class="form-label">Option For</label>
                   <select id="optionFor" name="optionFor" class="form-select select2" required>
                     <option value="Charge Arrangement" selected>Charge Arrangement</option>
-                 
                   </select>
                 </div>
+                
                 <!-- Treasury Name -->
                 <div class="col-md-12">
                   <label for="treasuryName" class="form-label">Treasury Name</label>
@@ -99,12 +97,9 @@
                   </select>
                 </div>
                 
-              
-           
-                
                 <!-- From Section -->
                 <div class="col-md-12 mt-4">
-               <div class="section-header">From Employee Details</div>
+                  <div class="section-header">From Employee Details</div>
                   <hr>
                 </div>
                 
@@ -136,7 +131,7 @@
                 
                 <!-- To Section -->
                 <div class="col-md-12 mt-4">
-                 <div class="section-header to-employee-section">To Employee Details</div>
+                  <div class="section-header to-employee-section">To Employee Details</div>
                   <hr>
                 </div>
                 
@@ -177,27 +172,24 @@
                   <input type="text" id="toDate" name="toDate" class="form-control datepicker" required>
                 </div>
                 
-                <!-- Hidden Fields -->
+                <!-- Hidden Status Field -->
                 <input type="hidden" id="status" name="status" value="Pending">
-                <input type="hidden" id="requestId" name="requestId">
                 
                 <!-- Submit Button -->
                 <div class="col-12 text-center mt-4">
-                  <!-- Color Dot Spinner hidden by default -->
                   <div id="spinner" class="dot-spinner" style="display: none;">
                     <div class="dot"></div>
                     <div class="dot"></div>
                     <div class="dot"></div>
                   </div>
-                  <!-- Submit Button -->
                   <button type="submit" id="submitBtn" class="btn btn-primary me-2">Submit Request</button>
                   <button type="reset" class="btn btn-secondary">Reset</button>
-	          <a href="#" class="btn btn-light" onclick="openPopup()">PDF</a>
+                  <a href="#" class="btn btn-light" onclick="openPopup()">PDF</a>
                 </div>
               </div>
             </form>
-		  <div id="requestIdLabel" style="font-weight: bold; color: red; text-align: center; margin-top: 15px;"></div>
-                   
+            <!-- Request ID Display (Updated by server response) -->
+            <div id="requestIdLabel" style="font-weight: bold; color: red; text-align: center; margin-top: 15px;"></div>
           </div>
         </div>
       </div>
@@ -229,9 +221,6 @@
       
       // Set today's date
       setToday();
-      
-      // Generate Request ID
-     // generateRequestId();
       
       // Load Treasury Names
       loadTreasuryNames();
@@ -343,8 +332,8 @@
             spinner.hide();
             submitButton.show();
                             
-            // Show success message with reference ID
-	    document.getElementById('requestIdLabel').textContent = `Request ID: ${response}`;
+            // Update Request ID label with server response
+            document.getElementById('requestIdLabel').textContent = `Request ID: ${response}`;
 
             Swal.fire({
               title: 'Success!',
@@ -354,7 +343,6 @@
             }).then(function() {
               // Reset the form after submission
               $('#changeRequestForm')[0].reset();
-              generateRequestId();
               setToday();
               resetAllSelects();
             });
@@ -386,28 +374,15 @@
       $('#fromDate').val(formattedDate);
       $('#toDate').val(formattedDate);
     }
-     function openPopup() {
-            const url = "https://script.google.com/macros/s/AKfycbzywjcUltvzofjDglUovicJfcWWN1oe0jFZCRwhCgA/dev";
-            const windowFeatures = "width=600,height=400,resizable=yes,scrollbars=yes";
-            const popup = window.open(url, "PopupWindow", windowFeatures);
+    
+    function openPopup() {
+      const url = "https://script.google.com/macros/s/AKfycbzywjcUltvzofjDglUovicJfcWWN1oe0jFZCRwhCgA/dev";
+      const windowFeatures = "width=600,height=400,resizable=yes,scrollbars=yes";
+      const popup = window.open(url, "PopupWindow", windowFeatures);
 
-            if (!popup || popup.closed || typeof popup.closed === "undefined") {
-                window.location.href = url;
-            }
-        }
-    function generateRequestId() {
-      const now = new Date();
-      const year = now.getFullYear().toString().slice(-2);
-      const month = String(now.getMonth() + 1).padStart(2, '0');
-      const date = String(now.getDate()).padStart(2, '0');
-      const hour = String(now.getHours()).padStart(2, '0');
-      const minute = String(now.getMinutes()).padStart(2, '0');
-      const second = String(now.getSeconds()).padStart(2, '0');
-      
-      const requestId = year + month + date + hour + minute + second;
-      $('#requestId').val(requestId);
-	     // Update the label as well
-  document.getElementById('requestIdLabel').textContent = `Request ID: ${requestId}`;
+      if (!popup || popup.closed || typeof popup.closed === "undefined") {
+        window.location.href = url;
+      }
     }
     
     function loadTreasuryNames() {
@@ -522,56 +497,53 @@
       });
     }
     
-     function loadEmployees(treasuryName, designation, role, targetId) {
-        $.ajax({
-          url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/umas-onboard!A2:E',
-          method: 'GET',
-          data: {
-            key: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
-          },
-          success: function(response) {
-            if (response.values) {
-              const employees = [];
-              response.values.forEach(row => {
-                // Columns: A=Treasury, B=PEN, C=Name, D=Designation, E=Role
-                if (row[0] === treasuryName && 
-                    row[3] === designation && 
-                    row[4] === role && 
-                    row[2]) { // Name exists
-                  employees.push({
-                    name: row[2],
-                    pen: row[1]
-                  });
-                }
-              });
-              
-              const select = $(`#${targetId}`);
-              select.empty().append('<option value="">Select Employee</option>');
-              
-              // Store employee data in data attributes
-              employees.forEach(employee => {
-                select.append(`<option value="${employee.name}" data-pen="${employee.pen}">${employee.name}</option>`);
-              });
-              
-              // When employee is selected, update PEN field
-              select.on('change', function() {
-                const selectedOption = $(this).find('option:selected');
-                const penField = targetId === 'fromName' ? '#fromPEN' : '#toPEN';
-                $(penField).val(selectedOption.data('pen') || '');
-              });
-            }
-          },
-          error: function() {
-            Swal.fire({
-              title: 'Error!',
-              text: 'Failed to load employees. Please try again.',
-              icon: 'error',
-              confirmButtonText: 'OK'
+    function loadEmployees(treasuryName, designation, role, targetId) {
+      $.ajax({
+        url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/umas-onboard!A2:E',
+        method: 'GET',
+        data: {
+          key: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
+        },
+        success: function(response) {
+          if (response.values) {
+            const employees = [];
+            response.values.forEach(row => {
+              if (row[0] === treasuryName && 
+                  row[3] === designation && 
+                  row[4] === role && 
+                  row[2]) {
+                employees.push({
+                  name: row[2],
+                  pen: row[1]
+                });
+              }
+            });
+            
+            const select = $(`#${targetId}`);
+            select.empty().append('<option value="">Select Employee</option>');
+            
+            employees.forEach(employee => {
+              select.append(`<option value="${employee.name}" data-pen="${employee.pen}">${employee.name}</option>`);
+            });
+            
+            // When employee is selected, update PEN field
+            select.on('change', function() {
+              const selectedOption = $(this).find('option:selected');
+              const penField = targetId === 'fromName' ? '#fromPEN' : '#toPEN';
+              $(penField).val(selectedOption.data('pen') || '');
             });
           }
-        });
-      }
-	
+        },
+        error: function() {
+          Swal.fire({
+            title: 'Error!',
+            text: 'Failed to load employees. Please try again.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+        }
+      });
+    }
     
     function loadPEN(treasuryName, designation, role, name, targetId) {
       $.ajax({
@@ -625,6 +597,15 @@
       $('.select2').val(null).trigger('change');
       $('#treasuryName').val(null).trigger('change');
       $('#optionFor').val('Charge Arrangement').trigger('change');
+      // Clear Request ID label on reset
+     // document.getElementById('requestIdLabel').textContent = '';
+    }
+function resetAllSelects2() {
+      $('.select2').val(null).trigger('change');
+      $('#treasuryName').val(null).trigger('change');
+      $('#optionFor').val('Charge Arrangement').trigger('change');
+      // Clear Request ID label on reset
+      document.getElementById('requestIdLabel').textContent = '';
     }
   </script>
 </body>
