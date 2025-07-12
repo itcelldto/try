@@ -204,9 +204,12 @@
                   <!-- Submit Button -->
                   <button type="submit" id="submitBtn" class="btn btn-primary me-2">Submit Request</button>
                   <button type="reset" class="btn btn-secondary">Reset</button>
+                   <a href="#" class="btn btn-light" onclick="openPopup()">PDF</a>
                 </div>
               </div>
             </form>
+                <!-- Request ID Display (Updated by server response) -->
+            <div id="requestIdLabel" style="font-weight: bold; color: red; text-align: center; margin-top: 15px;"></div>
           </div>
         </div>
       </div>
@@ -362,7 +365,7 @@
             // Hide spinner and show the submit button after response
             spinner.hide();
             submitButton.show();
-            
+             document.getElementById('requestIdLabel').textContent = `Please go through the status page to obtain our proforma and upload signed the same`;
             // Show success message with reference ID
             Swal.fire({
               title: 'Success!',
@@ -397,7 +400,15 @@
         });
       });
     });
-    
+     function openPopup() {
+      const url = "https://script.google.com/macros/s/AKfycbzywjcUltvzofjDglUovicJfcWWN1oe0jFZCRwhCgA/dev";
+      const windowFeatures = "width=600,height=400,resizable=yes,scrollbars=yes";
+      const popup = window.open(url, "PopupWindow", windowFeatures);
+
+      if (!popup || popup.closed || typeof popup.closed === "undefined") {
+        window.location.href = url;
+      }
+    }
     function setToday() {
       const today = new Date();
       const dd = String(today.getDate()).padStart(2, '0');
