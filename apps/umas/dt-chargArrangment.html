@@ -344,7 +344,7 @@
             submitButton.show();
                             
             // Show success message with reference ID
-		               document.getElementById('requestIdLabel').textContent = `Request ID: ${response}`;
+	    document.getElementById('requestIdLabel').textContent = `Request ID: ${response}`;
 
             Swal.fire({
               title: 'Success!',
@@ -406,6 +406,8 @@
       
       const requestId = year + month + date + hour + minute + second;
       $('#requestId').val(requestId);
+	     // Update the label as well
+  document.getElementById('requestIdLabel').textContent = `Request ID: ${requestId}`;
     }
     
     function loadTreasuryNames() {
