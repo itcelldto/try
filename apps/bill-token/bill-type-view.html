@@ -121,7 +121,7 @@
             .then(data => {
                 let ddoDropdown = $('#ddoCode');
                 ddoDropdown.empty();
-                ddoDropdown.append('<option value="">Select Bill Nature</option>');
+                ddoDropdown.append('<option value="">Select Bill Type</option>');
                 let uniqueCodes = [...new Set((data.values || []).flat())];
                 uniqueCodes.forEach(code => {
                     ddoDropdown.append(`<option value="${code}">${code}</option>`);
