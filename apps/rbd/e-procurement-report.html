@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Procurement Report | IT Cell Treasury</title>
+    <!-- Bootstrap & DataTables CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
+    
+    <!-- jQuery, Bootstrap, DataTables, SweetAlert, Select2 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    
+    <!-- jQuery UI Datepicker -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    
+    <style>
+        .loading {
+            display: none;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .select2-container .select2-selection--single {
+            height: 37px !important;
+            padding: 5px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+        }
+        .select2-container .select2-selection__rendered {
+            line-height: 28px !important;
+        }
+        .select2-container .select2-selection__arrow {
+            height: 36px !important;
+        }
+    </style>
+</head>
+<body class="container py-4" style="background-color: #d7e2ff6e;min-width: 100%;">
+    <div class="card p-4">
+        <h5>E-Procurement Report</h5><hr>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label for="fromDate" class="form-label">From Date:</label>
+                <input type="text" id="fromDate" class="form-control" placeholder="DD/MM/YYYY" required>
+            </div>
+            <div class="col-md-3">
+                <label for="toDate" class="form-label">To Date:</label>
+                <input type="text" id="toDate" class="form-control" placeholder="DD/MM/YYYY" required>
+            </div>
+            <div class="col-md-3">
+                <label for="chalanNo" class="form-label">Chalan No. / GRN:</label>
+                <input type="text" id="chalanNo" class="form-control" placeholder="Optional">
+            </div>
+            <div class="col-md-3">
+                <label for="bankRef" class="form-label">Bank Reference ID:</label>
+                <input type="text" id="bankRef" class="form-control" placeholder="Optional">
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-primary" onclick="searchData()">View</button>
+            </div>
+        </div>
+        <div class="loading mt-3"><img src="https://itcelldto.github.io/try/Spinner-3.gif">  Loading.Please wait...</div>
+        <br>
+
+        <div class="card p-4">
+            <h5 id="resultHeading" style="color: #5f87c5;">E-Procurement Details <span id="billCount" style="font-size: 14px; color: #ff0000;"></span></h5>
+            <hr>
+            <div class="table-responsive">
+                <table id="resultTable" class="table table-striped table-bordered" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>E-Procurement Ref</th>
+                            <th>Bank Reference ID</th>
+                            <th>Code</th>
+                            <th>Chalan No. / GRN</th>
+                            <th>Ref/Set Req Date</th>
+                            <th>Updated TRY</th>
+                            <th>Amount</th>
+                            <th>E-Procurement Dept Code</th>
+                            <th>Office Code</th>
+                            <th>TRY Code</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-size: 12px;"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="6" class="text-end fw-bold">Total:</td>
+                            <td id="grandTotal" class="fw-bold" style="color:green">0.00</td>
+                            <td colspan="3"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    $(document).ready(function () {
+        // Initialize jQuery UI Datepicker
+        $("#fromDate, #toDate").datepicker({
+            dateFormat: "dd/mm/yy",
+            changeMonth: true,
+            changeYear: true
+        });
+        
+        // Set default dates (today)
+        let today = new Date();
+        let yesterday = new Date();
+        yesterday.setDate(today.getDate() - 1);
+        
+        $("#fromDate").datepicker("setDate", yesterday);
+        $("#toDate").datepicker("setDate", today);
+    });
+
+    function searchData() {
+        let fromDateInput = $('#fromDate').val();
+        let toDateInput = $('#toDate').val();
+        let chalanNo = $('#chalanNo').val().trim();
+        let bankRef = $('#bankRef').val().trim();
+
+        if (!fromDateInput || !toDateInput) {
+            Swal.fire('Error', 'Please enter both From Date and To Date', 'error');
+            return;
+        }
+
+        let fromDate = parseDate(fromDateInput);
+        let toDate = parseDate(toDateInput);
+
+        $('.loading').show();
+
+        let sheetId = "1qrrGH3ShgrebkPng-tEsa4PSFUoXrGxp90f7QoXdvsA";
+        let apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+        let range = "Sheet1!A:L";
+        let url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                let rows = data.values || [];
+                let headers = rows.length > 0 ? rows.shift() : [];
+                
+                // Find column indices for our search criteria
+                let dateColIndex = 5; // Column F (0-based index 5)
+                let chalanColIndex = 4; // Column E
+                let bankRefColIndex = 1; // Column B
+
+                let filteredRows = rows.filter(row => {
+                    // Check if row has enough columns
+                    if (row.length <= dateColIndex) return false;
+                    
+                    let rowDate = parseDate(row[dateColIndex]);
+                    if (!rowDate || rowDate < fromDate || rowDate > toDate) return false;
+                    
+                    // Optional filters
+                    if (chalanNo && row.length > chalanColIndex && !row[chalanColIndex].includes(chalanNo)) {
+                        return false;
+                    }
+                    
+                    if (bankRef && row.length > bankRefColIndex && !row[bankRefColIndex].includes(bankRef)) {
+                        return false;
+                    }
+                    
+                    return true;
+                });
+
+                displayResults(filteredRows);
+                $('.loading').hide();
+            })
+            .catch(error => {
+                console.error("Error fetching data: ", error);
+                $('.loading').hide();
+                Swal.fire('Error', 'Failed to fetch data from Google Sheets', 'error');
+            });
+    }
+
+    function parseDate(dateStr) {
+        if (!dateStr) return null;
+        
+        // Try different date formats
+        let parts = dateStr.split(/[/-]/);
+        if (parts.length === 3) {
+            // Assume DD/MM/YYYY or DD-MM-YYYY format
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        
+        // Try ISO format if split didn't work
+        let date = new Date(dateStr);
+        if (!isNaN(date.getTime())) {
+            return date;
+        }
+        
+        return null;
+    }
+
+    function displayResults(data) {
+        if ($.fn.DataTable.isDataTable('#resultTable')) {
+            $('#resultTable').DataTable().destroy();
+        }
+        
+        let tableBody = $("#resultTable tbody");
+        tableBody.empty();
+        let totalAmount = 0;
+
+        data.forEach(row => {
+            let amount = parseFloat(row[7] || row[6] || 0); // Column H or G
+            totalAmount += isNaN(amount) ? 0 : amount;
+            
+            tableBody.append(`<tr>
+                <td>${row[0] || ''}</td>
+                <td>${row[1] || ''}</td>
+                <td>${row[3] || ''}</td>
+                <td>${row[4] || ''}</td>
+                <td>${row[5] || ''}</td>
+                <td>${row[6] || ''}</td>
+                <td>${isNaN(amount) ? '0.00' : amount.toFixed(2)}</td>
+                <td>${row[8] || ''}</td>
+                <td>${row[9] || ''}</td>
+                <td>${row[10] || ''}</td>
+            </tr>`);
+        });
+
+        $('#grandTotal').text(totalAmount.toFixed(2));
+        $('#billCount').text(`(${data.length} records found)`);
+        
+        $('#resultTable').DataTable({
+            paging: true,
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            searching: true,
+            ordering: true,
+            destroy: true
+        });
+
+        if (data.length === 0) {
+            Swal.fire('No Records Found', 'No matching records found for the selected criteria.', 'info');
+        }
+    }
+    </script>
+</body>
+</html>
