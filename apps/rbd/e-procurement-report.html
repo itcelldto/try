@@ -83,7 +83,8 @@
                             <th>Ref/Set Req Date</th>
                             <th>Updated TRY</th>
                             <th>Amount</th>
-                            <th>E-Procurement Dept Code</th>
+                            <th>E-Procurement </th>
+							 <th>Dept Code</th>
                             <th>Office Code</th>
                             <th>TRY Code</th>
                         </tr>
@@ -220,9 +221,11 @@
                 <td>${row[5] || ''}</td>
                 <td>${row[6] || ''}</td>
                 <td>${isNaN(amount) ? '0.00' : amount.toFixed(2)}</td>
+				
                 <td>${row[8] || ''}</td>
                 <td>${row[9] || ''}</td>
                 <td>${row[10] || ''}</td>
+				 <td>${row[11] || ''}</td>
             </tr>`);
         });
 
