@@ -56,11 +56,11 @@
             </div>
             <div class="col-md-2">
                 <label for="chalanNo" class="form-label">Chalan No. / GRN:</label>
-                <input type="text" id="chalanNo" class="form-control" placeholder="Optional">
+                <input type="text" id="chalanNo" class="form-control" placeholder="KL">
             </div>
             <div class="col-md-2">
                 <label for="bankRef" class="form-label">Bank Reference ID:</label>
-                <input type="text" id="bankRef" class="form-control" placeholder="Optional">
+                <input type="text" id="bankRef" class="form-control" placeholder="Bank Reference No">
             </div>
             <div class="col-md-2 d-flex align-items-end">
                 <button class="btn btn-primary" onclick="searchData()">View</button>
@@ -103,22 +103,27 @@
     </div>
     
     <script>
-    $(document).ready(function () {
-        // Initialize jQuery UI Datepicker
-        $("#fromDate, #toDate").datepicker({
-            dateFormat: "dd/mm/yy",
-            changeMonth: true,
-            changeYear: true
-        });
-        
-        // Set default dates (today)
-        let today = new Date();
-        let yesterday = new Date();
-        yesterday.setDate(today.getDate() - 1);
-        
-        $("#fromDate").datepicker("setDate", yesterday);
-        $("#toDate").datepicker("setDate", today);
+  $(document).ready(function () {
+    // Initialize jQuery UI Datepicker
+    $("#fromDate, #toDate").datepicker({
+        dateFormat: "dd/mm/yy",
+        changeMonth: true,
+        changeYear: true
     });
+    
+    // Set default dates
+    let today = new Date();
+    let lastMonthSameDate = new Date();
+    lastMonthSameDate.setMonth(today.getMonth() - 1);
+    
+    // Handle year transition (if current month is January)
+    if (today.getMonth() === 0) {
+        lastMonthSameDate.setFullYear(today.getFullYear() - 1);
+    }
+    
+    $("#fromDate").datepicker("setDate", lastMonthSameDate);
+    $("#toDate").datepicker("setDate", today);
+});
 
     function searchData() {
         let fromDateInput = $('#fromDate').val();
@@ -229,22 +234,44 @@
             </tr>`);
         });
 
-        $('#grandTotal').text(totalAmount.toFixed(2));
-        $('#billCount').text(`(${data.length} records found)`);
-        
-        $('#resultTable').DataTable({
-            paging: true,
-            pageLength: 10,
-            lengthMenu: [10, 25, 50, 100],
-            searching: true,
-            ordering: true,
-            destroy: true
-        });
+      $('#grandTotal').text(totalAmount.toFixed(2));
+    $('#billCount').text(`(${data.length} records found)`);
+    
+    // Initialize DataTable with default sorting by date column (5th column, 0-based index 4)
+    $('#resultTable').DataTable({
+        paging: true,
+        pageLength: 10,
+        lengthMenu: [10, 25, 50, 100],
+        searching: true,
+        ordering: true,
+        destroy: true,
+        order: [[4, 'asc']] // Sort by 5th column (date) in ascending order
+    });
 
-        if (data.length === 0) {
-            Swal.fire('No Records Found', 'No matching records found for the selected criteria.', 'info');
-        }
+    if (data.length === 0) {
+        Swal.fire('No Records Found', 'No matching records found for the selected criteria.', 'info');
     }
+}
+// Enhanced parseDate function to better handle different date formats
+function parseDate(dateStr) {
+    if (!dateStr) return new Date(0);
+    
+    // Try DD/MM/YYYY or DD-MM-YYYY format
+    let parts = dateStr.split(/[/-]/);
+    if (parts.length === 3) {
+        return new Date(parts[2], parts[1] - 1, parts[0]);
+    }
+    
+    // Try ISO format (YYYY-MM-DD)
+    let isoParts = dateStr.split('-');
+    if (isoParts.length === 3 && isoParts[0].length === 4) {
+        return new Date(isoParts[0], isoParts[1] - 1, isoParts[2]);
+    }
+    
+    // Fallback to native Date parsing
+    let date = new Date(dateStr);
+    return isNaN(date.getTime()) ? new Date(0) : date;
+}
     </script>
 </body>
 </html>
