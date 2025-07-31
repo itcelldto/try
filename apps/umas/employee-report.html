@@ -36,6 +36,10 @@
         .select2-container .select2-selection__arrow {
             height: 36px !important;
         }
+        .different-treasury {
+            color: red;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="container py-4" style="background-color: #d7e2ff6e;min-width: 100%;">
@@ -66,12 +70,11 @@
             <table id="resultTable" class="table table-striped table-bordered dataTable">
                 <thead>
                     <tr>
-					     <th>Employee Name</th>
+                        <th>From Treasury(Lean office)</th>
+                        <th>Employee Name</th>
                         <th>PEN</th>
-                       
                         <th>Designation</th>
                         <th>Role</th>
-                      
                         <th>eOffice Sec</th>
                         <th>Joined Date</th>
                         <th>Retirement Date</th>
@@ -88,6 +91,10 @@
     <script>
     // Cache for eOffice Sec data
     let eOfficeSecMap = {};
+    // Cache for From Treasury and Lean Period data
+    let fromTreasuryMap = {};
+    let leanStartMap = {};
+    let leanEndMap = {};
     
     $(document).ready(function() {
         $('.select2').select2();
@@ -160,6 +167,37 @@
         }
     }
 
+    async function fetchFromTreasuryAndLeanData() {
+        try {
+            let sheetId = "1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM";
+            let apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+            let range = "umas-onboard!B2:O"; // PEN is column B, From Treasury is M, Lean Start is N, Lean End is O
+            let url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+            const rows = data.values || [];
+            
+            // Create mappings for From Treasury and Lean Period
+            fromTreasuryMap = {};
+            leanStartMap = {};
+            leanEndMap = {};
+            
+            rows.forEach(row => {
+                if (row[0]) { // PEN exists
+                    if (row[11]) fromTreasuryMap[row[0]] = row[11]; // Column M (index 11)
+                    if (row[12]) leanStartMap[row[0]] = row[12]; // Column N (index 12)
+                    if (row[13]) leanEndMap[row[0]] = row[13]; // Column O (index 13)
+                }
+            });
+            
+            return true;
+        } catch (error) {
+            console.error("Error fetching From Treasury and Lean Period data:", error);
+            return false;
+        }
+    }
+
     async function searchEmployeeData() {
         let treasuryName = $('#treasuryName').val();
         let role = $('#role').val();
@@ -172,10 +210,15 @@
         $('.loading').show();
 
         try {
-            // First fetch all eOffice Sec data
+            // First fetch all eOffice Sec data and From Treasury + Lean Period data
             const eOfficeDataLoaded = await fetchAllEOfficeSecData();
+            const fromTreasuryDataLoaded = await fetchFromTreasuryAndLeanData();
+            
             if (!eOfficeDataLoaded) {
                 Swal.fire('Warning', 'Could not load eOffice Sec data. Showing employee data without eOffice Sec.', 'warning');
+            }
+            if (!fromTreasuryDataLoaded) {
+                Swal.fire('Warning', 'Could not load From Treasury data. Showing employee data without From Treasury information.', 'warning');
             }
 
             // Then fetch employee data
@@ -196,18 +239,26 @@
                        (role === "" || rowRole === role);
             });
 
-            // Process rows to add eOffice Sec
+            // Process rows to add eOffice Sec and From Treasury with Lean Period
             const processedRows = filteredRows.map(row => {
                 const pen = row[1]; // Column B (PEN)
                 const eOfficeSec = eOfficeSecMap[pen] || '';
-                // Remove Treasury Name (index 0) and add eOffice Sec at position 5 (after Role Status)
+                const fromTreasury = fromTreasuryMap[pen] || '';
+                const leanStart = leanStartMap[pen] || '';
+                const leanEnd = leanEndMap[pen] || '';
+                
+                // Format the From Treasury with Lean Period
+                let fromTreasuryDisplay = fromTreasury;
+                if (leanStart || leanEnd) {
+                    fromTreasuryDisplay += ` (${leanStart} - ${leanEnd})`;
+                }
+                
                 return [
-				      
-                    row[1],  // PEN
+                    fromTreasuryDisplay, // From Treasury with Lean Period (will be first column)
                     row[2],  // Employee Name
+                    row[1],  // PEN
                     row[3],  // Designation
                     row[4],  // Role
-                    row[5],  // Role Status
                     eOfficeSec, // eOffice Sec
                     row[6],  // Joined Date
                     row[7],  // Retirement Date
@@ -217,7 +268,7 @@
                 ];
             });
 
-            displayEmployeeResults(processedRows);
+            displayEmployeeResults(processedRows, treasuryName);
             $('.loading').hide();
         } catch (error) {
             console.error("Error fetching employee data: ", error);
@@ -226,7 +277,7 @@
         }
     }
 
-    function displayEmployeeResults(data) {
+    function displayEmployeeResults(data, selectedTreasury) {
         if ($.fn.DataTable.isDataTable('#resultTable')) {
             $('#resultTable').DataTable().destroy();
         }
@@ -235,13 +286,17 @@
         tableBody.empty();
 
         data.forEach(row => {
+            // Extract just the treasury name (before the bracket) for comparison
+            const fromTreasuryOnly = row[0].split(' (')[0];
+            const isDifferentTreasury = fromTreasuryOnly && fromTreasuryOnly !== selectedTreasury;
+            const treasuryClass = isDifferentTreasury ? 'different-treasury' : '';
+            
             tableBody.append(`<tr>
-			    <td>${row[1] || ''}</td> <!-- Employee Name -->
-                <td>${row[0] || ''}</td> <!-- PEN -->
-           
-                <td>${row[2] || ''}</td> <!-- Designation -->
-                <td>${row[3] || ''}</td> <!-- Role -->
-    
+                <td class="${treasuryClass}">${row[0] || ''}</td> <!-- From Treasury with Lean Period -->
+                <td>${row[1] || ''}</td> <!-- Employee Name -->
+                <td>${row[2] || ''}</td> <!-- PEN -->
+                <td>${row[3] || ''}</td> <!-- Designation -->
+                <td>${row[4] || ''}</td> <!-- Role -->
                 <td>${row[5] || ''}</td> <!-- eOffice Sec -->
                 <td>${row[6] || ''}</td> <!-- Joined Date -->
                 <td>${row[7] || ''}</td> <!-- Retirement Date -->
