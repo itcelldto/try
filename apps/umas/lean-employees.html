@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Bootstrap & DataTables CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet">
+
+    <!-- jQuery, Bootstrap, DataTables, SweetAlert, Select2 -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+
+    <style>
+        .loading {
+            display: none;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .select2-container .select2-selection--single {
+            height: 37px !important;
+            padding: 5px 10px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+        }
+        .select2-container .select2-selection__rendered {
+            line-height: 28px !important;
+        }
+        .select2-container .select2-selection__arrow {
+            height: 36px !important;
+        }
+        .expired-lean {
+            color: red;
+            font-weight: bold;
+        }
+        .active-lean {
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="container py-4" style="background-color: #d7e2ff6e;min-width: 100%;">
+    <div class="card p-4">
+        <h5>UMAS Lean Employees Details</h5><hr>
+        
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label for="statusFilter" class="form-label">Filter by Status:</label>
+                <select id="statusFilter" class="form-control select2">
+                    <option value="all">All Lean Employees</option>
+                    <option value="active">Active Lean Only</option>
+                    <option value="expired">Expired Lean Only</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button class="btn btn-primary" onclick="searchLeanEmployees()">View</button>
+            </div>
+        </div>
+        
+        <div class="loading mt-3"><img src="https://itcelldto.github.io/try/Spinner-3.gif">  Loading.Please wait...</div>
+        <br>
+        
+        <div class="card p-4">
+            <h5 id="resultHeading" class="" style="color: #5f87c5;">Lean Employee Details <span id="employeeCount" style="font-size: 14px; color: #ff0000;"></span></h5>
+            <hr> 
+            <table id="resultTable" class="table table-striped table-bordered dataTable">
+                <thead>
+                    <tr>
+                        <th>Lean Period</th>
+                        <th>From Treasury</th>
+                        <th>Current Treasury</th>
+                        <th>Employee Name</th>
+                        <th>PEN</th>
+                        <th>Designation</th>
+                        <th>Role</th>
+                        <th>eOffice Sec</th>
+                        <th>Joined Date</th>
+                        <th>Retirement Date</th>
+                    </tr>
+                </thead>
+                <tbody style="font-size: 12px;"></tbody>
+            </table>
+        </div>
+    </div>
+    	  
+    <script>
+    // Cache for eOffice Sec data
+    let eOfficeSecMap = {};
+    // Cache for employee data
+    let employeeDataMap = {};
+    
+    $(document).ready(function() {
+        $('.select2').select2();
+        fetchAllEOfficeSecData();
+    });
+
+    async function fetchAllEOfficeSecData() {
+        try {
+            let sheetId = "1bGd83-iK7XHBygGivClAlqpWwTi4Ha2E6dmCj_PF-Rg";
+            let apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+            let range = "Transfer_EMD_Try_View!B2:E"; // PEN is column B, eOffice Sec is column E
+            let url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+            const rows = data.values || [];
+            
+            // Create a mapping of PEN to eOffice Sec
+            eOfficeSecMap = {};
+            rows.forEach(row => {
+                if (row[0] && row[3]) { // Ensure both PEN and eOffice Sec exist
+                    eOfficeSecMap[row[0]] = row[3];
+                }
+            });
+            
+            return true;
+        } catch (error) {
+            console.error("Error fetching eOffice Sec data:", error);
+            return false;
+        }
+    }
+
+    async function searchLeanEmployees() {
+        const statusFilter = $('#statusFilter').val();
+        $('.loading').show();
+
+        try {
+            // Fetch all employee data with lean period information
+            let sheetId = "1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM";
+            let apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+            let range = "umas-onboard!A2:O"; // Columns A to O
+            let url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${range}?key=${apiKey}`;
+
+            const response = await fetch(url);
+            const data = await response.json();
+            const rows = data.values || [];
+            
+            // Process rows to include only those with lean period information
+            const leanEmployees = [];
+            const today = new Date();
+            
+            rows.forEach(row => {
+                const pen = row[1]; // Column B (PEN)
+                const fromTreasury = row[12]; // Column M (From Treasury)
+                const leanStart = row[13]; // Column N (Lean Start)
+                const leanEnd = row[14]; // Column O (Lean End)
+                
+                if (leanStart || leanEnd) {
+                    const leanEndDate = leanEnd ? new Date(leanEnd) : null;
+                    const isExpired = leanEndDate && leanEndDate < today;
+                    
+                    // Apply status filter
+                    if (statusFilter === 'all' || 
+                        (statusFilter === 'active' && !isExpired) ||
+                        (statusFilter === 'expired' && isExpired)) {
+                        
+                        const eOfficeSec = eOfficeSecMap[pen] || '';
+                        
+                        leanEmployees.push({
+                            pen: pen,
+                            employeeName: row[2], // Column C
+                            currentTreasury: row[0], // Column A
+                            fromTreasury: fromTreasury,
+                            designation: row[3], // Column D
+                            role: row[4], // Column E
+                            eOfficeSec: eOfficeSec,
+                            joinedDate: row[6], // Column G
+                            retirementDate: row[7], // Column H
+                            leanStart: leanStart,
+                            leanEnd: leanEnd,
+                            isExpired: isExpired,
+                            leanEndDate: leanEndDate
+                        });
+                    }
+                }
+            });
+            
+            // Sort by lean end date (nearest first, then those without end date, then by start date)
+            leanEmployees.sort((a, b) => {
+                if (!a.leanEndDate && !b.leanEndDate) {
+                    return new Date(b.leanStart || 0) - new Date(a.leanStart || 0);
+                }
+                if (!a.leanEndDate) return 1;
+                if (!b.leanEndDate) return -1;
+                return a.leanEndDate - b.leanEndDate;
+            });
+            
+            displayLeanEmployeeResults(leanEmployees);
+            $('.loading').hide();
+        } catch (error) {
+            console.error("Error fetching lean employee data: ", error);
+            $('.loading').hide();
+            Swal.fire('Error', 'Failed to fetch lean employee data', 'error');
+        }
+    }
+
+    function displayLeanEmployeeResults(data) {
+        if ($.fn.DataTable.isDataTable('#resultTable')) {
+            $('#resultTable').DataTable().destroy();
+        }
+        
+        let tableBody = $("#resultTable tbody");
+        tableBody.empty();
+
+        data.forEach(employee => {
+            const leanPeriod = `${employee.leanStart || ''} - ${employee.leanEnd || ''}`;
+            const leanClass = employee.isExpired ? 'expired-lean' : 'active-lean';
+            
+            tableBody.append(`<tr>
+                <td class="${leanClass}">${leanPeriod}</td>
+                <td>${employee.fromTreasury || ''}</td>
+                <td>${employee.currentTreasury || ''}</td>
+                <td>${employee.employeeName || ''}</td>
+                <td>${employee.pen || ''}</td>
+                <td>${employee.designation || ''}</td>
+                <td>${employee.role || ''}</td>
+                <td>${employee.eOfficeSec || ''}</td>
+                <td>${employee.joinedDate || ''}</td>
+                <td>${employee.retirementDate || ''}</td>
+            </tr>`);
+        });
+
+        $('#employeeCount').text(`(${data.length} employees found)`);
+        
+        $('#resultTable').DataTable({
+            paging: true,
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            searching: true,
+            ordering: true,
+            destroy: true,
+            scrollX: true,
+            order: [[0, 'desc']] // Default sort by Lean Period (column 0) descending
+        });
+
+        if (data.length === 0) {
+            Swal.fire('No Records Found', 'No matching records found for the selected criteria.', 'info');
+        }
+    }
+    </script>
+</body>
+</html>
