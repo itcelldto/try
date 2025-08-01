@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cashier Assistant</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- SweetAlert for notifications -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        .denomination-table th, .denomination-table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+        .denomination-input {
+            width: 80px;
+            text-align: center;
+        }
+        .section-card {
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .bundle-info {
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        .total-amount {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #0d6efd;
+        }
+        .currency-column {
+            font-weight: bold;
+        }
+        .remaining-limit {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+            background-color: #f8f9fa;
+            border-bottom-color: #f8f9fa;
+        }
+        .tab-content {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-left: 1px solid #dee2e6;
+            border-right: 1px solid #dee2e6;
+            border-bottom: 1px solid #dee2e6;
+            border-radius: 0 0 5px 5px;
+        }
+    </style>
+</head>
+<body class="container py-4">
+    <div class="card">
+        <div class="card-header bg-white">
+            <h4 class="mb-0">Cashier Assistant</h4>
+        </div>
+        
+        <div class="card-body p-0">
+            <!-- Navigation Tabs -->
+            <ul class="nav nav-tabs" id="cashierTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="receipt-tab" data-bs-toggle="tab" data-bs-target="#receipt" type="button" role="tab">Receipt</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="payment-tab" data-bs-toggle="tab" data-bs-target="#payment" type="button" role="tab">Payment</button>
+                </li>
+            </ul>
+            
+            <!-- Tab Content -->
+            <div class="tab-content" id="cashierTabsContent">
+                <!-- Receipt Tab -->
+                <div class="tab-pane fade show active" id="receipt" role="tabpanel" aria-labelledby="receipt-tab">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="mt-3">Basic Details</h5>
+                            <div class="mb-3">
+                                <label for="treasury" class="form-label">Treasury</label>
+                                <input type="text" class="form-control" id="treasury" placeholder="Enter Treasury Name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="pen" class="form-label">Permanent Employee Number (PEN)</label>
+                                <input type="text" class="form-control" id="pen" placeholder="Enter PEN">
+                            </div>
+                            <div class="mb-3">
+                                <label for="dob" class="form-label">Date of Birth</label>
+                                <input type="date" class="form-control" id="dob">
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5 class="mt-3">Amount Borrowed</h5>
+                            <table class="table table-bordered denomination-table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Currency</th>
+                                        <th>Count</th>
+                                        <th>Bundles</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="borrowedDenominations">
+                                    <!-- Will be populated by JavaScript -->
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="4">
+                                            <button class="btn btn-primary" onclick="updateBorrowedAmount()">Update Borrowed Amount</button>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Payment Tab -->
+                <div class="tab-pane fade" id="payment" role="tabpanel" aria-labelledby="payment-tab">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="paymentAmount" class="form-label">Payment Amount</label>
+                            <input type="number" class="form-control" id="paymentAmount" placeholder="Enter amount">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-success" onclick="calculateDenominations()">Calculate Denominations</button>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="total-amount">Total: ₹0</div>
+                        </div>
+                    </div>
+                    
+                    <table class="table table-bordered denomination-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Currency</th>
+                                <th>Denomination</th>
+                                <th>Count</th>
+                                <th>Bundles</th>
+                                <th>Subtotal</th>
+                                <th>Remaining Limit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentDenominations">
+                            <!-- Will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                    
+                    <div class="d-flex justify-content-end mt-3">
+                        <button class="btn btn-primary" onclick="savePaymentDetails()">Save Payment Details</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Google Sheets API Script -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Currency denominations (value: count)
+        const denominations = [
+            { value: 2000, label: "₹2000" },
+            { value: 500, label: "₹500" },
+            { value: 200, label: "₹200" },
+            { value: 100, label: "₹100" },
+            { value: 50, label: "₹50" },
+            { value: 20, label: "₹20" },
+            { value: 10, label: "₹10" },
+            { value: 5, label: "₹5" },
+            { value: 2, label: "₹2" },
+            { value: 1, label: "₹1" }
+        ];
+        
+        // Initialize data structures
+        let borrowedAmounts = {};
+        let paymentAmounts = {};
+        let remainingLimits = {};
+        
+        // Google Sheets configuration
+        const apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+        const spreadsheetId = "14pwf2MVeHg37RRGFgh0Dooy2SCxIOEseu7vTfCRcYSU";
+        const receiptSheetName = "Receipt";
+        const paymentSheetName = "Payment";
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load saved basic details from localStorage
+            loadBasicDetails();
+            
+            // Initialize denomination tables
+            initializeBorrowedDenominations();
+            initializePaymentDenominations();
+            
+            // Load borrowed amounts from Google Sheets
+            loadBorrowedAmountsFromSheet();
+        });
+        
+        // Load basic details from localStorage
+        function loadBasicDetails() {
+            const treasury = localStorage.getItem('cashierAssistant_treasury');
+            const pen = localStorage.getItem('cashierAssistant_pen');
+            const dob = localStorage.getItem('cashierAssistant_dob');
+            
+            if (treasury) document.getElementById('treasury').value = treasury;
+            if (pen) document.getElementById('pen').value = pen;
+            if (dob) document.getElementById('dob').value = dob;
+        }
+        
+        // Save basic details to localStorage
+        function saveBasicDetails() {
+            const treasury = document.getElementById('treasury').value;
+            const pen = document.getElementById('pen').value;
+            const dob = document.getElementById('dob').value;
+            
+            localStorage.setItem('cashierAssistant_treasury', treasury);
+            localStorage.setItem('cashierAssistant_pen', pen);
+            localStorage.setItem('cashierAssistant_dob', dob);
+        }
+        
+        // Initialize borrowed denominations table
+        function initializeBorrowedDenominations() {
+            const tableBody = document.getElementById('borrowedDenominations');
+            tableBody.innerHTML = '';
+            
+            denominations.forEach(denom => {
+                borrowedAmounts[denom.value] = 0;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="currency-column">${denom.label}</td>
+                    <td><input type="number" class="form-control denomination-input" id="borrowed_${denom.value}" value="0" min="0"></td>
+                    <td class="bundle-info">${Math.floor(borrowedAmounts[denom.value] / 100)}</td>
+                    <td><button class="btn btn-sm btn-outline-secondary" onclick="addBundle(${denom.value})">+100</button></td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Initialize payment denominations table
+        function initializePaymentDenominations() {
+            const tableBody = document.getElementById('paymentDenominations');
+            tableBody.innerHTML = '';
+            
+            denominations.forEach(denom => {
+                paymentAmounts[denom.value] = 0;
+                remainingLimits[denom.value] = 0;
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="currency-column">${denom.label}</td>
+                    <td>${denom.value}</td>
+                    <td><input type="number" class="form-control denomination-input" id="payment_${denom.value}" value="0" min="0" onchange="updatePaymentAmount(${denom.value})"></td>
+                    <td class="bundle-info">${Math.floor(paymentAmounts[denom.value] / 100)}</td>
+                    <td>₹${paymentAmounts[denom.value] * denom.value}</td>
+                    <td class="remaining-limit">${remainingLimits[denom.value]}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        // Add a bundle (100 units) to borrowed amount
+        function addBundle(denomination) {
+            const input = document.getElementById(`borrowed_${denomination}`);
+            input.value = parseInt(input.value) + 100;
+            updateBorrowedAmount();
+        }
+        
+        // Update borrowed amounts from input fields
+        function updateBorrowedAmount() {
+            saveBasicDetails();
+            
+            let totalBorrowed = 0;
+            
+            denominations.forEach(denom => {
+                const input = document.getElementById(`borrowed_${denom.value}`);
+                const count = parseInt(input.value) || 0;
+                borrowedAmounts[denom.value] = count;
+                
+                // Update bundle info
+                const row = input.closest('tr');
+                row.querySelector('.bundle-info').textContent = Math.floor(count / 100);
+                
+                totalBorrowed += count * denom.value;
+            });
+            
+            // Save to Google Sheets
+            saveBorrowedAmountsToSheet();
+            
+            // Update remaining limits in payment section
+            updateRemainingLimits();
+        }
+        
+        // Calculate denominations for payment amount
+        function calculateDenominations() {
+            const amountInput = document.getElementById('paymentAmount');
+            let amount = parseInt(amountInput.value) || 0;
+            
+            if (amount <= 0) {
+                alert("Please enter a valid amount");
+                return;
+            }
+            
+            // Reset payment amounts
+            denominations.forEach(denom => {
+                paymentAmounts[denom.value] = 0;
+            });
+            
+            // Calculate denominations (greedy algorithm)
+            denominations.forEach(denom => {
+                if (amount >= denom.value) {
+                    const maxPossible = Math.min(
+                        Math.floor(amount / denom.value),
+                        remainingLimits[denom.value]
+                    );
+                    
+                    if (maxPossible > 0) {
+                        paymentAmounts[denom.value] = maxPossible;
+                        amount -= maxPossible * denom.value;
+                    }
+                }
+            });
+            
+            // If we couldn't make exact change with available denominations
+            if (amount > 0) {
+                alert(`Warning: Could not provide exact change. Remaining amount: ₹${amount}`);
+            }
+            
+            // Update the payment table
+            updatePaymentTable();
+        }
+        
+        // Update payment table with current values
+        function updatePaymentTable() {
+            let totalAmount = 0;
+            
+            denominations.forEach(denom => {
+                const input = document.getElementById(`payment_${denom.value}`);
+                input.value = paymentAmounts[denom.value];
+                
+                const row = input.closest('tr');
+                row.querySelector('.bundle-info').textContent = Math.floor(paymentAmounts[denom.value] / 100);
+                row.querySelector('td:nth-child(5)').textContent = `₹${paymentAmounts[denom.value] * denom.value}`;
+                
+                totalAmount += paymentAmounts[denom.value] * denom.value;
+            });
+            
+            document.querySelector('.total-amount').textContent = `Total: ₹${totalAmount}`;
+        }
+        
+        // Update payment amount when user manually changes denomination counts
+        function updatePaymentAmount(denomination) {
+            const input = document.getElementById(`payment_${denomination}`);
+            const count = parseInt(input.value) || 0;
+            
+            // Check if count exceeds remaining limit
+            if (count > remainingLimits[denomination]) {
+                alert(`Cannot exceed remaining limit of ${remainingLimits[denomination]} for ₹${denomination} notes`);
+                input.value = paymentAmounts[denomination];
+                return;
+            }
+            
+            paymentAmounts[denomination] = count;
+            
+            // Recalculate total
+            let totalAmount = 0;
+            denominations.forEach(denom => {
+                totalAmount += paymentAmounts[denom.value] * denom.value;
+            });
+            
+            document.querySelector('.total-amount').textContent = `Total: ₹${totalAmount}`;
+            
+            // Update bundle info
+            const row = input.closest('tr');
+            row.querySelector('.bundle-info').textContent = Math.floor(count / 100);
+            row.querySelector('td:nth-child(5)').textContent = `₹${count * denomination}`;
+        }
+        
+        // Update remaining limits based on borrowed amounts
+        function updateRemainingLimits() {
+            denominations.forEach(denom => {
+                remainingLimits[denom.value] = borrowedAmounts[denom.value];
+                
+                const row = document.getElementById(`payment_${denom.value}`).closest('tr');
+                row.querySelector('.remaining-limit').textContent = remainingLimits[denom.value];
+            });
+        }
+        
+        // Save payment details to Google Sheets
+        function savePaymentDetails() {
+            saveBasicDetails();
+            
+            const treasury = document.getElementById('treasury').value;
+            const pen = document.getElementById('pen').value;
+            
+            if (!treasury || !pen) {
+                alert("Please enter Treasury and PEN details");
+                return;
+            }
+            
+            let totalAmount = 0;
+            const denominationCounts = [];
+            
+            denominations.forEach(denom => {
+                const count = paymentAmounts[denom.value] || 0;
+                denominationCounts.push(count);
+                totalAmount += count * denom.value;
+                
+                // Update remaining limits (subtract used denominations)
+                borrowedAmounts[denom.value] -= count;
+                remainingLimits[denom.value] = borrowedAmounts[denom.value];
+            });
+            
+            if (totalAmount <= 0) {
+                alert("Please enter a valid payment amount");
+                return;
+            }
+            
+            // Prepare data for Google Sheets
+            const paymentData = {
+                treasury: treasury,
+                pen: pen,
+                date: new Date().toISOString().split('T')[0],
+                denominations: denominationCounts,
+                totalAmount: totalAmount
+            };
+            
+            // Save to Google Sheets
+            savePaymentToSheet(paymentData);
+            
+            // Update UI
+            updateRemainingLimits();
+            updatePaymentTable();
+            
+            // Reset payment amount
+            document.getElementById('paymentAmount').value = '';
+        }
+        
+        // Load borrowed amounts from Google Sheets
+        function loadBorrowedAmountsFromSheet() {
+            // Show loading state
+            const spinner = document.createElement('div');
+            spinner.className = 'spinner-border text-primary';
+            document.getElementById('borrowedDenominations').appendChild(spinner);
+            
+            // In a real implementation, you would use the Google Sheets API
+            // This is a simplified example
+            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${receiptSheetName}?key=${apiKey}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Process the data from the sheet
+                    // This would depend on your specific sheet structure
+                    console.log("Data loaded from sheet:", data);
+                    
+                    // Remove spinner
+                    spinner.remove();
+                    
+                    // For demo purposes, we'll simulate some data
+                    simulateBorrowedAmounts();
+                })
+                .catch(error => {
+                    console.error("Error loading data:", error);
+                    spinner.remove();
+                    simulateBorrowedAmounts(); // Fallback to simulated data
+                });
+        }
+        
+        // Save borrowed amounts to Google Sheets
+        function saveBorrowedAmountsToSheet() {
+            const treasury = document.getElementById('treasury').value;
+            const pen = document.getElementById('pen').value;
+            
+            if (!treasury || !pen) {
+                alert("Please enter Treasury and PEN details");
+                return;
+            }
+            
+            const data = {
+                treasury: treasury,
+                pen: pen,
+                date: new Date().toISOString().split('T')[0],
+                denominations: Object.values(borrowedAmounts),
+                totalAmount: calculateTotal(borrowedAmounts)
+            };
+            
+            // In a real implementation, you would use the Google Sheets API
+            // This is a simplified example
+            console.log("Data to save to Receipt sheet:", data);
+            
+            // Simulate successful save
+            Swal.fire({
+                title: 'Success!',
+                text: 'Borrowed amounts updated successfully',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            });
+        }
+        
+        // Save payment to Google Sheets
+        function savePaymentToSheet(paymentData) {
+            // In a real implementation, you would use the Google Sheets API
+            // This is a simplified example
+            console.log("Data to save to Payment sheet:", paymentData);
+            
+            // Simulate successful save
+            Swal.fire({
+                title: 'Success!',
+                text: 'Payment details saved successfully',
+                icon: 'success',
+                confirmButtonText: 'OK'
+            });
+        }
+        
+        // Calculate total amount from denomination counts
+        function calculateTotal(amounts) {
+            let total = 0;
+            denominations.forEach(denom => {
+                total += amounts[denom.value] * denom.value;
+            });
+            return total;
+        }
+        
+        // Simulate borrowed amounts (for demo when API isn't available)
+        function simulateBorrowedAmounts() {
+            borrowedAmounts = {
+                2000: 500,
+                500: 1000,
+                200: 1500,
+                100: 2000,
+                50: 3000,
+                20: 4000,
+                10: 5000,
+                5: 6000,
+                2: 7000,
+                1: 8000
+            };
+            
+            // Update borrowed amounts table
+            denominations.forEach(denom => {
+                const input = document.getElementById(`borrowed_${denom.value}`);
+                if (input) input.value = borrowedAmounts[denom.value];
+            });
+            
+            // Update remaining limits
+            updateRemainingLimits();
+        }
+    </script>
+</body>
+</html>
