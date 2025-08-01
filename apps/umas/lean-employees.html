@@ -36,13 +36,12 @@
         .select2-container .select2-selection__arrow {
             height: 36px !important;
         }
-        .expired-lean {
+        .lean-to-date {
             color: red;
             font-weight: bold;
         }
-        .active-lean {
-            color: green;
-            font-weight: bold;
+        .expired-row {
+            background-color: #ffdddd !important;
         }
     </style>
 </head>
@@ -54,7 +53,7 @@
             <div class="col-md-4">
                 <label for="statusFilter" class="form-label">Filter by Status:</label>
                 <select id="statusFilter" class="form-control select2">
-                    <option value="all">All Lean Employees</option>
+                    <option value="all">All Treasury</option>
                     <option value="active">Active Lean Only</option>
                     <option value="expired">Expired Lean Only</option>
                 </select>
@@ -73,16 +72,14 @@
             <table id="resultTable" class="table table-striped table-bordered dataTable">
                 <thead>
                     <tr>
-                        <th>Lean Period</th>
-                        <th>From Treasury</th>
-                        <th>Current Treasury</th>
+                        <th>Lean From Treasury</th>
+                        <th>Current To Treasury</th>
+                        <th>Lean From Date</th>
+                        <th>Lean To Date</th>
                         <th>Employee Name</th>
                         <th>PEN</th>
                         <th>Designation</th>
                         <th>Role</th>
-                        <th>eOffice Sec</th>
-                        <th>Joined Date</th>
-                        <th>Retirement Date</th>
                     </tr>
                 </thead>
                 <tbody style="font-size: 12px;"></tbody>
@@ -100,6 +97,16 @@
         $('.select2').select2();
         fetchAllEOfficeSecData();
     });
+
+    // Function to parse DD/MM/YYYY date format
+    function parseDate(dateString) {
+        if (!dateString) return null;
+        const parts = dateString.split('/');
+        if (parts.length === 3) {
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        return null;
+    }
 
     async function fetchAllEOfficeSecData() {
         try {
@@ -153,7 +160,7 @@
                 const leanEnd = row[14]; // Column O (Lean End)
                 
                 if (leanStart || leanEnd) {
-                    const leanEndDate = leanEnd ? new Date(leanEnd) : null;
+                    const leanEndDate = parseDate(leanEnd);
                     const isExpired = leanEndDate && leanEndDate < today;
                     
                     // Apply status filter
@@ -182,11 +189,10 @@
                 }
             });
             
-            // Sort by lean end date (nearest first, then those without end date, then by start date)
+            // Sort by lean end date ascending (nearest dates first)
             leanEmployees.sort((a, b) => {
-                if (!a.leanEndDate && !b.leanEndDate) {
-                    return new Date(b.leanStart || 0) - new Date(a.leanStart || 0);
-                }
+                // Handle cases where dates might be null
+                if (!a.leanEndDate && !b.leanEndDate) return 0;
                 if (!a.leanEndDate) return 1;
                 if (!b.leanEndDate) return -1;
                 return a.leanEndDate - b.leanEndDate;
@@ -210,24 +216,42 @@
         tableBody.empty();
 
         data.forEach(employee => {
-            const leanPeriod = `${employee.leanStart || ''} - ${employee.leanEnd || ''}`;
-            const leanClass = employee.isExpired ? 'expired-lean' : 'active-lean';
+            const rowClass = employee.isExpired ? 'expired-row' : '';
             
-            tableBody.append(`<tr>
-                <td class="${leanClass}">${leanPeriod}</td>
+            tableBody.append(`<tr class="${rowClass}">
                 <td>${employee.fromTreasury || ''}</td>
                 <td>${employee.currentTreasury || ''}</td>
+                <td>${employee.leanStart || ''}</td>
+                <td class="lean-to-date">${employee.leanEnd || ''}</td>
                 <td>${employee.employeeName || ''}</td>
                 <td>${employee.pen || ''}</td>
                 <td>${employee.designation || ''}</td>
                 <td>${employee.role || ''}</td>
-                <td>${employee.eOfficeSec || ''}</td>
-                <td>${employee.joinedDate || ''}</td>
-                <td>${employee.retirementDate || ''}</td>
             </tr>`);
         });
 
         $('#employeeCount').text(`(${data.length} employees found)`);
+        
+        // Custom sorting for DD/MM/YYYY dates
+        jQuery.fn.dataTableExt.oSort['date-dd-mm-yyyy-asc'] = function(a, b) {
+            const dateA = parseDate(a);
+            const dateB = parseDate(b);
+            
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            return dateA - dateB;
+        };
+
+        jQuery.fn.dataTableExt.oSort['date-dd-mm-yyyy-desc'] = function(a, b) {
+            const dateA = parseDate(a);
+            const dateB = parseDate(b);
+            
+            if (!dateA && !dateB) return 0;
+            if (!dateA) return 1;
+            if (!dateB) return -1;
+            return dateB - dateA;
+        };
         
         $('#resultTable').DataTable({
             paging: true,
@@ -237,7 +261,13 @@
             ordering: true,
             destroy: true,
             scrollX: true,
-            order: [[0, 'desc']] // Default sort by Lean Period (column 0) descending
+            columnDefs: [
+                { 
+                    type: 'date-dd-mm-yyyy', 
+                    targets: 3 // Lean To Date column
+                }
+            ],
+            order: [[3, 'asc']] // Default sort by Lean To Date (column 3) ascending
         });
 
         if (data.length === 0) {
