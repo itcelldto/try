@@ -12,6 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <style>
+        /* Your existing styles here */
         .denomination-table th, .denomination-table td {
             text-align: center;
             vertical-align: middle;
@@ -53,9 +54,26 @@
             border-bottom: 1px solid #dee2e6;
             border-radius: 0 0 5px 5px;
         }
+        .loading-spinner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
     </style>
 </head>
 <body class="container py-4">
+    <!-- Loading Spinner -->
+    <div class="loading-spinner" id="loadingSpinner">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+    </div>
+
     <div class="card">
         <div class="card-header bg-white">
             <h4 class="mb-0">Cashier Assistant</h4>
@@ -158,15 +176,15 @@
         </div>
     </div>
     
-    <!-- Google Sheets API Script -->
-    <script src="https://apis.google.com/js/api.js"></script>
-    
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // Currency denominations (value: count)
-        const denominations = [
+        // Configuration - REPLACE WITH YOUR ACTUAL WEB APP URL
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxQJFIQlYmSZpRal2XxkpzHCA0v4PHK97WEzgPb7uCW6kGUiWGdoXVN-J-IR9G2k2lc/exec";
+        
+        // Currency denominations
+        const DENOMINATIONS = [
             { value: 2000, label: "₹2000" },
             { value: 500, label: "₹500" },
             { value: 200, label: "₹200" },
@@ -179,29 +197,25 @@
             { value: 1, label: "₹1" }
         ];
         
-        // Initialize data structures
+        // State management
         let borrowedAmounts = {};
         let paymentAmounts = {};
         let remainingLimits = {};
         
-        // Google Sheets configuration
-        const apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
-        const spreadsheetId = "14pwf2MVeHg37RRGFgh0Dooy2SCxIOEseu7vTfCRcYSU";
-        const receiptSheetName = "Receipt";
-        const paymentSheetName = "Payment";
-        
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
-            // Load saved basic details from localStorage
             loadBasicDetails();
+            initializeDenominationTables();
             
-            // Initialize denomination tables
+            // Load borrowed amounts when receipt tab is shown
+            document.getElementById('receipt-tab').addEventListener('shown.bs.tab', loadBorrowedAmounts);
+        });
+        
+        // Initialize all tables
+        function initializeDenominationTables() {
             initializeBorrowedDenominations();
             initializePaymentDenominations();
-            
-            // Load borrowed amounts from Google Sheets
-            loadBorrowedAmountsFromSheet();
-        });
+        }
         
         // Load basic details from localStorage
         function loadBasicDetails() {
@@ -223,6 +237,8 @@
             localStorage.setItem('cashierAssistant_treasury', treasury);
             localStorage.setItem('cashierAssistant_pen', pen);
             localStorage.setItem('cashierAssistant_dob', dob);
+            
+            return { treasury, pen, dob };
         }
         
         // Initialize borrowed denominations table
@@ -230,7 +246,7 @@
             const tableBody = document.getElementById('borrowedDenominations');
             tableBody.innerHTML = '';
             
-            denominations.forEach(denom => {
+            DENOMINATIONS.forEach(denom => {
                 borrowedAmounts[denom.value] = 0;
                 
                 const row = document.createElement('tr');
@@ -249,7 +265,7 @@
             const tableBody = document.getElementById('paymentDenominations');
             tableBody.innerHTML = '';
             
-            denominations.forEach(denom => {
+            DENOMINATIONS.forEach(denom => {
                 paymentAmounts[denom.value] = 0;
                 remainingLimits[denom.value] = 0;
                 
@@ -273,16 +289,81 @@
             updateBorrowedAmount();
         }
         
+        // Load borrowed amounts from Google Sheets
+        async function loadBorrowedAmounts() {
+            const { treasury, pen } = saveBasicDetails();
+            
+            if (!treasury || !pen) {
+                console.log("Treasury and PEN required to load borrowed amounts");
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: "getBorrowedAmounts",
+                        treasury: treasury,
+                        pen: pen
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update the borrowed amounts
+                    DENOMINATIONS.forEach((denom, index) => {
+                        borrowedAmounts[denom.value] = result.denominations[index] || 0;
+                        const input = document.getElementById(`borrowed_${denom.value}`);
+                        if (input) input.value = borrowedAmounts[denom.value];
+                        
+                        // Update bundle info
+                        const row = input.closest('tr');
+                        if (row) {
+                            row.querySelector('.bundle-info').textContent = Math.floor(borrowedAmounts[denom.value] / 100);
+                        }
+                    });
+                    
+                    // Update remaining limits
+                    updateRemainingLimits();
+                } else {
+                    throw new Error(result.error || "Failed to load borrowed amounts");
+                }
+            } catch (error) {
+                console.error("Error loading borrowed amounts:", error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            } finally {
+                showLoading(false);
+            }
+        }
+        
         // Update borrowed amounts from input fields
-        function updateBorrowedAmount() {
-            saveBasicDetails();
+        async function updateBorrowedAmount() {
+            const { treasury, pen, dob } = saveBasicDetails();
+            
+            if (!treasury || !pen) {
+                alert("Please enter Treasury and PEN details");
+                return;
+            }
             
             let totalBorrowed = 0;
+            const denominationCounts = [];
             
-            denominations.forEach(denom => {
+            DENOMINATIONS.forEach(denom => {
                 const input = document.getElementById(`borrowed_${denom.value}`);
                 const count = parseInt(input.value) || 0;
                 borrowedAmounts[denom.value] = count;
+                denominationCounts.push(count);
                 
                 // Update bundle info
                 const row = input.closest('tr');
@@ -291,11 +372,48 @@
                 totalBorrowed += count * denom.value;
             });
             
-            // Save to Google Sheets
-            saveBorrowedAmountsToSheet();
+            showLoading(true);
             
-            // Update remaining limits in payment section
-            updateRemainingLimits();
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: "saveReceipt",
+                        treasury: treasury,
+                        pen: pen,
+                        dob: dob,
+                        denominations: denominationCounts
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: result.message,
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    });
+                    
+                    // Update remaining limits
+                    updateRemainingLimits();
+                } else {
+                    throw new Error(result.error || "Failed to save borrowed amounts");
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            } finally {
+                showLoading(false);
+            }
         }
         
         // Calculate denominations for payment amount
@@ -309,12 +427,12 @@
             }
             
             // Reset payment amounts
-            denominations.forEach(denom => {
+            DENOMINATIONS.forEach(denom => {
                 paymentAmounts[denom.value] = 0;
             });
             
             // Calculate denominations (greedy algorithm)
-            denominations.forEach(denom => {
+            DENOMINATIONS.forEach(denom => {
                 if (amount >= denom.value) {
                     const maxPossible = Math.min(
                         Math.floor(amount / denom.value),
@@ -341,7 +459,7 @@
         function updatePaymentTable() {
             let totalAmount = 0;
             
-            denominations.forEach(denom => {
+            DENOMINATIONS.forEach(denom => {
                 const input = document.getElementById(`payment_${denom.value}`);
                 input.value = paymentAmounts[denom.value];
                 
@@ -371,7 +489,7 @@
             
             // Recalculate total
             let totalAmount = 0;
-            denominations.forEach(denom => {
+            DENOMINATIONS.forEach(denom => {
                 totalAmount += paymentAmounts[denom.value] * denom.value;
             });
             
@@ -385,7 +503,7 @@
         
         // Update remaining limits based on borrowed amounts
         function updateRemainingLimits() {
-            denominations.forEach(denom => {
+            DENOMINATIONS.forEach(denom => {
                 remainingLimits[denom.value] = borrowedAmounts[denom.value];
                 
                 const row = document.getElementById(`payment_${denom.value}`).closest('tr');
@@ -394,11 +512,8 @@
         }
         
         // Save payment details to Google Sheets
-        function savePaymentDetails() {
-            saveBasicDetails();
-            
-            const treasury = document.getElementById('treasury').value;
-            const pen = document.getElementById('pen').value;
+        async function savePaymentDetails() {
+            const { treasury, pen } = saveBasicDetails();
             
             if (!treasury || !pen) {
                 alert("Please enter Treasury and PEN details");
@@ -408,14 +523,10 @@
             let totalAmount = 0;
             const denominationCounts = [];
             
-            denominations.forEach(denom => {
+            DENOMINATIONS.forEach(denom => {
                 const count = paymentAmounts[denom.value] || 0;
                 denominationCounts.push(count);
                 totalAmount += count * denom.value;
-                
-                // Update remaining limits (subtract used denominations)
-                borrowedAmounts[denom.value] -= count;
-                remainingLimits[denom.value] = borrowedAmounts[denom.value];
             });
             
             if (totalAmount <= 0) {
@@ -423,133 +534,60 @@
                 return;
             }
             
-            // Prepare data for Google Sheets
-            const paymentData = {
-                treasury: treasury,
-                pen: pen,
-                date: new Date().toISOString().split('T')[0],
-                denominations: denominationCounts,
-                totalAmount: totalAmount
-            };
+            showLoading(true);
             
-            // Save to Google Sheets
-            savePaymentToSheet(paymentData);
-            
-            // Update UI
-            updateRemainingLimits();
-            updatePaymentTable();
-            
-            // Reset payment amount
-            document.getElementById('paymentAmount').value = '';
-        }
-        
-        // Load borrowed amounts from Google Sheets
-        function loadBorrowedAmountsFromSheet() {
-            // Show loading state
-            const spinner = document.createElement('div');
-            spinner.className = 'spinner-border text-primary';
-            document.getElementById('borrowedDenominations').appendChild(spinner);
-            
-            // In a real implementation, you would use the Google Sheets API
-            // This is a simplified example
-            fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${receiptSheetName}?key=${apiKey}`)
-                .then(response => response.json())
-                .then(data => {
-                    // Process the data from the sheet
-                    // This would depend on your specific sheet structure
-                    console.log("Data loaded from sheet:", data);
-                    
-                    // Remove spinner
-                    spinner.remove();
-                    
-                    // For demo purposes, we'll simulate some data
-                    simulateBorrowedAmounts();
-                })
-                .catch(error => {
-                    console.error("Error loading data:", error);
-                    spinner.remove();
-                    simulateBorrowedAmounts(); // Fallback to simulated data
+            try {
+                const response = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: "savePayment",
+                        treasury: treasury,
+                        pen: pen,
+                        date: new Date().toISOString().split('T')[0],
+                        denominations: denominationCounts
+                    })
                 });
-        }
-        
-        // Save borrowed amounts to Google Sheets
-        function saveBorrowedAmountsToSheet() {
-            const treasury = document.getElementById('treasury').value;
-            const pen = document.getElementById('pen').value;
-            
-            if (!treasury || !pen) {
-                alert("Please enter Treasury and PEN details");
-                return;
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: result.message,
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    });
+                    
+                    // Update remaining limits (subtract used denominations)
+                    DENOMINATIONS.forEach(denom => {
+                        borrowedAmounts[denom.value] -= paymentAmounts[denom.value];
+                        remainingLimits[denom.value] = borrowedAmounts[denom.value];
+                    });
+                    
+                    updateRemainingLimits();
+                    updatePaymentTable();
+                    document.getElementById('paymentAmount').value = '';
+                } else {
+                    throw new Error(result.error || "Failed to save payment");
+                }
+            } catch (error) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: error.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            } finally {
+                showLoading(false);
             }
-            
-            const data = {
-                treasury: treasury,
-                pen: pen,
-                date: new Date().toISOString().split('T')[0],
-                denominations: Object.values(borrowedAmounts),
-                totalAmount: calculateTotal(borrowedAmounts)
-            };
-            
-            // In a real implementation, you would use the Google Sheets API
-            // This is a simplified example
-            console.log("Data to save to Receipt sheet:", data);
-            
-            // Simulate successful save
-            Swal.fire({
-                title: 'Success!',
-                text: 'Borrowed amounts updated successfully',
-                icon: 'success',
-                confirmButtonText: 'OK'
-            });
         }
         
-        // Save payment to Google Sheets
-        function savePaymentToSheet(paymentData) {
-            // In a real implementation, you would use the Google Sheets API
-            // This is a simplified example
-            console.log("Data to save to Payment sheet:", paymentData);
-            
-            // Simulate successful save
-            Swal.fire({
-                title: 'Success!',
-                text: 'Payment details saved successfully',
-                icon: 'success',
-                confirmButtonText: 'OK'
-            });
-        }
-        
-        // Calculate total amount from denomination counts
-        function calculateTotal(amounts) {
-            let total = 0;
-            denominations.forEach(denom => {
-                total += amounts[denom.value] * denom.value;
-            });
-            return total;
-        }
-        
-        // Simulate borrowed amounts (for demo when API isn't available)
-        function simulateBorrowedAmounts() {
-            borrowedAmounts = {
-                2000: 500,
-                500: 1000,
-                200: 1500,
-                100: 2000,
-                50: 3000,
-                20: 4000,
-                10: 5000,
-                5: 6000,
-                2: 7000,
-                1: 8000
-            };
-            
-            // Update borrowed amounts table
-            denominations.forEach(denom => {
-                const input = document.getElementById(`borrowed_${denom.value}`);
-                if (input) input.value = borrowedAmounts[denom.value];
-            });
-            
-            // Update remaining limits
-            updateRemainingLimits();
+        // Show/hide loading spinner
+        function showLoading(show) {
+            document.getElementById('loadingSpinner').style.display = show ? 'flex' : 'none';
         }
     </script>
 </body>
