@@ -518,7 +518,7 @@
       document.getElementById('add_button').disabled = disabled;
     }
 
-    // Function to load bill types from Google Sheets
+    // Modified function to load bill types with module filtering
     function loadBillTypes() {
       const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${listSheetName}!A2:A?key=${apiKey}`;
       
@@ -545,11 +545,59 @@
         billTypes.forEach(type => {
           $('#thirdInp').append(`<option value="${type}">${type}</option>`);
         });
+        
+        // Add event listener for Bill Module changes
+        document.getElementById('sixthInp').addEventListener('change', function() {
+          filterBillTypes(this.value);
+        });
       }).fail(function(error) {
         console.error('Error loading bill types:', error);
         $('#thirdInp').empty().append('<option value="">Error loading bill types</option>');
       });
     }
+
+    // New function to filter bill types based on selected module
+   function filterBillTypes(module) {
+  const billTypeSelect = document.getElementById('thirdInp');
+  const currentValue = billTypeSelect.value;
+  
+  // Enable all options first
+  Array.from(billTypeSelect.options).forEach(option => {
+    option.disabled = false;
+    option.style.display = '';
+  });
+  
+  // Disable options based on module selection
+  if (module === '1-BIMS') {
+    // Only allow "3-Contingent Payment"
+    Array.from(billTypeSelect.options).forEach(option => {
+      if (option.value && option.value !== '3-Contingent Payment') {
+        option.disabled = true;
+        option.style.display = 'none';
+      }
+    });
+    
+    // Set to "3-Contingent Payment" if not already set
+    if (currentValue !== '3-Contingent Payment') {
+      billTypeSelect.value = '3-Contingent Payment';
+      getBillNature('3-Contingent Payment');
+    }
+  } 
+  else if (module === '4-SPARK') {
+    // Only allow "1-Salary Payments" and "2-Non Salary HR Claims"
+    Array.from(billTypeSelect.options).forEach(option => {
+      if (option.value && option.value !== '1-Salary Payments' && option.value !== '2-Non Salary HR Claims') {
+        option.disabled = true;
+        option.style.display = 'none';
+      }
+    });
+    
+    // Don't set any default value - clear selection if current value is not allowed
+    if (currentValue !== '1-Salary Payments' && currentValue !== '2-Non Salary HR Claims') {
+      billTypeSelect.value = '';
+    }
+  }
+}
 
     // Modified function to get bill nature with callback
     function getBillNature(billType, callback) {
@@ -755,9 +803,12 @@
         mode: 'no-cors'
       })
       .then(() => {
-        // Clear form fields
+        // Clear form fields thirdInp billNature
         document.getElementById("secondInp").value = '';
+		 document.getElementById("thirdInp").value = '';
         document.getElementById("fifthInp").value = '';
+		 document.getElementById("sixthInp").value = '';
+		  document.getElementById("billNature").value = '';
         document.getElementById("seventhInp").value = ""; // Reset remarks to "***"
         
         addButton.disabled = false;
@@ -932,7 +983,7 @@
     function clearRecord() {
       ["firstInp", "secondInp", "thirdInp", "billNature", "fifthInp", "sixthInp", "seventhInp"]
         .forEach(function(id) {
-          document.getElementById(id).value = id === "seventhInp" ? "***" : "";
+          document.getElementById(id).value = id === "seventhInp" ? "" : "";
         });
       
       // Reset token info display
