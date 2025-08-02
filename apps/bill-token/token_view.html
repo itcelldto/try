@@ -20,6 +20,10 @@
     
     <!-- jQuery UI Datepicker -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+	
+	 <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     
     <style>
         .loading {
@@ -40,6 +44,23 @@
     .select2-container .select2-selection__arrow {
         height: 36px !important;
     }
+	  .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+	  .pdf-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .pdf-btn:hover {
+            background-color: #c82333;
+        }
     </style>
 </head>
 <body class="container py-4" style="background-color: #d7e2ff6e;min-width: 100%;">
@@ -62,8 +83,11 @@
         <br>
 
         <div class="card p-4">
+		        <div class="result-header">
             <h5 id="resultHeading" style="color: #5f87c5;">Bill Details <span id="billCount" style="font-size: 14px; color: #ff0000;"></span></h5>
-            <hr>
+			 <button id="pdfButton" class="pdf-btn" style="display: none;">Download PDF</button>
+            </div>
+			<hr>
             <div class="table-responsive"> <!-- Added table-responsive wrapper -->
                 <table id="resultTable" class="table table-striped table-bordered" style="width:100%">
                     <thead>
@@ -94,7 +118,7 @@
     </div>
     
     <script>
-        
+     let currentData = []; // Store current table data for PDF export
     $(document).ready(function () {
         // Initialize jQuery UI Datepicker
         $("#fromDate, #toDate").datepicker({
@@ -104,6 +128,8 @@
         });
          // Set default dates
     setDefaultDates();
+	  // Initialize PDF button click handler
+            $('#pdfButton').click(generatePDF);
     });
 
   function setDefaultDates() {
@@ -150,15 +176,22 @@
                     let rowToDate = parseDate(row[11]);
                     return rowFromDate >= fromDate && rowToDate <= toDate;
                 });
-
+                   currentData = filteredRows; // Store data for PDF export
                 displayResults(filteredRows);
                 $('.loading').hide();
+				 // Show PDF button if there are results
+                    if (filteredRows.length > 0) {
+                        $('#pdfButton').show();
+                    } else {
+                        $('#pdfButton').hide();
+                    }
                  // Call the new function to update heading
            // updateResultHeading(officeName, filteredRows.length, totalGrossAmount);
             })
             .catch(error => {
                 console.error("Error fetching data: ", error);
                 $('.loading').hide();
+				   $('#pdfButton').hide();
             });
     }
     function updateResultHeading(officeName, totalBills, totalGrossAmount) {
@@ -215,6 +248,103 @@
             Swal.fire('No Records Found', 'No matching records found for the selected criteria.', 'info');
         }
     }
+	
+	function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
+    
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0];
+    
+    const pdfData = currentData.map((row, index) => {
+        const ddoCode = row[2];
+     //   const headOfAccount = headOfAccountCache[ddoCode] || row[6];
+        
+        return [
+            index + 1,
+            row[0],
+            row[1],
+            row[2],
+            row[3],
+            row[4],
+            row[5],
+             row[6],
+			  row[7],
+			   row[8],
+            '' + parseFloat(row[7] || 0).toFixed(2) // Changed from ₹ to Rs.
+        ];
+    });
+    
+    const totalGross = currentData.reduce((sum, row) => sum + (parseFloat(row[7]) || 0), 0);
+    
+    doc.setFontSize(14);
+    doc.text('Bill Date Wise Token Report', 105, 15, { align: 'center' });
+    
+    doc.setFontSize(10);
+    //doc.text(`Bill Nature: ${$('#ddoCode').val()}`, 14, 25);
+    doc.text(`Date Range: ${$('#fromDate').val()} to ${$('#toDate').val()}`, 14, 30);
+    doc.text(`Total Bills: ${currentData.length}`, 14, 35);
+    doc.text(`Total Gross Amount: Rs. ${totalGross.toFixed(2)}`, 14, 40); // Changed here too
+    
+    doc.autoTable({
+        startY: 45,
+        head: [['S.No', 'Token', 'Time', 'DDO', 'Office', 'BRN', 'Bill Type', 'Bill Nature', 'Gross (Rs.)']], // Changed header
+        body: pdfData,
+        theme: 'grid',
+        didParseCell: function(data) {
+            // Prevent automatic footnote generation
+            if (data.cell.text) {
+                data.cell.text = data.cell.text.map(t => t.toString().replace(/¹/g, ''));
+            }
+        },
+        headStyles: {
+            fillColor: [200, 200, 200],
+            textColor: [0, 0, 0],
+            fontStyle: 'bold',
+            fontSize: 8
+        },
+        styles: {
+            cellPadding: 2,
+            fontSize: 7,
+            textColor: [0, 0, 0],
+            lineColor: [0, 0, 0],
+            lineWidth: 0.1
+        },
+        columnStyles: {
+            0: { cellWidth: 10, halign: 'center' },
+            1: { cellWidth: 13, halign: 'center' },
+            2: { cellWidth: 18, halign: 'center' },
+            3: { cellWidth: 20 },
+            4: { cellWidth: 25 },
+            5: { cellWidth: 32, halign: 'center' },
+            6: { cellWidth: 15 },
+            7: { cellWidth: 30 },
+            8: { cellWidth: 20, halign: 'right' }
+        },
+        margin: { left: 10, right: 10 },
+        tableWidth: 'wrap'
+    });
+    
+    doc.autoTable({
+        startY: doc.lastAutoTable.finalY,
+        body: [['', '', '', '', '', '', '', 'Total:', 'Rs. ' + totalGross.toFixed(2)]], // Changed here
+        styles: {
+            fontStyle: 'bold',
+            textColor: [0, 0, 0],
+            fontSize: 8
+        },
+        columnStyles: {
+            8: { halign: 'right' }
+        },
+        margin: { left: 10, right: 10 }
+    });
+    
+    doc.save(`Bill_date_wise_Report_${dateStr}.pdf`);
+}
     </script>
 </body>
 </html>
