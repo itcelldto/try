@@ -325,98 +325,100 @@
             }
         }
         
-        function generatePDF() {
-            // Use jsPDF with autoTable plugin
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({
-                orientation: 'portrait',
-                unit: 'mm',
-                format: 'a4'
-            });
-            
-            // Get current date for filename
-            const today = new Date();
-            const dateStr = today.toISOString().split('T')[0];
-            
-            // Prepare data for PDF (only selected columns)
-            const pdfData = currentData.map(row => {
-                const ddoCode = row[2];
-                const headOfAccount = headOfAccountCache[ddoCode] || row[6];
-                
-                return [
-                    row[0], // Token
-                    row[1], // Time
-                    row[2], // DDO
-                    row[3], // Office
-                    row[4], // BRN
-                    row[5], // Bill Type
-                    headOfAccount, // DDO Head
-                    row[7]  // Gross
-                ];
-            });
-            
-            // Calculate total gross amount
-            const totalGross = currentData.reduce((sum, row) => sum + (parseFloat(row[7]) || 0), 0);
-            
-            // Add title and date to PDF
-            doc.setFontSize(14);
-            doc.setTextColor(0, 0, 0); // Black color
-            doc.text('Bill Nature Wise Token Report', 105, 15, { align: 'center' });
-            
-            doc.setFontSize(10);
-            doc.text(`Bill Nature: ${$('#ddoCode').val()}`, 14, 25);
-            doc.text(`Date Range: ${$('#fromDate').val()} to ${$('#toDate').val()}`, 14, 30);
-            doc.text(`Total Bills: ${currentData.length}`, 14, 35);
-            doc.text(`Total Gross Amount: ₹${totalGross.toFixed(2)}`, 14, 40);
-            
-            // Add the table
-            doc.autoTable({
-                startY: 45,
-                head: [['Token', 'Time', 'DDO', 'Office', 'BRN', 'Bill Type', 'DDO Head', 'Gross']],
-                body: pdfData,
-                theme: 'grid',
-                headStyles: {
-                    fillColor: [200, 200, 200],
-                    textColor: [0, 0, 0],
-                    fontStyle: 'bold'
-                },
-                styles: {
-                    cellPadding: 2,
-                    fontSize: 8,
-                    textColor: [0, 0, 0], // Black text
-                    lineColor: [0, 0, 0],   // Black lines
-                    lineWidth: 0.1
-                },
-                columnStyles: {
-                    0: { cellWidth: 20 }, // Token
-                    1: { cellWidth: 20 }, // Time
-                    2: { cellWidth: 20 }, // DDO
-                    3: { cellWidth: 30 }, // Office
-                    4: { cellWidth: 15 }, // BRN
-                    5: { cellWidth: 20 }, // Bill Type
-                    6: { cellWidth: 30 }, // DDO Head
-                    7: { cellWidth: 20 }  // Gross
-                },
-                margin: { left: 10 }
-            });
-            
-            // Add total row
-            doc.autoTable({
-                startY: doc.lastAutoTable.finalY,
-                body: [['', '', '', '', '', '', 'Total:', totalGross.toFixed(2)]],
-                styles: {
-                    fontStyle: 'bold',
-                    textColor: [0, 0, 0]
-                },
-                columnStyles: {
-                    7: { halign: 'right' }
-                },
-                margin: { left: 10 }
-            });
-            
-            // Save the PDF
-            doc.save(`Bill_Nature_Report_${dateStr}.pdf`);
-        }
+       function generatePDF() {
+    // Use jsPDF with autoTable plugin
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+    });
+    
+    // Get current date for filename
+    const today = new Date();
+    const dateStr = today.toISOString().split('T')[0];
+    
+    // Prepare data for PDF (only selected columns) with serial numbers
+    const pdfData = currentData.map((row, index) => {
+        const ddoCode = row[2];
+        const headOfAccount = headOfAccountCache[ddoCode] || row[6];
+        
+        return [
+            index + 1, // Serial Number
+            row[0], // Token
+            row[1], // Time
+            row[2], // DDO
+            row[3], // Office
+            row[4], // BRN
+            row[5], // Bill Type
+            headOfAccount, // DDO Head
+            row[7]  // Gross
+        ];
+    });
+    
+    // Calculate total gross amount
+    const totalGross = currentData.reduce((sum, row) => sum + (parseFloat(row[7]) || 0), 0);
+    
+    // Add title and date to PDF
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0); // Black color
+    doc.text('Bill Nature Wise Token Report', 105, 15, { align: 'center' });
+    
+    doc.setFontSize(10);
+    doc.text(`Bill Nature: ${$('#ddoCode').val()}`, 14, 25);
+    doc.text(`Date Range: ${$('#fromDate').val()} to ${$('#toDate').val()}`, 14, 30);
+    doc.text(`Total Bills: ${currentData.length}`, 14, 35);
+    doc.text(`Total Gross Amount: ₹${totalGross.toFixed(2)}`, 14, 40);
+    
+    // Add the table
+    doc.autoTable({
+        startY: 45,
+        head: [['S.No', 'Token', 'Time', 'DDO', 'Office', 'BRN', 'Bill Type', 'DDO Head', 'Gross']],
+        body: pdfData,
+        theme: 'grid',
+        headStyles: {
+            fillColor: [200, 200, 200],
+            textColor: [0, 0, 0],
+            fontStyle: 'bold'
+        },
+        styles: {
+            cellPadding: 2,
+            fontSize: 8,
+            textColor: [0, 0, 0], // Black text
+            lineColor: [0, 0, 0],   // Black lines
+            lineWidth: 0.1
+        },
+        columnStyles: {
+            0: { cellWidth: 10 },  // S.No
+            1: { cellWidth: 10 }, // Token
+            2: { cellWidth: 15 }, // Time
+            3: { cellWidth: 15 }, // DDO
+            4: { cellWidth: 25 }, // Office
+            5: { cellWidth: 10 }, // BRN
+            6: { cellWidth: 15 }, // Bill Type
+            7: { cellWidth: 25 }, // DDO Head
+            8: { cellWidth: 15 }  // Gross
+        },
+        margin: { left: 10 }
+    });
+    
+    // Add total row
+    doc.autoTable({
+        startY: doc.lastAutoTable.finalY,
+        body: [['', '', '', '', '', '', '', 'Total:', totalGross.toFixed(2)]],
+        styles: {
+            fontStyle: 'bold',
+            textColor: [0, 0, 0]
+        },
+        columnStyles: {
+            8: { halign: 'right' }
+        },
+        margin: { left: 10 }
+    });
+    
+    // Save the PDF
+    doc.save(`Bill_Nature_Report_${dateStr}.pdf`);
+}
     </script>
 
 </body>
