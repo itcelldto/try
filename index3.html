@@ -795,7 +795,7 @@ background-color: #091c34c7;
 		$('#resend-otp').click(function() {
 			if (currentUser) {
 				// In a real implementation, you would regenerate and send a new OTP here
-				alert(`New OTP would be sent to ${currentUser.email}. For demo, using same OTP: ${currentUser.otp}`);
+				alert(`OTP already sent to ${currentUser.email}. `);
 				$('#otp').val('').focus();
 			}
 		});
