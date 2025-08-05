@@ -393,9 +393,9 @@ background-color: #091c34c7;
                             </div>
                         </div>
                         <div id="otp-error" class="text-center" style="color: #dd4b39; display: none;">Invalid OTP</div>
-                        <div class="text-center" style="margin-top: 10px;">
-                            <span id="resend-otp">Resend OTP</span>
-                        </div>
+                     <div class="text-center" style="margin-top: 10px;">
+    <a href="javascript:void(0)" id="find-otp-link">Where do I find OTP?</a>
+</div>
                     </form>
                 </div>
             </div>
@@ -743,155 +743,23 @@ background-color: #091c34c7;
 				});
 		});
 		
-		// Handle OTP form submission (step 2 - OTP verification)
-		$('#otp-form').submit(function(e) {
-			e.preventDefault();
-			
-			// Get button and disable it
-			const otpButton = $('#verify-otp-button');
-			otpButton.prop('disabled', true);
-			otpButton.addClass('loading');
-			
-			const enteredOtp = $('#otp').val().trim();
-			
-			// Show loading state
-			$('#otp-error').hide();
-			
-			// Verify OTP (simple comparison for now)
-			if (currentUser && enteredOtp === currentUser.otp) {
-				// Successful login
-				$('#otp-error').hide();
-				$('#login-overlay').hide();
-				
-				// Display treasury name in sidebar
-				$('#treasury-name-display').text(currentUser.treasuryName);
-				
-				// Store user information in session storage
-				sessionStorage.setItem('treasuryName', currentUser.treasuryName);
-				sessionStorage.setItem('userName', currentUser.userName);
-				sessionStorage.setItem('userRole', currentUser.userRole);
-				
-				// Update user display in navbar
-				$('#session-storage-value').text(currentUser.userName);
-				$('#user-name-display').text(currentUser.treasuryName);
-				$('#user-role-display').text(currentUser.userRole);
-				
-				// Show the main content wrapper
-				$('#main-wrapper').show();
-				
-				// Initialize the main application with the menu sheet name
-				initializeApplication(currentUser.menuSheet);
-			} else {
-				// Failed OTP verification
-				$('#otp-error').text('Invalid OTP').show();
-			}
-			
-			// Re-enable button
-			otpButton.prop('disabled', false);
-			otpButton.removeClass('loading');
-		});
-		
-		// Handle resend OTP click
-	// Replace the resend OTP click handler with this:
-document.getElementById("resend-otp").onclick = function(e) {
+	// Handle "Where do I find OTP?" click
+document.getElementById("find-otp-link").onclick = function(e) {
     e.preventDefault();
     
-    if (!currentUser) return;
+    if (!currentUser || !currentUser.email) {
+        alert("Login information not available. Please try logging in again.");
+        return;
+    }
     
-    // Generate new 4-digit OTP
-    const newOtp = Math.floor(1000 + Math.random() * 9000).toString();
+    const today = new Date().toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    }).replace(/\//g, '-');
     
-    // Show loading state
-    const resendLink = document.getElementById("resend-otp");
-    const spinner = document.getElementById("otp-spinner");
-    const message = document.getElementById("otp-sent-message");
-    
-    resendLink.style.display = "none";
-    spinner.style.display = "inline-block";
-    message.style.display = "none";
-    
-    // Prepare form data
-    const formData = new FormData();
-    formData.append("action", "updateOtp");
-    formData.append("rowIndex", currentUser.rowIndex + 2); // Adding 2 because sheet data starts from row 2
-    formData.append("newOtp", newOtp);
-    
-    // Make the request
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "https://script.google.com/macros/s/AKfycbyLfXh4vTWrlrwJioM2RxKYUsafmWJ4HfA8WzxYTTxPmgPWaZZBuM8yQ3k5hT6JRW3DOQ/exec", true);
-    
-    xhr.onload = function() {
-        // Hide spinner and show the link again
-        spinner.style.display = "none";
-        resendLink.style.display = "inline";
-        
-        if (xhr.status == 200) {
-            // Success - update local OTP reference
-            currentUser.otp = newOtp;
-            
-            // Show success message
-            message.style.display = "block";
-            setTimeout(() => {
-                message.style.display = "none";
-            }, 3000);
-            
-            // Focus on OTP field
-            document.getElementById("otp").value = "";
-            document.getElementById("otp").focus();
-        } else {
-            // Error handling
-            alert("Failed to generate new OTP. Please try again.");
-            console.error("Error:", xhr.responseText);
-        }
-    };
-    
-    xhr.onerror = function() {
-        spinner.style.display = "none";
-        resendLink.style.display = "inline";
-        alert("Network error. Please check your connection and try again.");
-    };
-    
-    xhr.send(formData);
+    alert(`Login OTP for ${today} is already sent to ${currentUser.email}.\n\nIf you didn't receive it or have any issues, please contact administrator.`);
 };
-
-// Add this function to update OTP in Google Sheet
-function updateOtpInSheet(rowIndex, newOtp) {
-    return new Promise((resolve, reject) => {
-        const scriptUrl = 'https://script.google.com/macros/s/AKfycbyLfXh4vTWrlrwJioM2RxKYUsafmWJ4HfA8WzxYTTxPmgPWaZZBuM8yQ3k5hT6JRW3DOQ/exec';
-        
-        // Prepare data to send to Google Apps Script
-        const payload = {
-            action: 'updateOtp',
-            rowIndex: rowIndex + 2, // Adding 2 because sheet data starts from row 2 (1-based index)
-            newOtp: newOtp
-        };
-        
-        // Make POST request to Google Apps Script
-        fetch(scriptUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                resolve();
-            } else {
-                reject(data.error || 'Unknown error');
-            }
-        })
-        .catch(error => {
-            reject(error);
-        });
-    });
-}
 		
 		// Function to initialize the application after successful login
 		function initializeApplication(menuSheetName) {
