@@ -3,7 +3,18 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>Help Desk | IT Cell Treasury </title>
+    <title>IT Cell HelpDesk</title>
+    <!-- Link the manifest -->
+    <link rel="manifest" href="/try/manifest.json">
+    <!-- Theme color for mobile browsers -->
+    <meta name="theme-color" content="#3367D6">
+    <!-- iOS Safari PWA support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/try/icons/icon-192x192.png">
+    <!-- Favicons -->
+    <link href="./icons/favicon.png" rel="icon">
+    <link href="./icons/favicon.png" rel="apple-touch-icon">
     <!-- Tell the browser to be responsive -->
     <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
     <!-- Bootstrap 3.3.7 -->
@@ -16,6 +27,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/css/AdminLTE.min.css">
     <!-- AdminLTE Skins -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/css/skins/_all-skins.min.css">
+    <link rel="stylesheet" href="https://adminlte.io/themes/AdminLTE/plugins/pace/pace.min.css">	
     <style>
 	.skin-blue .main-header .logo {
   background-color: #1fadffb2;
@@ -24,6 +36,9 @@
 }
 	.skin-blue .main-header .navbar {
   background-color: #1fadff;
+}
+	    .skin-blue .sidebar-menu>li>a:hover {
+    border-left: 3px solid #0095ec;
 }
         #current-date-time {
             font-family: Arial, sans-serif;
@@ -44,15 +59,19 @@
             top: 0;
             z-index: 1000;
             background: #f8f9fa;
-            padding: 5px;
+            padding: 8.9px;
             border-bottom: 1px solid #ddd;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        #news-reel {
-            font-weight: normal;
-            color: #333;
-        }
+       #news-reel {
+    font-weight: normal;
+    color: #333;
+    white-space: nowrap; /* Prevent text wrapping */
+    display: block; /* Ensure it's block level */
+    width: 100%; /* Full width */
+    overflow: hidden; /* Hide overflow */
+}
         
         /* Login overlay styles */
         .login-overlay {
@@ -62,23 +81,37 @@
             right: 0;
             bottom: 0;
             background-color: rgb(199 199 199);
-            z-index: 9999;
+            z-index: 99999;
             display: flex;
             align-items: center;
             justify-content: center;
+            background-color: #06002c;		
+	    background: url('./img/bg1.jpg') transparent;
+            background-size: cover;
+           
         }
         
         .login-box {
             width: 360px;
         }
+	    .btn.btn-flat {
+  border-radius: 16px;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  border-width: 1px;
+  background-color: #0aa5ff;
+}
         
         .login-box-body {
-            background: #fff;
+            background-color: rgb(255 255 255 / 68%);
+            -webkit-backdrop-filter: saturate(180%) blur(2px);
+            backdrop-filter: saturate(180%) blur(2px);
             padding: 20px;
             border-top: 0;
             color: #666;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-radius: 3px;
+            border-radius: 15px;
         }
         
         .login-logo {
@@ -184,9 +217,113 @@
           /*  padding: 15px;*/
             overflow: auto;
         }
+
+        /* Button loading spinner styles */
+        #login-button {
+            position: relative;
+        }
+
+        #login-button .loading-spinner {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #3c8dbc;
+            border-radius: 16px;
+        }
+
+        #login-button .button-text {
+            visibility: visible;
+        }
+
+        #login-button.loading .button-text {
+            visibility: hidden;
+        }
+
+        #login-button.loading .loading-spinner {
+            display: flex !important;
+        }
+        
+        /* Hide main content initially */
+        .wrapper {
+            display: none;
+        }
+	 .skin-blue .main-sidebar {
+    background-color: #222d32;
+  background: url(./img/bg-sidebar1.jpg) #1d2362;
+    background-size: cover;
+}
+/* new theme styles */
+	    .sidebar {
+background-color: #091c34c7;
+		      
+}
+	    .skin-blue .sidebar-menu>li>a:hover {
+    border-left: 3px solid #81cb0b;
+}
+.skin-blue .sidebar-menu>li:hover>a, .skin-blue .sidebar-menu>li.active>a, .skin-blue .sidebar-menu>li.menu-open>a {
+    color: #fff;
+    background: #004ca0e8;
+}
+
+.skin-blue .sidebar a:hover {
+    text-decoration: none;
+}
+.skin-blue .main-header .logo {
+    background-color: #0e56d1;
+}
+
+/* Custom navbar styles */
+.navbar-custom-menu {
+    float: right;
+    margin-right: 10px;
+}
+
+.navbar-custom-menu .user-image {
+    width: 25px;
+    height: 25px;
+    margin-right: 5px;
+}
+
+.user-header {
+    height: auto;
+    padding: 10px;
+    text-align: center;
+    background: #3c8dbc;
+}
+
+.user-header img {
+    width: 80px;
+    height: 80px;
+    border: 3px solid #fff;
+}
+
+.user-footer {
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+
+.user-footer .btn {
+    margin: 0 5px;
+}
+
     </style>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/try/sw.js', { scope: '/try/' })
+        .then(reg => console.log('Service Worker registered'))
+        .catch(err => console.log('Registration failed:', err));
+    });
+  }
+</script>
 </head>
-<body class="hold-transition skin-blue sidebar-mini">
+<body class="hold-transition skin-blue sidebar-mini" style="background-color: #06002c;	">
     <!-- Login Overlay (shown by default) -->
     <div class="login-overlay" id="login-overlay">
         <div class="login-box">
@@ -194,7 +331,7 @@
                 <a href="#"><b>IT Cell</b> Help Desk</a>
             </div>
             <div class="login-box-body">
-			<h3 style="text-align: center;color: #c5c5c5;font-weight: 600;">eAdmin- Dashboard </h3>
+			<h3 style="text-align: center;color: #06002c9c;font-weight: 600;">eAdmin </h3>
                 <p class="login-box-msg">Sign in to start your session</p>
                 <form id="login-form">
                     <div class="form-group has-feedback">
@@ -207,7 +344,10 @@
                     </div>
                     <div class="row">
                         <div class="col-xs-12">
-                            <button type="submit" class="btn btn-primary btn-block btn-flat">Sign In</button>
+                            <button type="submit" class="btn btn-primary btn-block btn-flat" id="login-button">
+                                <span class="button-text">Sign In</span>
+                                <span class="loading-spinner hidden"><i class="fa fa-spinner fa-spin"></i>  Authenticating ...</span>
+                            </button>
                         </div>
                     </div>
                     <div id="login-error" class="text-center">Invalid User ID or Password</div>
@@ -240,11 +380,11 @@ function openForgotPasswordPopup() {
     </div>
 
     <!-- Main Content (hidden initially) -->
-    <div class="wrapper">
+    <div class="wrapper" id="main-wrapper">
         <!-- Main Header -->
         <header class="main-header">
             <!-- Logo -->
-            <a href="ithd.html" class="logo">
+            <a href="" class="logo">
                 <span class="logo-mini"><b>IT</b>HD</span>
                 <span class="logo-lg"><b>IT Cell</b>Help Desk</span>
             </a>
@@ -254,8 +394,44 @@ function openForgotPasswordPopup() {
                 <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
                     <span class="sr-only">Toggle navigation</span>
                 </a>
+		     <div class="pull-left">
+              <h4 style="font-size: 25px;color: #ecf0f5;font-weight: bold;text-shadow: 2px 2px #262626;">eAdmin</h4>
+            </div>
                 <!-- Current Date and Time -->
                 <span id="current-date-time" style="float: right; padding: 15px;  color: #fff;"></span>
+                
+                <!-- Custom Menu Section -->
+                <div class="navbar-custom-menu">
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown user user-menu">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                                <img src="./img/user.png" class="user-image" alt="User Image">
+                                <span class="hidden-xs" id="session-storage-value"></span>
+                            </a>
+                            <ul class="dropdown-menu"style="box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);">
+                                <!-- User image -->
+                                <li class="user-header">
+                                    <img src="./img/user.png" class="img-circle" alt="User Image">
+                                    <p id="user-name-display">
+                                        <small id="user-name-display"></small>
+                                    </p>
+									<p id="user-role-display">
+                                        <small id="user-role-display"></small>
+                                    </p>
+                                </li>
+                                <!-- Menu Footer-->
+                                <li class="user-footer">
+                                    <div class="pull-left">
+                                        <a href="#" class="btn btn-default btn-flat">Profile</a>
+                                    </div>
+                                    <div class="pull-right">
+                                        <a href="#" class="btn btn-default btn-flat" onclick="window.location.reload(); return false;">Sign out</a>
+                                    </div>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
             </nav>
         </header>
         <!-- Left side column. contains the logo and sidebar -->
@@ -266,12 +442,9 @@ function openForgotPasswordPopup() {
             <!-- sidebar: style can be found in sidebar.less -->
             <section class="sidebar">
                 <!-- Sidebar Menu -->
-                <ul class="sidebar-menu" data-widget="tree" id="sidebar-menu">
+                <ul class="sidebar-menu" data-widget="tree" id="sidebar-menu" >
                     <!-- Menu items will be dynamically populated here -->
                 </ul>
-				<ul class="sidebar-menu" data-widget="tree" >
-				<li class="treeview"><a href="#" onclick="window.location.reload(); return false;"><i class="glyphicon glyphicon-log-out"></i> Logout</a>></li>
-				</ul>
                 <!-- /.sidebar-menu -->
             </section>
             <!-- /.sidebar -->
@@ -304,7 +477,7 @@ function openForgotPasswordPopup() {
             <div class="pull-right hidden-xs">
                 Version 1 
             </div>
-            <strong>Copyright &copy; 2025 <a href="#">IT Cell Treasury</a>.</strong> All rights reserved.
+            <strong>Copyright &copy; 2025 <a href="#">IT Cell HelpDesk</a>.</strong> All rights reserved.
         </footer>
     </div>
 
@@ -314,7 +487,7 @@ function openForgotPasswordPopup() {
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <!-- AdminLTE App -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/2.4.8/js/adminlte.min.js"></script>
-
+    <script src="https://adminlte.io/themes/AdminLTE/bower_components/PACE/pace.min.js"></script>
     <script>
 	// Set inactivity timeout to 15 minutes (900,000 milliseconds)
 	const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
@@ -466,48 +639,84 @@ function openForgotPasswordPopup() {
 		$('#login-form').submit(function(e) {
 			e.preventDefault();
 			
+			// Get button and disable it
+			const loginButton = $('#login-button');
+			loginButton.prop('disabled', true);
+			loginButton.addClass('loading');
+			
 			const userId = $('#userid').val().trim();
 			const password = $('#password').val().trim();
 			
-			// Fetch credentials from Google Sheet
+			// Show loading state
+			$('#login-error').hide();
+			
+			// Fetch credentials
 			const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
 			
-			$.get(settingsUrl, function(data) {
-				treasurySettings = data.values;
-				let loginSuccessful = false;
-				let treasuryName = '';
-				
-				// Check each row for matching credentials
-				for (let i = 0; i < treasurySettings.length; i++) {
-					const row = treasurySettings[i];
-					if (row[1] === userId && row[2] === password) {
-						loginSuccessful = true;
-						treasuryName = row[0]; // A column - Treasury name
-						treasuryRow = i; // Store the row index for later use
-						break;
+			fetch(settingsUrl)
+				.then(response => {
+					if (!response.ok) {
+						throw new Error('Network response was not ok');
 					}
-				}
-				
-				if (loginSuccessful) {
-    // Successful login
-    $('#login-error').hide();
-    $('#login-overlay').hide();
-    
-    // Display treasury name in sidebar
-    $('#treasury-name-display').text(treasuryName);
-    
-    // Store treasury name in session storage
-    sessionStorage.setItem('treasuryName', treasuryName);
-    
-    // Initialize the main application with the menu sheet name from column F
-    initializeApplication(treasurySettings[treasuryRow][5] || 'nav-links');
-} else {
-					// Failed login
-					$('#login-error').show();
-				}
-			}).fail(function() {
-				$('#login-error').text('Error connecting to server').show();
-			});
+					return response.json();
+				})
+				.then(data => {
+					treasurySettings = data.values;
+					let loginSuccessful = false;
+					let treasuryName = '';
+					let userName = '';
+					let userRole = '';
+					
+					// Check each row for matching credentials
+					for (let i = 0; i < treasurySettings.length; i++) {
+						const row = treasurySettings[i];
+						if (row[1] === userId && row[2] === password) {
+							loginSuccessful = true;
+							treasuryName = row[0]; // A column - Treasury name
+							userName = row[1] || userId; // D column - User Name
+							userRole = row[3] || UserRole; // E column - User Role
+							treasuryRow = i; // Store the row index for later use
+							break;
+						}
+					}
+					
+					if (loginSuccessful) {
+						// Successful login
+						$('#login-error').hide();
+						$('#login-overlay').hide();
+						
+						// Display treasury name in sidebar
+						$('#treasury-name-display').text(treasuryName);
+						
+						// Store user information in session storage
+						sessionStorage.setItem('treasuryName', treasuryName);
+						sessionStorage.setItem('userName', userName);
+						sessionStorage.setItem('userRole', userRole);
+						
+						// Update user display in navbar
+						$('#session-storage-value').text(userName);
+						$('#user-name-display').text(treasuryName);
+						$('#user-role-display').text(userRole);
+						
+						// Show the main content wrapper
+						$('#main-wrapper').show();
+						
+						// Initialize the main application with the menu sheet name from column F
+						initializeApplication(treasurySettings[treasuryRow][5] || 'nav-links');
+					} else {
+						// Failed login
+						$('#login-error').text('Invalid User ID or Password').show();
+					}
+				})
+				.catch(error => {
+					console.error('Error:', error);
+					$('#login-error').text('Error connecting to server. Please try again later.').show();
+				})
+				.finally(() => {
+					// Re-enable button
+					loginButton.prop('disabled', false);
+					loginButton.removeClass('loading');
+				});
 		});
 		
 		// Function to initialize the application after successful login
@@ -540,64 +749,78 @@ function openForgotPasswordPopup() {
 			});
 
 			// Fetch and populate the sidebar menu
-			$.get(menuUrl, function(data) {
-				const rows = data.values;
-				let currentMainMenu = '';
-				let mainMenuLi = null;
-				let subMenuUl = null;
-				let firstSubmenuItem = null;
+			fetch(menuUrl)
+				.then(response => response.json())
+				.then(data => {
+					const rows = data.values;
+					let currentMainMenu = '';
+					let mainMenuLi = null;
+					let subMenuUl = null;
+					let firstSubmenuItem = null;
 
-				rows.slice(1).forEach((row, index) => {
-					const mainMenu = row[0];
-					const subMenu = row[1];
-					const subMenuLink = row[2];
-					const dynamicContent = row[3]; // Content from column D
+					rows.slice(1).forEach((row, index) => {
+						const mainMenu = row[0];
+						const subMenu = row[1];
+						const subMenuLink = row[2];
+						const dynamicContent = row[3]; // Content from column D
 
-					if (mainMenu !== currentMainMenu) {
-						currentMainMenu = mainMenu;
-						mainMenuLi = $('<li>').addClass('treeview');
-						subMenuUl = $('<ul>').addClass('treeview-menu');
+						if (mainMenu !== currentMainMenu) {
+							currentMainMenu = mainMenu;
+							mainMenuLi = $('<li>').addClass('treeview');
+							subMenuUl = $('<ul>').addClass('treeview-menu');
 
-						// Add glyphicon-plus icon before the main menu text
-						const mainMenuLink = $('<a>')
-							.append($('<i>').addClass('glyphicon glyphicon-plus'))
-							.append(' ' + mainMenu)
-							.append($('<i>').addClass('fa fa-angle-left pull-right'));
+							// Add glyphicon-plus icon before the main menu text
+							const mainMenuLink = $('<a>')
+								.append($('<i>').addClass('glyphicon glyphicon-plus'))
+								.append(' ' + mainMenu)
+								.append($('<i>').addClass('fa fa-angle-left pull-right'));
 
-						mainMenuLi.append(mainMenuLink);
-						mainMenuLi.append(subMenuUl);
-						$('#sidebar-menu').append(mainMenuLi);
-					}
-
-					if (subMenu && subMenuLink) {
-						const subMenuLi = $('<li>').append(
-							$('<a>').attr('href', '#').text(subMenu).click(function(e) {
-								e.preventDefault();
-								loadDynamicContent(dynamicContent);
-							})
-						);
-						subMenuUl.append(subMenuLi);
-						
-						// Store the first submenu item to load its content automatically
-						if (!firstSubmenuItem && dynamicContent) {
-							firstSubmenuItem = dynamicContent;
+							mainMenuLi.append(mainMenuLink);
+							mainMenuLi.append(subMenuUl);
+							$('#sidebar-menu').append(mainMenuLi);
 						}
+
+						if (subMenu && subMenuLink) {
+							const subMenuLi = $('<li>').append(
+								$('<a>').attr('href', '#').text(subMenu).click(function(e) {
+									e.preventDefault();
+									loadDynamicContent(dynamicContent);
+								})
+							);
+							subMenuUl.append(subMenuLi);
+							
+							// Store the first submenu item to load its content automatically
+							if (!firstSubmenuItem && dynamicContent) {
+								firstSubmenuItem = dynamicContent;
+							}
+						}
+					});
+					
+					// Reinitialize the tree after adding new elements
+					$('[data-widget="tree"]').tree();
+					$('#loading-spinner').addClass('hidden');
+					
+					// Load the first submenu item's content automatically
+					if (firstSubmenuItem) {
+						loadDynamicContent(firstSubmenuItem);
+					} else {
+						$('#dynamic-content').html('<div class="alert alert-info">Select a menu item to view content</div>');
 					}
+				})
+				.catch(error => {
+					console.error('Error loading menu:', error);
+					$('#dynamic-content').html('<div class="alert alert-danger">Failed to load menu. Please try again later.</div>');
+					$('#loading-spinner').addClass('hidden');
 				});
-				
-				// Reinitialize the tree after adding new elements
-				$('[data-widget="tree"]').tree();
-				$('#loading-spinner').addClass('hidden');
-				
-				// Load the first submenu item's content automatically
-				if (firstSubmenuItem) {
-					loadDynamicContent(firstSubmenuItem);
-				} else {
-					$('#dynamic-content').html('<div class="alert alert-info">Select a menu item to view content</div>');
-				}
-			});
 		}
 	});
+	     $('.ajax').click(function () {
+    $.ajax({
+      url: '#', success: function (result) {
+        $('.ajax-content').html('<hr>Ajax Request Completed !')
+      }
+    })
+  })
     </script>
 </body>
 </html>
