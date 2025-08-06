@@ -30,302 +30,301 @@
     <link rel="stylesheet" href="https://adminlte.io/themes/AdminLTE/plugins/pace/pace.min.css">	
     <style>
 	.skin-blue .main-header .logo {
-  background-color: #1fadffb2;
-  color: #fff;
-  border-bottom: 0 solid transparent;
-}
+        background-color: #1fadffb2;
+        color: #fff;
+        border-bottom: 0 solid transparent;
+    }
 	.skin-blue .main-header .navbar {
-  background-color: #1fadff;
-}
-	    .skin-blue .sidebar-menu>li>a:hover {
-    border-left: 3px solid #0095ec;
-}
-        #current-date-time {
-            font-family: Arial, sans-serif;
-            font-weight: bold;
-            margin-right: 20px;
-        }
+        background-color: #1fadff;
+    }
+	.skin-blue .sidebar-menu>li>a:hover {
+        border-left: 3px solid #0095ec;
+    }
+    #current-date-time {
+        font-family: Arial, sans-serif;
+        font-weight: bold;
+        margin-right: 20px;
+    }
 
-        .content {
-            padding: 0px !important;
-        }
-        .treeview-menu>li>a {
-            padding: 5px 5px 5px 35px;
-            display: block;
-            font-size: 14px;
-        }
-        .running-text {
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            background: #f8f9fa;
-            padding: 8.9px;
-            border-bottom: 1px solid #ddd;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
+    .content {
+        padding: 0px !important;
+    }
+    .treeview-menu>li>a {
+        padding: 5px 5px 5px 35px;
+        display: block;
+        font-size: 14px;
+    }
+    .running-text {
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: #f8f9fa;
+        padding: 8.9px;
+        border-bottom: 1px solid #ddd;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
 
-       #news-reel {
-    font-weight: normal;
-    color: #333;
-    white-space: nowrap; /* Prevent text wrapping */
-    display: block; /* Ensure it's block level */
-    width: 100%; /* Full width */
-    overflow: hidden; /* Hide overflow */
-}
-        
-        /* Login overlay styles */
-        .login-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgb(199 199 199);
-            z-index: 99999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #06002c;		
-	    background: url('./img/bg1.jpg') transparent;
-            background-size: cover;
-           
-        }
-        
-        .login-box {
-            width: 360px;
-        }
-	    .btn.btn-flat {
-  border-radius: 16px;
-  -webkit-box-shadow: none;
-  -moz-box-shadow: none;
-  box-shadow: none;
-  border-width: 1px;
-  background-color: #0aa5ff;
-}
-        
-        .login-box-body {
-            background-color: rgb(255 255 255 / 68%);
-            -webkit-backdrop-filter: saturate(180%) blur(2px);
-            backdrop-filter: saturate(180%) blur(2px);
-            padding: 20px;
-            border-top: 0;
-            color: #666;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border-radius: 15px;
-        }
-        
-        .login-logo {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        
-        .login-logo a {
-            font-size: 24px;
-            font-weight: bold;
-            color: #3c8dbc;
-        }
-        
-        .form-control {
-            border-radius: 3px;
-            box-shadow: none;
-            border-color: #d2d6de;
-        }
-        
-        .btn {
-            border-radius: 3px;
-            font-weight: 600;
-        }
-        
-        .btn-primary {
-            background-color: #3c8dbc;
-            border-color: #367fa9;
-        }
-        
-        .btn-primary:hover {
-            background-color: #367fa9;
-            border-color: #2d6a91;
-        }
-        
-        #login-error {
-            color: #dd4b39;
-            margin-top: 10px;
-            display: none;
-        }
-        
-        /* Loading spinner styles */
-        .loading-container {
-            position: relative;
-            width: 100%;
-            height: calc(100vh - 1px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            
-        }
-        
-        .loading-content {
-            text-align: center;
-        }
-        
-        .loading-content img {
-            width: 50px;
-            height: 50px;
-        }
-        
-        .loading-content p {
-            margin-top: 10px;
-            font-weight: bold;
-            color: #555;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-        
-        /* Forgot password link */
-        .forgot-password {
-            text-align: center;
-            margin-top: 10px;
-        }
-        
-        .forgot-password a {
-            color: #666;
-            cursor: pointer;
-        }
-        
-        .forgot-password a:hover {
-            color: #3c8dbc;
-            text-decoration: underline;
-        }
-        
-        /* Treasury name in sidebar */
-        .treasury-name {
-          padding: 10px;
-          text-align: left;
-          font-weight: 400;
-          font-size: 12px;
-          color: #b8c7ce;
-          background-color: #0000005e;
-          border-bottom: 1px solid #3c8dbc5e;
-          overflow: hidden;
-        }
-        
-        /* Dynamic content area */
-        #dynamic-content {
-            width: 100%;
-            min-height: calc(100vh - 100px);
-          /*  padding: 15px;*/
-            overflow: auto;
-        }
+    #news-reel {
+        font-weight: normal;
+        color: #333;
+        white-space: nowrap;
+        display: block;
+        width: 100%;
+        overflow: hidden;
+    }
+    
+    /* Login overlay styles */
+    .login-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgb(199 199 199);
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #06002c;		
+        background: url('./img/bg1.jpg') transparent;
+        background-size: cover;
+    }
+    
+    .login-box {
+        width: 360px;
+    }
+	.btn.btn-flat {
+        border-radius: 16px;
+        -webkit-box-shadow: none;
+        -moz-box-shadow: none;
+        box-shadow: none;
+        border-width: 1px;
+        background-color: #0aa5ff;
+    }
+    
+    .login-box-body {
+        background-color: rgb(255 255 255 / 68%);
+        -webkit-backdrop-filter: saturate(180%) blur(2px);
+        backdrop-filter: saturate(180%) blur(2px);
+        padding: 20px;
+        border-top: 0;
+        color: #666;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        border-radius: 15px;
+    }
+    
+    .login-logo {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    
+    .login-logo a {
+        font-size: 24px;
+        font-weight: bold;
+        color: #3c8dbc;
+    }
+    
+    .form-control {
+        border-radius: 3px;
+        box-shadow: none;
+        border-color: #d2d6de;
+    }
+    
+    .btn {
+        border-radius: 3px;
+        font-weight: 600;
+    }
+    
+    .btn-primary {
+        background-color: #3c8dbc;
+        border-color: #367fa9;
+    }
+    
+    .btn-primary:hover {
+        background-color: #367fa9;
+        border-color: #2d6a91;
+    }
+    
+    #login-error {
+        color: #dd4b39;
+        margin-top: 10px;
+        display: none;
+    }
+    
+    /* Loading spinner styles */
+    .loading-container {
+        position: relative;
+        width: 100%;
+        height: calc(100vh - 1px);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .loading-content {
+        text-align: center;
+    }
+    
+    .loading-content img {
+        width: 50px;
+        height: 50px;
+    }
+    
+    .loading-content p {
+        margin-top: 10px;
+        font-weight: bold;
+        color: #555;
+    }
+    
+    .hidden {
+        display: none !important;
+    }
+    
+    /* Forgot password link */
+    .forgot-password {
+        text-align: center;
+        margin-top: 10px;
+    }
+    
+    .forgot-password a {
+        color: #666;
+        cursor: pointer;
+    }
+    
+    .forgot-password a:hover {
+        color: #3c8dbc;
+        text-decoration: underline;
+    }
+    
+    /* Treasury name in sidebar */
+    .treasury-name {
+        padding: 10px;
+        text-align: left;
+        font-weight: 400;
+        font-size: 12px;
+        color: #b8c7ce;
+        background-color: #0000005e;
+        border-bottom: 1px solid #3c8dbc5e;
+        overflow: hidden;
+    }
+    
+    /* Dynamic content area */
+    #dynamic-content {
+        width: 100%;
+        min-height: calc(100vh - 100px);
+        overflow: auto;
+    }
 
-        /* Button loading spinner styles */
-        #login-button {
-            position: relative;
-        }
+    /* Button loading spinner styles */
+    #login-button {
+        position: relative;
+    }
 
-        #login-button .loading-spinner {
-            position: absolute;
-            left: 0;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background-color: #3c8dbc;
-            border-radius: 16px;
-        }
+    #login-button .loading-spinner {
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #3c8dbc;
+        border-radius: 16px;
+    }
 
-        #login-button .button-text {
-            visibility: visible;
-        }
+    #login-button .button-text {
+        visibility: visible;
+    }
 
-        #login-button.loading .button-text {
-            visibility: hidden;
-        }
+    #login-button.loading .button-text {
+        visibility: hidden;
+    }
 
-        #login-button.loading .loading-spinner {
-            display: flex !important;
-        }
-        
-        /* Hide main content initially */
-        .wrapper {
-            display: none;
-        }
-	 .skin-blue .main-sidebar {
-    background-color: #222d32;
-  background: url(./img/bg-sidebar1.jpg) #1d2362;
-    background-size: cover;
-}
-/* new theme styles */
-	    .sidebar {
-background-color: #091c34c7;
-		      
-}
-	    .skin-blue .sidebar-menu>li>a:hover {
-    border-left: 3px solid #81cb0b;
-}
-.skin-blue .sidebar-menu>li:hover>a, .skin-blue .sidebar-menu>li.active>a, .skin-blue .sidebar-menu>li.menu-open>a {
-    color: #fff;
-    background: #004ca0e8;
-}
+    #login-button.loading .loading-spinner {
+        display: flex !important;
+    }
+    
+    /* Hide main content initially */
+    .wrapper {
+        display: none;
+    }
+	.skin-blue .main-sidebar {
+        background-color: #222d32;
+        background: url(./img/bg-sidebar1.jpg) #1d2362;
+        background-size: cover;
+    }
+    /* new theme styles */
+	.sidebar {
+        background-color: #091c34c7;
+    }
+	.skin-blue .sidebar-menu>li>a:hover {
+        border-left: 3px solid #81cb0b;
+    }
+    .skin-blue .sidebar-menu>li:hover>a, .skin-blue .sidebar-menu>li.active>a, .skin-blue .sidebar-menu>li.menu-open>a {
+        color: #fff;
+        background: #004ca0e8;
+    }
 
-.skin-blue .sidebar a:hover {
-    text-decoration: none;
-}
-.skin-blue .main-header .logo {
-    background-color: #0e56d1;
-}
+    .skin-blue .sidebar a:hover {
+        text-decoration: none;
+    }
+    .skin-blue .main-header .logo {
+        background-color: #0e56d1;
+    }
 
-/* Custom navbar styles */
-.navbar-custom-menu {
-    float: right;
-    margin-right: 10px;
-}
+    /* Custom navbar styles */
+    .navbar-custom-menu {
+        float: right;
+        margin-right: 10px;
+    }
 
-.navbar-custom-menu .user-image {
-    width: 25px;
-    height: 25px;
-    margin-right: 5px;
-}
+    .navbar-custom-menu .user-image {
+        width: 25px;
+        height: 25px;
+        margin-right: 5px;
+    }
 
-.user-header {
-    height: auto;
-    padding: 10px;
-    text-align: center;
-    background: #3c8dbc;
-}
+    .user-header {
+        height: auto;
+        padding: 10px;
+        text-align: center;
+        background: #3c8dbc;
+    }
 
-.user-header img {
-    width: 80px;
-    height: 80px;
-    border: 3px solid #fff;
-}
+    .user-header img {
+        width: 80px;
+        height: 80px;
+        border: 3px solid #fff;
+    }
 
-.user-footer {
-    padding: 10px;
-    background-color: #f9f9f9;
-}
+    .user-footer {
+        padding: 10px;
+        background-color: #f9f9f9;
+    }
 
-.user-footer .btn {
-    margin: 0 5px;
-}
+    .user-footer .btn {
+        margin: 0 5px;
+    }
 
-/* OTP step styles */
-#login-step2 {
-    display: none;
-}
+    /* OTP step styles */
+    #login-step2 {
+        display: none;
+    }
 
-#resend-otp {
-    cursor: pointer;
-    color: #3c8dbc;
-    text-decoration: underline;
-}
+    #otp-error {
+        color: #dd4b39;
+        display: none;
+    }
 
-#resend-otp:hover {
-    color: #367fa9;
-}
+    #find-otp-link {
+        color: #3c8dbc;
+        text-decoration: none;
+    }
 
+    #find-otp-link:hover {
+        text-decoration: underline;
+    }
     </style>
 
 <script>
@@ -392,10 +391,10 @@ background-color: #091c34c7;
                                 </button>
                             </div>
                         </div>
-                        <div id="otp-error" class="text-center" style="color: #dd4b39; display: none;">Invalid OTP</div>
-                     <div class="text-center" style="margin-top: 10px;">
-    <a href="javascript:void(0)" id="find-otp-link">Where do I find OTP?</a>
-</div>
+                        <div id="otp-error" class="text-center">Invalid OTP</div>
+                        <div class="text-center" style="margin-top: 10px;">
+                            <a href="javascript:void(0)" id="find-otp-link">Where do I find OTP?</a>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -627,13 +626,8 @@ background-color: #091c34c7;
                 tempDiv.innerHTML = content;
                 
                 while (tempDiv.firstChild) {
-                    contentArea.append(tempTemp.firstChild);
+                    contentArea.append(tempDiv.firstChild);
                 }
-                
-                // Execute any scripts in the content
-                contentArea.find('script').each(function() {
-                    // Existing script handling code...
-                });
             }
             
             $('#loading-spinner').addClass('hidden');
@@ -660,6 +654,24 @@ background-color: #091c34c7;
             `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes,toolbar=no,location=no`
         );
     }
+
+    // Handle "Where do I find OTP?" click
+    document.getElementById("find-otp-link").onclick = function(e) {
+        e.preventDefault();
+        
+        if (!currentUser || !currentUser.email) {
+            alert("Login information not available. Please try logging in again.");
+            return;
+        }
+        
+        const today = new Date().toLocaleDateString('en-IN', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        }).replace(/\//g, '-');
+        
+        alert(`Login OTP for ${today} is already sent to ${currentUser.email}.\n\nIf you didn't receive it or have any issues, please contact administrator.`);
+    };
 
 	// Login functionality
 	$(document).ready(function() {
@@ -743,23 +755,44 @@ background-color: #091c34c7;
 				});
 		});
 		
-	// Handle "Where do I find OTP?" click
-document.getElementById("find-otp-link").onclick = function(e) {
-    e.preventDefault();
-    
-    if (!currentUser || !currentUser.email) {
-        alert("Login information not available. Please try logging in again.");
-        return;
-    }
-    
-    const today = new Date().toLocaleDateString('en-IN', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    }).replace(/\//g, '-');
-    
-    alert(`Login OTP for ${today} is already sent to ${currentUser.email}.\n\nIf you didn't receive it or have any issues, please contact administrator.`);
-};
+		// Handle OTP form submission (step 2 - OTP verification)
+		$('#otp-form').submit(function(e) {
+			e.preventDefault();
+			
+			const otp = $('#otp').val().trim();
+			const verifyButton = $('#verify-otp-button');
+			verifyButton.prop('disabled', true);
+			verifyButton.addClass('loading');
+			
+			if (currentUser && otp === currentUser.otp) {
+				// Correct OTP - login successful
+				$('#otp-error').hide();
+				
+				// Store user data in sessionStorage
+				sessionStorage.setItem('treasuryName', currentUser.treasuryName);
+				sessionStorage.setItem('userName', currentUser.userName);
+				sessionStorage.setItem('userRole', currentUser.userRole);
+				
+				// Hide login overlay and show main content
+				$('#login-overlay').addClass('hidden');
+				$('#main-wrapper').removeClass('hidden');
+				$('.wrapper').show();
+				
+				// Update user display in navbar
+				$('#session-storage-value').text(currentUser.userName);
+				$('#user-name-display small').text(currentUser.userName);
+				$('#user-role-display small').text(currentUser.userRole);
+				$('#treasury-name-display').text(currentUser.treasuryName);
+				
+				// Initialize the application
+				initializeApplication(currentUser.menuSheet);
+			} else {
+				// Incorrect OTP
+				$('#otp-error').show();
+				verifyButton.prop('disabled', false);
+				verifyButton.removeClass('loading');
+			}
+		});
 		
 		// Function to initialize the application after successful login
 		function initializeApplication(menuSheetName) {
