@@ -199,9 +199,9 @@
                                 </div>
                                 
                                 <div class="col-md-6">
-                                    <label for="toRole" class="form-label">New Role*</label>
+                                    <label for="toRole" class="form-label">To Role*</label>
                                     <select id="toRole" name="toRole" class="form-select select2" required>
-                                        <option value="">Select New Role</option>
+                                        <option value="">Select To Role</option>
                                     </select>
                                 </div>
                                 
@@ -574,7 +574,7 @@
         
         function loadAllRoles() {
             $.ajax({
-                url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/settings!A2:B',
+                url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/settings!C2:C',
                 method: 'GET',
                 data: {
                     key: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
