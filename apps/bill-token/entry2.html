@@ -260,6 +260,7 @@
                       <th>Bill Type</th>
                       <th>Amount</th>
                       <th>Date & Time</th>
+					     <th>Remarks</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1000,52 +1001,55 @@
     }
 
     // Function to load recent tokens for the table view
-    function loadRecentTokens() {
-      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!B2:O?key=${apiKey}`;
+function loadRecentTokens() {
+  // Change the range to include column T (index 19)
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${dataSheetName}!B2:T?key=${apiKey}`;
+  
+  $.get(url, function(data) {
+    var table = $('#tokenTable').DataTable();
+    table.clear();
+    
+    if (data.values && data.values.length > 0) {
+      // Get last 1000 entries (most recent first)
+      const recentTokens = data.values.slice(-1000).reverse();
       
-      $.get(url, function(data) {
-        var table = $('#tokenTable').DataTable();
-        table.clear();
-        
-        if (data.values && data.values.length > 0) {
-          // Get last 1000 entries (most recent first)
-          const recentTokens = data.values.slice(-1000).reverse();
+      recentTokens.forEach(row => {
+        if (row[9]) { // Column K is Token
+          // Format amount to remove .00 if present
+          let amount = row[4];
+          if (amount && amount.includes('.00')) {
+            amount = amount.replace('.00', '');
+          }
           
-          recentTokens.forEach(row => {
-            if (row[9]) { // Column K is Token
-              // Format amount to remove .00 if present
-              let amount = row[4];
-              if (amount && amount.includes('.00')) {
-                amount = amount.replace('.00', '');
-              }
-              
-              // Column O (index 13) is the BRN
-              let brn = row[13] || row[1]; // Fallback to column C if O is empty
-              let ddoname = row[12] || ''; // Column M is index 12
-              
-              table.row.add([
-                row[9],  // Token (Column K)
-                row[0],  // DDO Code (Column B)
-                ddoname, // Office Name (Column M)
-                brn,     // BRN (Column O, fallback to Column C)
-                row[2],  // Bill Type (Column D)
-                amount,  // Amount (Column F)
-                row[7]   // Date (Column I)
-              ]);
-            }
-          });
-        } else {
-          table.row.add(['No records found', '', '', '', '', '']);
+          // Column O (index 13) is the BRN
+          let brn = row[13] || row[1]; // Fallback to column C if O is empty
+          let ddoname = row[12] || ''; // Column M is index 12
+          let remarks = row[18] || ''; // Column T is index 18
+          
+          table.row.add([
+            row[9],  // Token (Column K)
+            row[0],  // DDO Code (Column B)
+            ddoname, // Office Name (Column M)
+            brn,     // BRN (Column O, fallback to Column C)
+            row[2],  // Bill Type (Column D)
+            amount,  // Amount (Column F)
+            row[7],  // Date (Column I)
+            remarks  // Remarks (Column T)
+          ]);
         }
-        
-        table.draw();
-      }).fail(function(error) {
-        console.error('Error loading token data:', error);
-        var table = $('#tokenTable').DataTable();
-        table.clear().draw();
-        table.row.add(['Error loading data', '', '', '', '', '']);
       });
+    } else {
+      table.row.add(['No records found', '', '', '', '', '', '', '']);
     }
+    
+    table.draw();
+  }).fail(function(error) {
+    console.error('Error loading token data:', error);
+    var table = $('#tokenTable').DataTable();
+    table.clear().draw();
+    table.row.add(['Error loading data', '', '', '', '', '', '', '']);
+  });
+}
 
     // Helper function to format date
     function formatDate(dateStr) {
