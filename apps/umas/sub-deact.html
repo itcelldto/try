@@ -262,25 +262,22 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        $(document).ready(function() {
+    $(document).ready(function() {
             // Check for treasury name in session storage
             const treasuryName = sessionStorage.getItem('treasuryName');
-            if (treasuryName) {
-                // If treasury name exists in session, set it as the selected option
-                $('#treasuryName').empty().append(`<option value="${treasuryName}" selected>${treasuryName}</option>`);
-                $('#treasuryName').trigger('change');
-                
-                // Make the Select2 control look disabled but keep it functional for form submission
-                $('#treasuryName').next('.select2-container').find('.select2-selection').addClass('readonly-select2');
-                $('#treasuryName').prop('disabled', false); // Ensure it's not disabled
-                
-                // Load designations for the treasury
-                loadDesignations(treasuryName, 'fromDesignation');
-                loadDesignations(treasuryName, 'toDesignation');
-            } else {
-                // If no treasury in session, load all treasury names
-                loadTreasuryNames();
+            if (!treasuryName) {
+                $('#loginAlert').show();
+                $('.card').hide();
+                return;
             }
+            
+            // Set the treasury name as the only option and select it
+            $('#treasuryName').empty().append(`<option value="${treasuryName}" selected>${treasuryName}</option>`);
+            $('#treasuryName').trigger('change');
+            
+            // Make the Select2 control look disabled but keep it functional for form submission
+            $('#treasuryName').next('.select2-container').find('.select2-selection').addClass('readonly-select2');
+            $('#treasuryName').prop('disabled', false); // Ensure it's not disabled
 
             // Initialize Select2
             $('.select2').select2({
@@ -288,7 +285,6 @@
                 width: '100%',
                 dropdownAutoWidth: true
             });
-            
             // Initialize Datepicker
             flatpickr(".datepicker", {
                 dateFormat: "d/m/Y",
