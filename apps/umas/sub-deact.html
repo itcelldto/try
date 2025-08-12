@@ -101,15 +101,32 @@
         .is-invalid + .select2 .select2-selection {
             border-color: #dc3545 !important;
         }
+        .alert-danger {
+            color: #a94442;
+            background-color: #f2dede;
+            border-color: #ebccd1;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .readonly-select2 {
+            background-color: #e9ecef !important;
+        }
     </style>
 </head>
 <body style="background-color: #d7e2ff6e;">
     <div class="container" style="min-width:100%;margin-top: 25px !important; margin-bottom: 25px !important;">
+        <!-- Error Alert (hidden by default) -->
+        <div id="loginAlert" class="alert-danger" style="display: none;">
+            <strong>Error:</strong> session expired. Please <a href="https://itcelldto.github.io/try/" target="_blank">login</a> again.
+        </div>
+        
         <div class="row justify-content-center">
             <div class="col-lg-12">
                 <div class="card shadow">
                     <div class="card-body">
-                      <h5>UMAS Offboarding/Deactivation Request Form</h5><hr>
+                        <h5>UMAS Request Form</h5><hr>
                         <form id="umasForm" method="post" class="php-email-form" novalidate>
                             <div class="row gy-3">
                                 <!-- Option For -->
@@ -117,7 +134,8 @@
                                     <label for="optionFor" class="form-label">Option For*</label>
                                     <select id="optionFor" name="optionFor" class="form-select select2" required>
                                         <option value="">Select Option</option>
-                                        <!-- Options will be populated from Google Sheet -->
+                                        <option value="User Activation" >User Activation</option>
+                                       
                                     </select>
                                 </div>
                                 
@@ -245,6 +263,25 @@
 
     <script>
         $(document).ready(function() {
+            // Check for treasury name in session storage
+            const treasuryName = sessionStorage.getItem('treasuryName');
+            if (treasuryName) {
+                // If treasury name exists in session, set it as the selected option
+                $('#treasuryName').empty().append(`<option value="${treasuryName}" selected>${treasuryName}</option>`);
+                $('#treasuryName').trigger('change');
+                
+                // Make the Select2 control look disabled but keep it functional for form submission
+                $('#treasuryName').next('.select2-container').find('.select2-selection').addClass('readonly-select2');
+                $('#treasuryName').prop('disabled', false); // Ensure it's not disabled
+                
+                // Load designations for the treasury
+                loadDesignations(treasuryName, 'fromDesignation');
+                loadDesignations(treasuryName, 'toDesignation');
+            } else {
+                // If no treasury in session, load all treasury names
+                loadTreasuryNames();
+            }
+
             // Initialize Select2
             $('.select2').select2({
                 theme: 'bootstrap-5',
@@ -265,19 +302,17 @@
             // Generate Request ID
             generateRequestId();
             
-            // Load Treasury Names
-            loadTreasuryNames();
-            
-            // Load Option For values from Google Sheet
-            loadOptionForValues();
-            
             // Handle Option For change
             $('#optionFor').on('change', handleOptionForChange);
             
-            // Treasury Name change event
+            // Treasury Name change event - store in session storage
             $('#treasuryName').on('change', function() {
                 const treasuryName = $(this).val();
                 if (treasuryName) {
+                    // Store the selected treasury in session storage
+                    sessionStorage.setItem('treasuryName', treasuryName);
+                    
+                    // Load designations for the selected treasury
                     loadDesignations(treasuryName, 'fromDesignation');
                     loadDesignations(treasuryName, 'toDesignation');
                 } else {
@@ -326,8 +361,8 @@
                     }
                 }
                 
-                // If Option For is "User off-boarding / Deactivate", copy to to employee details
-                if ($('#optionFor').val() === "User off-boarding / Deactivate") {
+                // If Option For is "User Activation", copy to to employee details
+                if ($('#optionFor').val() === "User Activation") {
                     $('#toPEN').val($('#fromPEN').val());
                     $('#toName').val($('#fromName').val());
                     $('#toDesignation').val($('#fromDesignation').val()).trigger('change');
@@ -423,10 +458,10 @@
                     fromRole: $('#fromRole').val(),
                     fromName: $('#fromName').val(),
                     fromPEN: $('#fromPEN').val(),
-                    toDesignation: optionFor === "User off-boarding / Deactivate" ? $('#fromDesignation').val() : $('#toDesignation').val(),
-                    toRole: optionFor === "User off-boarding / Deactivate" ? $('#fromRole').val() : $('#toRole').val(),
-                    toName: optionFor === "User off-boarding / Deactivate" ? $('#fromName').val() : $('#toName').val(),
-                    toPEN: optionFor === "User off-boarding / Deactivate" ? $('#fromPEN').val() : $('#toPEN').val(),
+                    toDesignation: optionFor === "User Activation" ? $('#fromDesignation').val() : $('#toDesignation').val(),
+                    toRole: optionFor === "User Activation" ? $('#fromRole').val() : $('#toRole').val(),
+                    toName: optionFor === "User Activation" ? $('#fromName').val() : $('#toName').val(),
+                    toPEN: optionFor === "User Activation" ? $('#fromPEN').val() : $('#toPEN').val(),
                     fromDate: $('#fromDate').val(),
                     toDate: $('#toDate').val(),
                     status: $('#status').val(),
@@ -479,21 +514,21 @@
             });
         });
         
-        function loadOptionForValues() {
+        function loadTreasuryNames() {
             $.ajax({
-                url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/settings!j2:j',
+                url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/umas-onboard!A2:A',
                 method: 'GET',
                 data: {
                     key: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
                 },
                 success: function(response) {
                     if (response.values) {
-                        const uniqueOptions = [...new Set(response.values.flat())];
-                        const select = $('#optionFor');
-                        select.empty().append('<option value="">Select Option</option>');
-                        uniqueOptions.forEach(option => {
-                            if (option) {
-                                select.append(`<option value="${option}">${option}</option>`);
+                        const uniqueTreasuries = [...new Set(response.values.flat())];
+                        const select = $('#treasuryName');
+                        select.empty().append('<option value="">Select Treasury</option>');
+                        uniqueTreasuries.forEach(treasury => {
+                            if (treasury) {
+                                select.append(`<option value="${treasury}">${treasury}</option>`);
                             }
                         });
                     }
@@ -501,7 +536,7 @@
                 error: function() {
                     Swal.fire({
                         title: 'Error!',
-                        text: 'Failed to load options. Please refresh the page.',
+                        text: 'Failed to load treasury names. Please refresh the page.',
                         icon: 'error',
                         confirmButtonText: 'OK'
                     });
@@ -514,7 +549,7 @@
             const today = new Date();
             const todayFormatted = formatDate(today);
             
-            if (optionFor === "User off-boarding / Deactivate") {
+            if (optionFor === "User Activation") {
                 $('.to-employee-section, .date-range-section').addClass('hidden-section');
                 $('#fromDate').val(todayFormatted);
                 $('#toDate').val(todayFormatted);
@@ -574,36 +609,6 @@
             
             const requestId = year + month + date + hour + minute + second;
             $('#requestId').val(requestId);
-        }
-        
-        function loadTreasuryNames() {
-            $.ajax({
-                url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/umas-onboard!A2:A',
-                method: 'GET',
-                data: {
-                    key: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
-                },
-                success: function(response) {
-                    if (response.values) {
-                        const uniqueTreasuries = [...new Set(response.values.flat())];
-                        const select = $('#treasuryName');
-                        select.empty().append('<option value="">Select Treasury</option>');
-                        uniqueTreasuries.forEach(treasury => {
-                            if (treasury) {
-                                select.append(`<option value="${treasury}">${treasury}</option>`);
-                            }
-                        });
-                    }
-                },
-                error: function() {
-                    Swal.fire({
-                        title: 'Error!',
-                        text: 'Failed to load treasury names. Please refresh the page.',
-                        icon: 'error',
-                        confirmButtonText: 'OK'
-                    });
-                }
-            });
         }
         
         function loadDesignations(treasuryName, targetId) {
@@ -717,23 +722,6 @@
                         
                         employees.forEach(employee => {
                             select.append(`<option value="${employee.name}" data-pen="${employee.pen}">${employee.name}</option>`);
-                        });
-                        
-                        select.on('change', function() {
-                            const selectedOption = $(this).find('option:selected');
-                            const penField = targetId === 'fromName' ? '#fromPEN' : '#toPEN';
-                            if (selectedOption.val() === "Vacant") {
-                                $(penField).val('0');
-                            } else {
-                                $(penField).val(selectedOption.data('pen') || '');
-                            }
-                            
-                            if ($('#optionFor').val() === "User off-boarding / Deactivate") {
-                                $('#toPEN').val($('#fromPEN').val());
-                                $('#toName').val($('#fromName').val());
-                                $('#toDesignation').val($('#fromDesignation').val()).trigger('change');
-                                $('#toRole').val($('#fromRole').val()).trigger('change');
-                            }
                         });
                     }
                 },
