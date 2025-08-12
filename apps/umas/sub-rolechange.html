@@ -199,9 +199,9 @@
                                 </div>
                                 
                                 <div class="col-md-6">
-                                    <label for="toRole" class="form-label">To Role*</label>
+                                    <label for="toRole" class="form-label">New Role*</label>
                                     <select id="toRole" name="toRole" class="form-select select2" required>
-                                        <option value="">Select To Role</option>
+                                        <option value="">Select New Role</option>
                                     </select>
                                 </div>
                                 
@@ -574,7 +574,7 @@
         
         function loadAllRoles() {
             $.ajax({
-                url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/settings!C2:C',
+                url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/settings!c2:c',
                 method: 'GET',
                 data: {
                     key: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
@@ -630,6 +630,7 @@
                         });
                         
                         const select = $(`#${targetId}`);
+                        // Always include "Select Employee" as first option
                         select.empty().append('<option value="">Select Employee</option>');
                         
                         // Store employee data in data attributes
@@ -653,6 +654,10 @@
                             $('#toDesignationDisplay').text($('#fromDesignation').val());
                             $('#toNameDisplay').text($('#fromName').val());
                             $('#toPENDisplay').text($('#fromPEN').val());
+                            
+                            // Reset the dropdown to show "Select Employee" as the first option
+                            $(this).find('option[value=""]').prop('selected', true);
+                            $(this).trigger('change.select2');
                         });
                     }
                 },
