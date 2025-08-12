@@ -134,7 +134,7 @@
                                     <label for="optionFor" class="form-label">Option For*</label>
                                     <select id="optionFor" name="optionFor" class="form-select select2" required>
                                         <option value="">Select Option</option>
-                                        <option value="User Activation">User Activation</option>
+                                        <option value="User off-boarding / Deactivate">User off-boarding / Deactivate</option>
                                     </select>
                                 </div>
                                 
@@ -335,8 +335,8 @@
                     $('#fromPEN').val(selectedOption.data('pen') || '');
                 }
                 
-                // If Option For is "User Activation", copy to to employee details
-                if ($('#optionFor').val() === "User Activation") {
+                // If Option For is "User off-boarding / Deactivate", copy to to employee details
+                if ($('#optionFor').val() === "User off-boarding / Deactivate") {
                     $('#toPEN').val($('#fromPEN').val());
                     $('#toName').val($('#fromName').val());
                     $('#toDesignation').val($('#fromDesignation').val()).trigger('change');
@@ -423,10 +423,10 @@
                     fromRole: $('#fromRole').val(),
                     fromName: $('#fromName').val(),
                     fromPEN: $('#fromPEN').val(),
-                    toDesignation: optionFor === "User Activation" ? $('#fromDesignation').val() : $('#toDesignation').val(),
-                    toRole: optionFor === "User Activation" ? $('#fromRole').val() : $('#toRole').val(),
-                    toName: optionFor === "User Activation" ? $('#fromName').val() : $('#toName').val(),
-                    toPEN: optionFor === "User Activation" ? $('#fromPEN').val() : $('#toPEN').val(),
+                    toDesignation: optionFor === "User off-boarding / Deactivate" ? $('#fromDesignation').val() : $('#toDesignation').val(),
+                    toRole: optionFor === "User off-boarding / Deactivate" ? $('#fromRole').val() : $('#toRole').val(),
+                    toName: optionFor === "User off-boarding / Deactivate" ? $('#fromName').val() : $('#toName').val(),
+                    toPEN: optionFor === "User off-boarding / Deactivate" ? $('#fromPEN').val() : $('#toPEN').val(),
                     fromDate: $('#fromDate').val(),
                     toDate: $('#toDate').val(),
                     status: $('#status').val(),
@@ -484,7 +484,7 @@
             const today = new Date();
             const todayFormatted = formatDate(today);
             
-            if (optionFor === "User Activation") {
+            if (optionFor === "User off-boarding / Deactivate") {
                 $('.to-employee-section, .date-range-section').addClass('hidden-section');
                 $('#fromDate').val(todayFormatted);
                 $('#toDate').val(todayFormatted);
