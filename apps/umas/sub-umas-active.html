@@ -113,6 +113,15 @@
         .readonly-select2 {
             background-color: #e9ecef !important;
         }
+        .readonly-text {
+            background-color: #f8f9fa;
+            border: 1px solid #ced4da;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            min-height: calc(1.5em + 0.75rem + 2px);
+            display: block;
+            width: 100%;
+        }
     </style>
 </head>
 <body style="background-color: #d7e2ff6e;">
@@ -133,9 +142,7 @@
                                 <div class="col-md-12">
                                     <label for="optionFor" class="form-label">Option For*</label>
                                     <select id="optionFor" name="optionFor" class="form-select select2" required>
-                                         <option value="" ></option>
-                                        <option value="User Activation" >User Activation</option>
-                                       
+                                         <option value="User Activation" selected>User Activation</option>
                                     </select>
                                 </div>
                                 
@@ -151,7 +158,7 @@
                                 <div class="col-md-12 mt-4">
                                     <div class="section-header">From Employee Details</div>
                                     <hr>
-                                    <p class="instruction-text">* In Charge Arrangements, give '0' as PEN and "Vacant" as Name if user is inactive/not listed or on leave for more than 2 days.</p>
+                                   
                                 </div>
                                 
                                 <div class="col-md-6">
@@ -181,51 +188,49 @@
                                     <input type="text" id="fromPEN" name="fromPEN" class="form-control" readonly>
                                 </div>
                                 
-                                <!-- To Section -->
-                                <div class="col-md-12 mt-4 to-employee-section">
+                                <!-- To Section - Hidden and set to readonly text -->
+                                <div class="col-md-12 mt-4 to-employee-section hidden-section">
                                     <div class="section-header">To Employee Details</div>
                                     <hr>
                                 </div>
                                 
-                                <div class="col-md-6 to-employee-section">
+                                <div class="col-md-6 to-employee-section hidden-section">
                                     <label for="toDesignation" class="form-label">Designation*</label>
-                                    <select id="toDesignation" name="toDesignation" class="form-select select2">
-                                        <option value="">Select Designation</option>
-                                    </select>
+                                    <div id="toDesignationDisplay" class="readonly-text"></div>
+                                    <input type="hidden" id="toDesignation" name="toDesignation">
                                 </div>
                                 
-                                <div class="col-md-6 to-employee-section">
+                                <div class="col-md-6 to-employee-section hidden-section">
                                     <label for="toRole" class="form-label">Role*</label>
-                                    <select id="toRole" name="toRole" class="form-select select2">
-                                        <option value="">Select Role</option>
-                                    </select>
+                                    <div id="toRoleDisplay" class="readonly-text"></div>
+                                    <input type="hidden" id="toRole" name="toRole">
                                 </div>
                                 
-                                <div class="col-md-6 to-employee-section">
+                                <div class="col-md-6 to-employee-section hidden-section">
                                     <label for="toName" class="form-label">Employee Name*</label>
-                                    <select id="toName" name="toName" class="form-select select2">
-                                        <option value="">Select Employee</option>
-                                    </select>
+                                    <div id="toNameDisplay" class="readonly-text"></div>
+                                    <input type="hidden" id="toName" name="toName">
                                 </div>
                                 
-                                <div class="col-md-6 to-employee-section">
+                                <div class="col-md-6 to-employee-section hidden-section">
                                     <label for="toPEN" class="form-label">PEN</label>
-                                    <input type="text" id="toPEN" name="toPEN" class="form-control" readonly>
+                                    <div id="toPENDisplay" class="readonly-text"></div>
+                                    <input type="hidden" id="toPEN" name="toPEN">
                                 </div>
                                 
-                                <!-- Dates -->
-                                <div class="col-md-12 mt-4 date-range-section">
+                                <!-- Dates - Hidden -->
+                                <div class="col-md-12 mt-4 date-range-section hidden-section">
                                     <div class="section-header">Date Range</div>
                                     <hr>
                                     <p class="instruction-text">* Maximum period for Charge Arrangement is 90 Days</p>
                                 </div>
                                 
-                                <div class="col-md-6 date-range-section">
+                                <div class="col-md-6 date-range-section hidden-section">
                                     <label for="fromDate" class="form-label">From Date*</label>
                                     <input type="text" id="fromDate" name="fromDate" class="form-control datepicker" required>
                                 </div>
                                 
-                                <div class="col-md-6 date-range-section">
+                                <div class="col-md-6 date-range-section hidden-section">
                                     <label for="toDate" class="form-label">To Date*</label>
                                     <input type="text" id="toDate" name="toDate" class="form-control datepicker" required>
                                 </div>
@@ -400,10 +405,10 @@
                     fromRole: $('#fromRole').val(),
                     fromName: $('#fromName').val(),
                     fromPEN: $('#fromPEN').val(),
-                    toDesignation: optionFor === "User Activation" ? $('#fromDesignation').val() : $('#toDesignation').val(),
-                    toRole: optionFor === "User Activation" ? $('#fromRole').val() : $('#toRole').val(),
-                    toName: optionFor === "User Activation" ? $('#fromName').val() : $('#toName').val(),
-                    toPEN: optionFor === "User Activation" ? $('#fromPEN').val() : $('#toPEN').val(),
+                    toDesignation: $('#fromDesignation').val(), // Copy from fromDesignation
+                    toRole: $('#fromRole').val(), // Copy from fromRole
+                    toName: $('#fromName').val(), // Copy from fromName
+                    toPEN: $('#fromPEN').val(), // Copy from fromPEN
                     fromDate: $('#fromDate').val(),
                     toDate: $('#toDate').val(),
                     status: $('#status').val(),
@@ -466,12 +471,17 @@
                 $('#fromDate').val(todayFormatted);
                 $('#toDate').val(todayFormatted);
                 
-                $('#toPEN').val($('#fromPEN').val());
+                // Copy values to to employee details
+                $('#toDesignation').val($('#fromDesignation').val());
+                $('#toRole').val($('#fromRole').val());
                 $('#toName').val($('#fromName').val());
-                $('#toDesignation').val($('#fromDesignation').val()).trigger('change');
-                $('#toRole').val($('#fromRole').val()).trigger('change');
+                $('#toPEN').val($('#fromPEN').val());
                 
-                $('#toName, #toPEN').addClass('form-control-plaintext').removeClass('form-control');
+                // Update display fields
+                $('#toDesignationDisplay').text($('#fromDesignation').val());
+                $('#toRoleDisplay').text($('#fromRole').val());
+                $('#toNameDisplay').text($('#fromName').val());
+                $('#toPENDisplay').text($('#fromPEN').val());
             } else {
                 $('.to-employee-section, .date-range-section').removeClass('hidden-section');
                 
@@ -479,8 +489,6 @@
                 $('#toName').val('');
                 $('#toDesignation').val(null).trigger('change');
                 $('#toRole').val(null).trigger('change');
-                
-                $('#toName, #toPEN').addClass('form-control').removeClass('form-control-plaintext');
                 
                 $('#fromDate').val(todayFormatted);
                 $('#toDate').val(todayFormatted);
@@ -653,8 +661,14 @@
                             if ($('#optionFor').val() === "User Activation") {
                                 $('#toPEN').val($('#fromPEN').val());
                                 $('#toName').val($('#fromName').val());
-                                $('#toDesignation').val($('#fromDesignation').val()).trigger('change');
-                                $('#toRole').val($('#fromRole').val()).trigger('change');
+                                $('#toDesignation').val($('#fromDesignation').val());
+                                $('#toRole').val($('#fromRole').val());
+                                
+                                // Update display fields
+                                $('#toDesignationDisplay').text($('#fromDesignation').val());
+                                $('#toRoleDisplay').text($('#fromRole').val());
+                                $('#toNameDisplay').text($('#fromName').val());
+                                $('#toPENDisplay').text($('#fromPEN').val());
                             }
                         });
                     }
@@ -694,7 +708,7 @@
         function resetAllSelects() {
             $('.select2').val(null).trigger('change');
             $('#treasuryName').val(null).trigger('change');
-            $('#optionFor').val('Charge Arrangement').trigger('change');
+            $('#optionFor').val('User Activation').trigger('change');
         }
     </script>
 </body>
