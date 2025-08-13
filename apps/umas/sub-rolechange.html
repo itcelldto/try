@@ -142,6 +142,7 @@
                                 <div class="col-md-12">
                                     <label for="optionFor" class="form-label">Option For*</label>
                                     <select id="optionFor" name="optionFor" class="form-select select2" required>
+                                         <option value="" selected></option>
                                         <option value="Role Change" selected>Role Change</option>
                                     </select>
                                 </div>
@@ -157,7 +158,8 @@
                                 <!-- From Section -->
                                 <div class="col-md-12 mt-4">
                                     <div class="section-header">From Employee Details</div>
-                                    <hr>
+                                    <hr><br>
+                                    * This option is for Permenant Change in Employee's Role.
                                 </div>
                                 
                                 <div class="col-md-6">
@@ -174,14 +176,18 @@
                                     </select>
                                 </div>
                                 
-                                <div class="col-md-6">
-                                    <label for="fromName" class="form-label">Employee Name*</label>
+                                <div class="col-md-3">
+                                    <label for="fromName" class="form-label">.</label>
                                     <select id="fromName" name="fromName" class="form-select select2" required>
                                         <option value="">Select Employee</option>
                                     </select>
                                 </div>
-                                
-                                <div class="col-md-6">
+                                   <div class="col-md-5">
+                                    <label for="toName" class="form-label">Employee Name*</label>
+                                    <div id="toNameDisplay" class="readonly-text"></div>
+                                    <input type="hidden" id="toName" name="toName">
+                                </div>
+                                <div class="col-md-4">
                                     <label for="fromPEN" class="form-label">PEN</label>
                                     <input type="text" id="fromPEN" name="fromPEN" class="form-control" readonly>
                                 </div>
@@ -205,11 +211,7 @@
                                     </select>
                                 </div>
                                 
-                                <div class="col-md-6 to-employee-section hidden-section">
-                                    <label for="toName" class="form-label">Employee Name*</label>
-                                    <div id="toNameDisplay" class="readonly-text"></div>
-                                    <input type="hidden" id="toName" name="toName">
-                                </div>
+                             
                                 
                                 <div class="col-md-6 to-employee-section hidden-section">
                                     <label for="toPEN" class="form-label">PEN</label>
