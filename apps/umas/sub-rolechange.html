@@ -146,7 +146,8 @@
                                         <option value="Role Change" >Role Change</option>
                                     </select>
                                 </div>
-                                
+                                <br>
+                                    * This option is for Permenant Change in Employee's Role.
                                 <!-- Treasury Name -->
                                 <div class="col-md-12">
                                     <label for="treasuryName" class="form-label">Treasury Name*</label>
@@ -157,19 +158,18 @@
                                 
                                 <!-- From Section -->
                                 <div class="col-md-12 mt-4">
-                                    <div class="section-header">From Employee Details</div>
-                                    <hr><br>
-                                    * This option is for Permenant Change in Employee's Role.
+                                    <div class="section-header">Employee Details</div>
+                                    <hr>
                                 </div>
                                 
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label for="fromDesignation" class="form-label">Designation*</label>
                                     <select id="fromDesignation" name="fromDesignation" class="form-select select2" required>
                                         <option value="">Select Designation</option>
                                     </select>
                                 </div>
                                 
-                                <div class="col-md-6">
+                                <div class="col-md-4">
                                     <label for="fromRole" class="form-label">Current Role*</label>
                                     <select id="fromRole" name="fromRole" class="form-select select2" required>
                                         <option value="">Select Role</option>
@@ -177,13 +177,13 @@
                                 </div>
                                 
                                 <div class="col-md-3">
-                                    <label for="fromName" class="form-label">.</label>
+                                    <label for="fromName" class="form-label">Select Employee*</label>
                                     <select id="fromName" name="fromName" class="form-select select2" required>
                                         <option value="">Select Employee</option>
                                     </select>
                                 </div>
                                    <div class="col-md-5">
-                                    <label for="toName" class="form-label">Employee Name*</label>
+                                    <label for="toName" class="form-label">Name</label>
                                     <div id="toNameDisplay" class="readonly-text"></div>
                                     <input type="hidden" id="toName" name="toName">
                                 </div>
@@ -205,7 +205,7 @@
                                 </div>
                                 
                                 <div class="col-md-6">
-                                    <label for="toRole" class="form-label">New Role*</label>
+                                    <label for="toRole" class="form-label">Role Changed to *</label>
                                     <select id="toRole" name="toRole" class="form-select select2" required>
                                         <option value="">Select New Role</option>
                                     </select>
