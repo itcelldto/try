@@ -177,15 +177,19 @@
                                     </select>
                                 </div>
                                 
-                                <div class="col-md-6">
-                                    <label for="fromName" class="form-label">Employee Name*</label>
+                                <div class="col-md-3">
+                                    <label for="fromName" class="form-label"></label>
                                     <select id="fromName" name="fromName" class="form-select select2" required>
                                         <option value="">Select Employee</option>
                                         <option value="Vacant">Vacant</option>
                                     </select>
                                 </div>
-                                
-                                <div class="col-md-6">
+                                  <div class="col-md-5">
+                                    <label for="toName" class="form-label">Employee Name*</label>
+                                    <div id="toNameDisplay" class="readonly-text"></div>
+                                    <input type="hidden" id="toName" name="toName">
+                                </div>
+                                <div class="col-md-4">
                                     <label for="fromPEN" class="form-label">PEN</label>
                                     <input type="text" id="fromPEN" name="fromPEN" class="form-control" readonly>
                                 </div>
@@ -208,11 +212,7 @@
                                     <input type="hidden" id="toRole" name="toRole">
                                 </div>
                                 
-                                <div class="col-md-6 ">
-                                    <label for="toName" class="form-label">Employee Name*</label>
-                                    <div id="toNameDisplay" class="readonly-text"></div>
-                                    <input type="hidden" id="toName" name="toName">
-                                </div>
+                              
                                 
                                 <div class="col-md-6 to-employee-section hidden-section">
                                     <label for="toPEN" class="form-label">PEN</label>
