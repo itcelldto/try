@@ -129,6 +129,13 @@
                         <h5>User Offboarding/Deactivation Request Form</h5><hr>
                         <form id="umasForm" method="post" class="php-email-form" novalidate>
                             <div class="row gy-3">
+                                    <!-- Treasury Name -->
+                                <div class="col-md-12">
+                                    <label for="treasuryName" class="form-label">Treasury Name*</label>
+                                    <select id="treasuryName" name="treasuryName" class="form-select select2" required>
+                                        <option value="">Select Treasury</option>
+                                    </select>
+                                </div>
                                 <!-- Option For -->
                                 <div class="col-md-12">
                                     <label for="optionFor" class="form-label">Option For*</label>
@@ -138,17 +145,11 @@
                                     </select>
                                 </div>
                                 
-                                <!-- Treasury Name -->
-                                <div class="col-md-12">
-                                    <label for="treasuryName" class="form-label">Treasury Name*</label>
-                                    <select id="treasuryName" name="treasuryName" class="form-select select2" required>
-                                        <option value="">Select Treasury</option>
-                                    </select>
-                                </div>
+                            
                                 
                                 <!-- From Section -->
                                 <div class="col-md-12 mt-4">
-                                    <div class="section-header">From Employee Details</div>
+                                    <div class="section-header">Employee Details</div>
                                     <hr>
                                     <p class="instruction-text">* In Charge Arrangements, give '0' as PEN and "Vacant" as Name if user is inactive/not listed or on leave for more than 2 days.</p>
                                 </div>
@@ -181,33 +182,33 @@
                                 </div>
                                 
                                 <!-- To Section -->
-                                <div class="col-md-12 mt-4 to-employee-section">
+                                <div class="col-md-12 mt-4 to-employee-section hidden-section">
                                     <div class="section-header">To Employee Details</div>
                                     <hr>
                                 </div>
                                 
-                                <div class="col-md-6 to-employee-section">
+                                <div class="col-md-6 to-employee-section hidden-section">
                                     <label for="toDesignation" class="form-label">Designation*</label>
                                     <select id="toDesignation" name="toDesignation" class="form-select select2">
                                         <option value="">Select Designation</option>
                                     </select>
                                 </div>
                                 
-                                <div class="col-md-6 to-employee-section">
+                                <div class="col-md-6 to-employee-section hidden-section">
                                     <label for="toRole" class="form-label">Role*</label>
                                     <select id="toRole" name="toRole" class="form-select select2">
                                         <option value="">Select Role</option>
                                     </select>
                                 </div>
                                 
-                                <div class="col-md-6 to-employee-section">
+                                <div class="col-md-6 to-employee-section hidden-section">
                                     <label for="toName" class="form-label">Employee Name*</label>
                                     <select id="toName" name="toName" class="form-select select2">
                                         <option value="">Select Employee</option>
                                     </select>
                                 </div>
                                 
-                                <div class="col-md-6 to-employee-section">
+                                <div class="col-md-6 to-employee-section hidden-section">
                                     <label for="toPEN" class="form-label">PEN</label>
                                     <input type="text" id="toPEN" name="toPEN" class="form-control" readonly>
                                 </div>
