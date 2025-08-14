@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TISMIS/eProcurement File Validation</title>
+    <style>
+       body {
+            font-family: Arial, sans-serif;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .upload-container {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        #fileInput {
+            display: none;
+        }
+        .upload-btn {
+            background: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .download-btn {
+            background: #af4c4d;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .download-btn:hover {
+            background:  #8a4041;
+        }
+       
+        .upload-btn:hover {
+            background: #45a049;
+        }
+        #fileName {
+            margin-left: 10px;
+            font-style: italic;
+        }
+        #results {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            position: sticky;
+            top: 0;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .instructions {
+            background: #e7f3fe;
+            border-left: 6px solid #2196F3;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .total-display {
+            font-weight: bold;
+            font-size: 18px;
+            margin: 10px 0;
+            background: #e7f3fe;
+            border-left: 6px solid #2196F3;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h3>CSV/TXT File Parser</h3>
+    
+    <div class="instructions">
+        <p>Upload a CSV or TXT file to display its contents as a table. The parser automatically detects delimiters (comma, tab, semicolon).</p>
+    </div>
+    
+    <div class="upload-container">
+        <label for="fileInput" class="upload-btn">Choose txt file</label>
+        <input type="file" id="fileInput" accept=".csv,.txt" />
+        <span id="fileName">No file chosen</span>
+        <button id="parseBtn" class="upload-btn" disabled> View </button>
+    </div>
+    
+    <div id="error" class="error"></div>
+    
+    <div id="results"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fileInput = document.getElementById('fileInput');
+            const parseBtn = document.getElementById('parseBtn');
+            const fileName = document.getElementById('fileName');
+            const resultsDiv = document.getElementById('results');
+            const errorDiv = document.getElementById('error');
+            
+            fileInput.addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    fileName.textContent = e.target.files[0].name;
+                    parseBtn.disabled = false;
+                } else {
+                    fileName.textContent = 'No file chosen';
+                    parseBtn.disabled = true;
+                }
+                errorDiv.textContent = '';
+                resultsDiv.innerHTML = '';
+            });
+            
+            parseBtn.addEventListener('click', function() {
+                const file = fileInput.files[0];
+                if (!file) return;
+                
+                errorDiv.textContent = '';
+                resultsDiv.innerHTML = '';
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const content = e.target.result;
+                        const { table, totalAmount } = parseCSV(content, file, resultsDiv);
+                        
+                        // Create and display total amount above the table
+                        const totalDisplay = document.createElement('div');
+                        totalDisplay.className = 'total-display';
+                        totalDisplay.textContent = `Total Amount: ${totalAmount.toFixed(2)}`;
+                        resultsDiv.appendChild(totalDisplay);
+                        
+                        resultsDiv.appendChild(table);
+                    } catch (err) {
+                        errorDiv.textContent = 'Error parsing file: ' + err.message;
+                    }
+                };
+                reader.onerror = function() {
+                    errorDiv.textContent = 'Error reading file';
+                };
+                reader.readAsText(file);
+            });
+            
+            function parseCSV(content, file, resultsDiv) {
+                // Detect delimiter
+                const delimiters = [',', '\t', ';', '|'];
+                let delimiter = ',';
+                
+                // Check which delimiter appears first in the first line
+                const firstLine = content.split('\n')[0];
+                for (const d of delimiters) {
+                    if (firstLine.includes(d)) {
+                        delimiter = d;
+                        break;
+                    }
+                }
+                
+                // Parse lines
+                const lines = content.split('\n').filter(line => line.trim() !== '');
+                if (lines.length === 0) {
+                    throw new Error('File is empty');
+                }
+                
+                // Create container for date input and download button
+                const controlContainer = document.createElement('div');
+                controlContainer.style.margin = '10px 0';
+                controlContainer.style.display = 'flex';
+                controlContainer.style.alignItems = 'center';
+                controlContainer.style.gap = '10px';
+                
+                const dateContainer = document.createElement('div');
+                dateContainer.style.display = 'flex';
+                dateContainer.style.alignItems = 'center';
+                
+                const dateLabel = document.createElement('label');
+                dateLabel.textContent = 'eProcurement file date: ';
+                dateLabel.style.marginRight = '10px';
+                
+                const dateInput = document.createElement('input');
+                dateInput.type = 'text';
+                dateInput.style.padding = '5px';
+                
+                dateContainer.appendChild(dateLabel);
+                dateContainer.appendChild(dateInput);
+                
+                // Create download button
+                const downloadBtn = document.createElement('button');
+                downloadBtn.textContent = 'Download eProcurement File';
+                downloadBtn.className = 'download-btn';
+                downloadBtn.style.marginLeft = '10px';
+                
+                downloadBtn.addEventListener('click', function() {
+                    if (!dateInput.value) {
+                        alert('Please wait for date to be processed');
+                        return;
+                    }
+                    
+                    const filename = `kerala_epayment_scroll_70252_${dateInput.value}.txt`;
+                    const blob = new Blob([content], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                });
+                
+                controlContainer.appendChild(dateContainer);
+                controlContainer.appendChild(downloadBtn);
+                resultsDiv.appendChild(controlContainer);
+                
+                // Create table
+                const table = document.createElement('table');
+                const thead = document.createElement('thead');
+                const tbody = document.createElement('tbody');
+                const tfoot = document.createElement('tfoot');
+                
+                // Define our fixed headers
+                const fixedHeaders = [
+                    'eProcurement Ref.No', 'Bank Ref.ID', '', 'code', 'Amount',
+                    'Date', 'Dep.Code', 'Eprocurement', 'Office01',
+                    'Office02', 'TRY.Code'
+                ];
+                
+                // Find the index of the Amount column and Date column
+                const amountColumnIndex = fixedHeaders.indexOf('Amount');
+                const dateColumnIndex = fixedHeaders.indexOf('Date');
+                
+                // Create header row with our fixed headers
+                const headerRow = document.createElement('tr');
+                fixedHeaders.forEach(header => {
+                    const th = document.createElement('th');
+                    th.textContent = header;
+                    headerRow.appendChild(th);
+                });
+                thead.appendChild(headerRow);
+                table.appendChild(thead);
+                
+                let totalAmount = 0;
+                let formattedDate = '';
+                
+                // Process all data rows (starting from 0 since we're using fixed headers)
+                for (let i = 0; i < lines.length; i++) {
+                    const dataCells = lines[i].split(delimiter);
+                    const dataRow = document.createElement('tr');
+                    
+                    // Create cells for each of our fixed headers
+                    fixedHeaders.forEach((_, index) => {
+                        const td = document.createElement('td');
+                        // Use the data from the corresponding column if available
+                        const cellValue = index < dataCells.length ? dataCells[index].trim() : '';
+                        td.textContent = cellValue;
+                        
+                        // If this is the Amount column, add to total
+                        if (index === amountColumnIndex) {
+                            const amount = parseFloat(cellValue.replace(/[^0-9.-]/g, '')) || 0;
+                            totalAmount += amount;
+                        }
+                        
+                        // If this is the first row and Date column, format the date
+                        if (i === 0 && index === dateColumnIndex && cellValue) {
+                            try {
+                                const dateParts = cellValue.split('/');
+                                if (dateParts.length === 3) {
+                                    const month = dateParts[0];
+                                    const day = dateParts[1];
+                                    const year = dateParts[2].length === 4 ? dateParts[2].substring(2) : dateParts[2];
+                                    formattedDate = `${day}${month}${year}`;
+                                    dateInput.value = formattedDate;
+                                }
+                            } catch (e) {
+                                console.error('Error formatting date:', e);
+                            }
+                        }
+                        
+                        dataRow.appendChild(td);
+                    });
+                    
+                    tbody.appendChild(dataRow);
+                }
+                table.appendChild(tbody);
+                
+                // Create footer row with total amount
+                if (amountColumnIndex >= 0) {
+                    const footerRow = document.createElement('tr');
+                    footerRow.style.fontWeight = 'bold';
+                    footerRow.style.backgroundColor = '#f2f2f2';
+                    
+                    fixedHeaders.forEach((_, index) => {
+                        const td = document.createElement('td');
+                        if (index === amountColumnIndex) {
+                            td.textContent = totalAmount.toFixed(2);
+                        } else if (index === 0) {
+                            td.textContent = 'Total:';
+                        }
+                        footerRow.appendChild(td);
+                    });
+                    
+                    tfoot.appendChild(footerRow);
+                    table.appendChild(tfoot);
+                }
+                
+                return { table, totalAmount };
+            }
+        });
+    </script>
+</body>
+</html>

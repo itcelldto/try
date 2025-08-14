@@ -1,0 +1,315 @@
+<html>
+<head>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <!-- Add Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+</head>
+<body style="background-color: #d7e2ff6e;">
+  <div class="container py-5"style="min-width:98%">
+    <div class="info-item aos-init aos-animate" data-aos="fade" data-aos-delay="300">
+     
+      
+      <form id="ddoForm" method="post" class="php-email-form aos-init aos-animate" data-aos="fade-up" data-aos-delay="200">
+	       <h3>DDO Details Updation Form</h3><hr><br>
+        <div class="row gy-4">
+          <!-- Hidden Timestamp field -->
+          <input type="hidden" name="timestamp" id="timestampField">
+		  
+		  		   <div class="col-md-6">
+            <label for="ddoCode" class="form-label">DDO Code</label>
+            <input type="text" class="form-control" name="ddoCode" id="ddoCode" placeholder="DDO Code" required maxlength="10" pattern="[A-Za-z0-9]{10}" title="Must be exactly 10 alphanumeric characters">
+          </div>
+          
+       
+          
+                  
+          <div class="col-md-6">
+            <label for="ddoDepartment" class="form-label">DDO Department</label>
+            <select class="form-select select2" name="ddoDepartment" id="ddoDepartment" required>
+              <option value="" selected disabled>Select Department</option>
+              <!-- Options will be loaded dynamically from Google Sheet -->
+            </select>
+          </div>
+          
+          <div class="col-md-6">
+            <label for="ddoOffice" class="form-label">DDO Office Name</label>
+            <input type="text" class="form-control" name="ddoOffice" id="ddoOffice" placeholder="Office Name" required>
+          </div>
+		  
+   <div class="col-md-6">
+            <label for="ddoRegNo" class="form-label">DDO Reg. No. (Optional)</label>
+            <input type="text" class="form-control" name="ddoRegNo" id="ddoRegNo" placeholder="e.g. SGV11111A"  title="Format: 2-3 letters followed by 4-5 digits and optional letter">
+          </div>
+          
+          <div class="col-md-6">
+            <label for="ddoPhone" class="form-label">Phone Number</label>
+            <input type="tel" class="form-control" name="ddoPhone" id="ddoPhone" 
+                   placeholder="+91XXXXXXXXXX" required >
+          </div>
+          
+          <div class="col-md-6">
+            <label for="ddoEmail" class="form-label">Email Address</label>
+            <input type="email" class="form-control" name="ddoEmail" id="ddoEmail" 
+                   placeholder="official@email.com" required 
+                   pattern="^[a-zA-Z0-9._%+-]+@[a-zA0-9.-]+\.[a-zA-Z]{2,}$">
+          </div>
+          
+          <div class="col-12">
+            <label for="ddoAddress" class="form-label">Communication Address</label>
+            <textarea class="form-control" name="ddoAddress" id="ddoAddress" rows="3" placeholder="Full address" required></textarea>
+          </div>
+		  
+           
+		  
+          <div class="col-md-6">
+            <label for="isVirtual" class="form-label">Is it virtual DDO?</label>
+            <select class="form-select" name="isVirtual" id="isVirtual" required>
+              <option value="" selected disabled>Select option</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+          
+          <div class="col-md-6">
+            <label for="sparshImplemented" class="form-label">SNA Sparsh Implemented</label>
+            <select class="form-select" name="sparshImplemented" id="sparshImplemented" required>
+              <option value="" selected disabled>Select option</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+          
+          <div class="col-12 text-center mt-4">
+            <!-- Color Dot Spinner hidden by default -->
+            <div id="ddoSpinner" class="dot-spinner" style="display: none;">
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+            <!-- Submit Button -->
+            <button type="submit" id="ddoSubmitBtn" class="btn btn-primary px-4 py-2">Submit DDO Details</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <style>
+    /* Dot Spinner CSS */
+    .dot-spinner {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #007bff;
+      animation: dotAnimation 1.2s infinite ease-in-out;
+    }
+
+    .dot:nth-child(1) {
+      animation-delay: 0s;
+    }
+
+    .dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes dotAnimation {
+      0% {
+        transform: scale(0);
+      }
+      50% {
+        transform: scale(1);
+      }
+      100% {
+        transform: scale(0);
+      }
+    }
+    
+    /* Form styling */
+    .php-email-form {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .php-email-form .form-control {
+      height: 44px;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .php-email-form textarea.form-control {
+      min-height: 120px;
+    }
+    
+    .php-email-form label {
+      font-weight: 500;
+      margin-bottom: 8px;
+      display: block;
+    }
+    
+    .icon {
+      font-size: 2.5rem;
+      color: #0d6efd;
+      margin-bottom: 15px;
+    }
+
+    /* Select2 styling */
+    .select2-container--bootstrap-5 .select2-selection {
+      height: 44px;
+      padding: 5px 15px;
+      border: 1px solid #ddd;
+    }
+  </style>
+
+  <script>
+  
+    // Set current timestamp when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      const now = new Date();
+      document.getElementById('timestampField').value = now.toISOString();
+      
+      // Initialize Select2
+      $('.select2').select2({
+        theme: 'bootstrap-5',
+        placeholder: 'Select Department',
+        allowClear: true
+      });
+
+      // Load departments from Google Sheet
+      loadDepartmentsFromGoogleSheet();
+    });
+
+    function loadDepartmentsFromGoogleSheet() {
+      const spinner = document.getElementById("ddoSpinner");
+      const submitButton = document.getElementById("ddoSubmitBtn");
+      
+      // Show spinner and disable the submit button while loading
+      spinner.style.display = "flex";
+      submitButton.disabled = true;
+
+      const spreadsheetId = "15-DTNnC_BLIxpJ_0H9lGhTc-dS1Ezx5P8J476JXzNUw";
+      const sheetName = "DB";
+      const apiKey = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}?key=${apiKey}`;
+
+      fetch(url)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          const departments = [];
+          // Assuming the first column contains department names
+          if (data.values && data.values.length > 0) {
+            // Skip header row if exists (index 0)
+            for (let i = 1; i < data.values.length; i++) {
+              if (data.values[i][3]) { // Assuming department is in 3 column
+                departments.push(data.values[i][3]);
+              }
+            }
+          }
+          
+          // Remove duplicates and sort
+          const uniqueDepartments = [...new Set(departments)].sort();
+          
+          // Populate the select element
+          const select = document.getElementById('ddoDepartment');
+          uniqueDepartments.forEach(dept => {
+            const option = document.createElement('option');
+            option.value = dept;
+            option.textContent = dept;
+            select.appendChild(option);
+          });
+          
+          // Refresh Select2 to show the new options
+          $(select).trigger('change');
+        })
+        .catch(error => {
+          console.error('Error loading departments:', error);
+          Swal.fire({
+            title: 'Error!',
+            text: 'Could not load departments. Please refresh the page or contact support.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+        })
+        .finally(() => {
+          // Hide spinner and enable the submit button
+          spinner.style.display = "none";
+          submitButton.disabled = false;
+        });
+    }
+
+    document.getElementById("ddoForm").onsubmit = function(e) {
+      e.preventDefault(); // Prevent default form submission
+      
+      var submitButton = document.getElementById("ddoSubmitBtn");
+      var spinner = document.getElementById("ddoSpinner");
+      
+      // Show spinner and hide the button
+      spinner.style.display = "flex";
+      submitButton.style.display = "none";
+      
+      var formData = new FormData(this);
+      var xhr = new XMLHttpRequest();
+      
+      // Use the same Google Apps Script endpoint or create a new one for DDO submissions
+      xhr.open("POST", "https://script.google.com/macros/s/AKfycby8s24c83k2TgcxYEeuRxWmNiFgxZCy0Jf6fQ-mY3kwnjnEWv8TgH7L-LxCXXUByqcS2Q/exec", true);
+      
+      xhr.onload = function() {
+        // Hide spinner and show the submit button after response
+        spinner.style.display = "none";
+        submitButton.style.display = "inline-block";
+        
+        if (xhr.status == 200) {
+          var referenceId = xhr.responseText; // Receive reference ID from the server
+          
+          // Show SweetAlert success message with the reference ID
+          Swal.fire({
+            title: 'Success!',
+            html: 'Details of ' + referenceId +' saved successfully. ' ,
+            icon: 'success',
+            confirmButtonText: 'OK'
+          }).then(function() {
+            document.getElementById("ddoForm").reset(); // Reset the form after submission
+          });
+        } else {
+          // Error handling if the form submission fails
+          Swal.fire({
+            title: 'Error!',
+            text: 'There was an issue submitting the form. Please try again.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+          });
+        }
+      };
+      
+      xhr.send(formData);
+    };
+  </script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- Add jQuery and Select2 JS -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+</body>
+</html>
