@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To Do List Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        /* Base Styles */
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+        
+        /* Dashboard Container */
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            
+            margin: 0 auto;
+        }
+        
+        /* To Do List Box */
+        .box {
+            background: #fff;
+            border-radius: 6px;
+            border-top: 3px solid #d2d6de;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        
+        .box-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .box-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+            color: #444;
+        }
+        
+        .box-tools {
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        .table {
+            width: 100%;
+            max-width: 100%;
+            margin-bottom: 0;
+            border-collapse: collapse;
+        }
+        
+        .table > thead > tr > th {
+            border-bottom: 2px solid #eee;
+            vertical-align: bottom;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .table > tbody > tr > td {
+            padding: 12px 15px;
+            vertical-align: middle;
+            border-top: 1px solid #eee;
+        }
+        
+        .table-hover > tbody > tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        /* Status Labels */
+        .label {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 4px;
+        }
+        
+        .label-danger {
+            background-color: #f56954;
+            color: #fff;
+        }
+        
+        .label-success {
+            background-color: #00a65a;
+            color: #fff;
+        }
+        
+        .label-warning {
+            background-color: #f39c12;
+        }
+        
+        /* Office Pills */
+        .office-pill {
+            display: inline-block;
+            padding: 4px 10px;
+            margin: 2px;
+            background-color: #3c8dbc;
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1;
+        }
+        
+        /* Form Elements */
+        .input-group {
+            position: relative;
+            display: flex;
+        }
+        
+        .input-group .form-control {
+            position: relative;
+            z-index: 2;
+            flex: 1 1 auto;
+            width: 1%;
+            margin-bottom: 0;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        .form-control {
+            display: block;
+            width: 100%;
+            height: auto;
+            padding: 6px 12px;
+            font-size: 14px;
+            line-height: 1.42857143;
+            color: #555;
+            background-color: #fff;
+            background-image: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        }
+        
+        .input-group-btn {
+            position: relative;
+            white-space: nowrap;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 6px 12px;
+            margin-bottom: 0;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.42857143;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            cursor: pointer;
+            user-select: none;
+            background-image: none;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        
+        .btn-default {
+            color: #333;
+            background-color: #fff;
+            border-color: #ddd;
+        }
+        
+        /* Loading Spinner */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Alert Messages */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        
+        .alert-info {
+            color: #31708f;
+            background-color: #d9edf7;
+            border-color: #bce8f1;
+        }
+        
+        .alert-danger {
+            color: #a94442;
+            background-color: #f2dede;
+            border-color: #ebccd1;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .box-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .box-tools {
+                width: 100%;
+            }
+            
+            .input-group {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="row"><h2>Dashboard</h2></div>
+    <div class="dashboard-container" id="dashboard-container">
+        <div class="loading">
+            <div class="spinner"></div>
+            Loading dashboard...
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            apiKey: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4',
+            spreadsheetId: '11wvVQ2G41ke3g6RdfYX8AJAl0w-fnf2NQ_Agufz0wXY',
+            sheets: {
+                todo: {
+                    name: 'To Do List',
+                    range: 'A:H' // Job ID, Subject, Description, Link Url, Last Date, Status, Offices Assigned, Confirm
+                }
+            }
+        };
+        
+        // Main Dashboard Loader
+        document.addEventListener('DOMContentLoaded', async function() {
+            const container = document.getElementById('dashboard-container');
+            
+            try {
+                // Show loading state
+                container.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Loading dashboard data...
+                    </div>
+                `;
+                
+                // Load data
+                const todoData = await loadSheetData(CONFIG.sheets.todo);
+                
+                container.innerHTML = '';
+                
+                // Render To Do list
+                if (todoData.values && todoData.values.length > 0) {
+                    renderTodoList(container, todoData.values);
+                } else {
+                    container.innerHTML = `
+                        <div class="alert alert-info">
+                            No data found in the spreadsheet.
+                        </div>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Dashboard loading failed:', error);
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Error loading dashboard:</strong> ${error.message}<br>
+                        Please check your network connection and try again.
+                    </div>
+                `;
+            }
+        });
+        
+        // Load data from Google Sheets
+        async function loadSheetData(sheetConfig) {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.spreadsheetId}/values/${sheetConfig.name}!${sheetConfig.range}?key=${CONFIG.apiKey}`;
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`Failed to load ${sheetConfig.name} data: ${response.status}`);
+            }
+            
+            return await response.json();
+        }
+        
+        // Render To Do List table
+        function renderTodoList(container, rows) {
+            // Remove header if exists
+            const headers = rows[0];
+            if (headers && headers[0] === 'Job ID') {
+                rows.shift();
+            }
+            
+            // Filter only confirmed items (H column = "Yes")
+            const todoItems = rows.filter(row => {
+                const confirmValue = (row[7] || '').toString().trim().toLowerCase();
+                return confirmValue === 'yes' || confirmValue === 'y';
+            });
+            
+            if (todoItems.length === 0) {
+                container.innerHTML += `
+                    <div class="box">
+                        <div class="box-header">
+                            <h3 class="box-title">To Do List</h3>
+                        </div>
+                        <div class="box-body">
+                            <div class="alert alert-info">No confirmed tasks found.</div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Create table HTML
+            let tableRows = '';
+            
+            todoItems.forEach(row => {
+                const jobId = row[0] || '';
+                const subject = row[1] || '';
+                const description = row[2] || '';
+                const linkUrl = row[3] || '#';
+                const lastDate = row[4] || '';
+                const status = row[5] || 'Pending';
+                const officesAssigned = row[6] || '';
+                
+                // Format offices as pills
+                const officesPills = officesAssigned.split(',')
+                    .map(office => office.trim())
+                    .filter(office => office !== '')
+                    .map(office => `<span class="office-pill">${office}</span>`)
+                    .join(' ');
+                
+                // Determine status label class
+                let statusClass = 'label-danger';
+                const statusLower = status.toLowerCase();
+                if (statusLower.includes('complete') || statusLower.includes('done')) {
+                    statusClass = 'label-success';
+                } else if (statusLower.includes('progress') || statusLower.includes('working')) {
+                    statusClass = 'label-warning';
+                }
+                
+                tableRows += `
+                    <tr>
+                        <td>${jobId}</td>
+                        <td><strong>${subject}</strong></td>
+                        <td>${description}</td>
+                        <td>${formatDate(lastDate)}</td>
+                        <td>
+                            <a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-default">
+                                View <i class="fa fa-external-link"></i>
+                            </a>
+                        </td>
+                        <td><span class="label ${statusClass}">${status}</span></td>
+                        <td>${officesPills || '-'}</td>
+                    </tr>
+                `;
+            });
+            
+            container.innerHTML += `
+                <div class="box">
+                    <div class="box-header">
+                        <h3 class="box-title">To Do List</h3>
+                        <div class="box-tools">
+                            <div class="input-group input-group-sm" style="width: 250px;">
+                                <input type="text" name="table_search" class="form-control" placeholder="Search tasks...">
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-default btn-search">
+                                        <i class="fa fa-search"></i>
+                                    </button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="box-body table-responsive no-padding">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Subject</th>
+                                    <th>Description</th>
+                                    <th>Last Date</th>
+                                    <th>Action</th>
+                                    <th>Status</th>
+                                    <th>Pending Offices</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            
+            // Add search functionality
+            addSearchFunctionality();
+        }
+        
+        // Format date for display as DD/MM/YYYY
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            
+            try {
+                const date = new Date(dateString);
+                if (isNaN(date.getTime())) return dateString;
+                
+                // Get day, month, and year components
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                
+                return `${day}/${month}/${year}`;
+            } catch (e) {
+                return dateString;
+            }
+        }
+        
+        // Add search functionality to the To Do table
+        function addSearchFunctionality() {
+            const searchInput = document.querySelector('input[name="table_search"]');
+            const searchButton = document.querySelector('.btn-search');
+            
+            const performSearch = () => {
+                const query = searchInput.value.toLowerCase();
+                const rows = document.querySelectorAll('.table-hover tbody tr');
+                
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(query) ? '' : 'none';
+                });
+            };
+            
+            searchInput.addEventListener('keyup', performSearch);
+            if (searchButton) {
+                searchButton.addEventListener('click', performSearch);
+            }
+        }
+    </script>
+</body>
+</html>

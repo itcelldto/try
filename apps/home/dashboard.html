@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To Do List Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        /* Base Styles */
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f6f9;
+            color: #333;
+        }
+        
+        /* Dashboard Container */
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin: 0 auto;
+        }
+        
+        /* Contact Cards Container */
+        .contact-cards {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .contact-card {
+            flex: 1;
+            min-width: 250px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .contact-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        /* Dynamic color classes for contact cards */
+        .contact-card-color-0 { border-top: 5px solid #3498db; }
+        .contact-card-color-1 { border-top: 5px solid #e74c3c; }
+        .contact-card-color-2 { border-top: 5px solid #2ecc71; }
+        .contact-card-color-3 { border-top: 5px solid #9b59b6; }
+        .contact-card-color-4 { border-top: 5px solid #f39c12; }
+        .contact-card-color-5 { border-top: 5px solid #1abc9c; }
+        .contact-card-color-6 { border-top: 5px solid #d35400; }
+        .contact-card-color-7 { border-top: 5px solid #34495e; }
+        
+        .contact-name {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        
+        .contact-designation {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .contact-detail {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .contact-detail i {
+            width: 24px;
+            text-align: center;
+            margin-right: 10px;
+            color: #7f8c8d;
+        }
+        
+        .contact-detail a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .contact-detail a:hover {
+            text-decoration: underline;
+        }
+        
+        /* To Do List Box */
+        .box {
+            background: #fff;
+            border-radius: 6px;
+            border-top: 3px solid #d2d6de;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        
+        .box-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            background: #3498db;
+        }
+        
+        .box-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0;
+            color: #fff;
+        }
+        
+        .box-tools {
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        .table {
+            width: 100%;
+            max-width: 100%;
+            margin-bottom: 0;
+            border-collapse: collapse;
+        }
+        
+        .table > thead > tr > th {
+            border-bottom: 2px solid #eee;
+            vertical-align: bottom;
+            padding: 12px 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .table > tbody > tr > td {
+            padding: 12px 15px;
+            vertical-align: middle;
+            border-top: 1px solid #eee;
+        }
+        
+        .table-hover > tbody > tr:hover {
+            background-color: #f9f9f9;
+        }
+        
+        /* Status Labels */
+        .label {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: 4px;
+        }
+        
+        .label-danger {
+            background-color: #f56954;
+            color: #fff;
+        }
+        
+        .label-success {
+            background-color: #00a65a;
+            color: #fff;
+        }
+        
+        .label-warning {
+            background-color: #f39c12;
+        }
+        
+        /* Form Elements */
+        .input-group {
+            position: relative;
+            display: flex;
+        }
+        
+        .input-group .form-control {
+            position: relative;
+            z-index: 2;
+            flex: 1 1 auto;
+            width: 1%;
+            margin-bottom: 0;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+        
+        .form-control {
+            display: block;
+            width: 100%;
+            height: auto;
+            padding: 6px 12px;
+            font-size: 14px;
+            line-height: 1.42857143;
+            color: #555;
+            background-color: #fff;
+            background-image: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        }
+        
+        .input-group-btn {
+            position: relative;
+            white-space: nowrap;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 6px 12px;
+            margin-bottom: 0;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.42857143;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: middle;
+            cursor: pointer;
+            user-select: none;
+            background-image: none;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        
+        .btn-default {
+            color: #333;
+            background-color: #fff;
+            border-color: #ddd;
+        }
+        
+        /* Loading Spinner */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Alert Messages */
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        
+        .alert-info {
+            color: #31708f;
+            background-color: #d9edf7;
+            border-color: #bce8f1;
+        }
+        
+        .alert-danger {
+            color: #a94442;
+            background-color: #f2dede;
+            border-color: #ebccd1;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .box-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .box-tools {
+                width: 100%;
+            }
+            
+            .input-group {
+                width: 100%;
+            }
+            
+            .contact-cards {
+                flex-direction: column;
+            }
+            
+            .contact-card {
+                min-width: 100%;
+            }
+        }
+         .whatsapp-box {
+            background: #fff;
+            border-radius: 6px;
+            border-top: 3px solid #25D366;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .whatsapp-box-header {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .whatsapp-box-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin: 0 0 5px 0;
+            color: #075E54;
+        }
+
+        .whatsapp-box-subtitle {
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .whatsapp-qr-container {
+            margin: 15px 0;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .whatsapp-qr-image {
+            max-width: 200px;
+            height: auto;
+        }
+
+        .whatsapp-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 20px;
+            background-color: #25D366;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .whatsapp-link:hover {
+            background-color: #128C7E;
+        }
+
+        .whatsapp-link i {
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="row"><h2>Dashboard</h2></div>
+    <div class="dashboard-container" id="dashboard-container">
+        <div class="loading">
+            <div class="spinner"></div>
+            Loading dashboard...
+        </div>
+    </div>
+
+   <script>
+    // Configuration
+    const CONFIG = {
+        apiKey: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4',
+        spreadsheetId: '11wvVQ2G41ke3g6RdfYX8AJAl0w-fnf2NQ_Agufz0wXY',
+        sheets: {
+            todo: {
+                name: 'To Do List',
+                range: 'A:H' // Job ID, Subject, Description, Link Url, Last Date, Status, Offices Assigned, Confirm
+            },
+            settings: {
+                name: 'Settings',
+                range: 'H2:L' // Designation, Name, Contact Personal, eMail, Contact CUG
+            }
+        }
+    };
+    
+    // Main Dashboard Loader
+    document.addEventListener('DOMContentLoaded', async function() {
+        const container = document.getElementById('dashboard-container');
+        
+        try {
+            // Show loading state
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    Loading dashboard data...
+                </div>
+            `;
+            
+            // Get treasury name from session storage
+            const treasuryName = sessionStorage.getItem('treasuryName');
+            if (!treasuryName) {
+                container.innerHTML = `
+                    <div class="alert alert-danger">
+                        <strong>Error:</strong> Session Expired. Please <a href="https://itcelldto.github.io/try/" target="_blank">login</a> again.
+                    </div>
+                `;
+                return;
+            }
+            
+            // Load data
+            const [todoData, settingsData] = await Promise.all([
+                loadSheetData(CONFIG.sheets.todo),
+                loadSheetData(CONFIG.sheets.settings)
+            ]);
+            
+            container.innerHTML = '';
+            
+            // Render contact cards
+            if (settingsData.values && settingsData.values.length > 0) {
+                renderContactCards(container, settingsData.values);
+            }
+            
+            // Render To Do list
+            if (todoData.values && todoData.values.length > 0) {
+                renderTodoList(container, todoData.values, treasuryName);
+            } else {
+                container.innerHTML += `
+                    <div class="box">
+                        <div class="box-header">
+                            <h3 class="box-title">To Do List - ${treasuryName}</h3>
+                        </div>
+                        <div class="box-body">
+                            <div class="alert alert-info">No tasks assigned to ${treasuryName} found.</div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Add WhatsApp Group Box
+            container.innerHTML += `
+                <div class="whatsapp-box">
+                    <div class="whatsapp-box-header">
+                        <h3 class="whatsapp-box-title">eAdmin WhatsApp Group</h3>
+                        <p class="whatsapp-box-subtitle">Join our official communication channel</p>
+                    </div>
+                    <div class="whatsapp-qr-container">
+                        <img src="./img/qr.png" alt="WhatsApp Group QR Code" class="whatsapp-qr-image">
+                    </div>
+                    <p>Scan the QR code or click below to join</p>
+                    <a href="https://chat.whatsapp.com/CZ2sjysIx23LAzf11yVsUH" class="whatsapp-link" target="_blank">
+                        <i class="fa fa-whatsapp"></i> Join eAdmin Group
+                    </a>
+                </div>
+            `;
+            
+        } catch (error) {
+            console.error('Dashboard loading failed:', error);
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    <strong>Error loading dashboard:</strong> ${error.message}<br>
+                    Please check your network connection and try again.
+                </div>
+            `;
+        }
+    });
+    
+    // Load data from Google Sheets
+    async function loadSheetData(sheetConfig) {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.spreadsheetId}/values/${sheetConfig.name}!${sheetConfig.range}?key=${CONFIG.apiKey}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`Failed to load ${sheetConfig.name} data: ${response.status}`);
+        }
+        
+        return await response.json();
+    }
+    
+    // Render Contact Cards
+    function renderContactCards(container, rows) {
+        if (!rows || rows.length === 0) return;
+        
+        let contactCardsHTML = '<div class="contact-cards">';
+        
+        rows.forEach((row, index) => {
+            // Skip empty rows
+            if (!row || row.length < 5 || !row[1]) return;
+            
+            const colorClass = `contact-card-color-${index % 8}`; // Cycle through 8 color classes
+            
+            contactCardsHTML += `
+                <div class="contact-card ${colorClass}">
+                    <div class="contact-name">${row[1] || ''}</div>
+                    <div class="contact-designation">${row[0] || ''}</div>
+                    <div class="contact-detail">
+                        <i class="fa fa-phone"></i>
+                        <span>CUG: ${row[4] || ''}</span>
+                    </div>
+                    <div class="contact-detail">
+                        <i class="fa fa-mobile"></i>
+                        <span>Personal: ${row[2] || ''}</span>
+                    </div>
+                    <div class="contact-detail">
+                        <i class="fa fa-envelope"></i>
+                        <a href="mailto:${row[3] || ''}">${row[3] || ''}</a>
+                    </div>
+                </div>
+            `;
+        });
+        
+        contactCardsHTML += '</div>';
+        container.innerHTML += contactCardsHTML;
+    }
+    
+    // Render To Do List table
+    function renderTodoList(container, rows, treasuryName) {
+        // Remove header if exists
+        const headers = rows[0];
+        if (headers && headers[0] === 'Job ID') {
+            rows.shift();
+        }
+        
+        // Filter only confirmed items (H column = "Yes") and assigned to this treasury
+        const todoItems = rows.filter(row => {
+            const confirmValue = (row[7] || '').toString().trim().toLowerCase();
+            const officesAssigned = (row[6] || '').toString().toLowerCase();
+            
+            // Check if this treasury is in the assigned offices list
+            const isAssignedToThisTreasury = officesAssigned
+                .split(',')
+                .map(office => office.trim())
+                .some(office => office === treasuryName.toLowerCase());
+            
+            return (confirmValue === 'yes' || confirmValue === 'y') && isAssignedToThisTreasury;
+        });
+        
+        if (todoItems.length === 0) {
+            container.innerHTML += `
+                <div class="box">
+                    <div class="box-header">
+                        <h3 class="box-title">To Do List - ${treasuryName}</h3>
+                    </div>
+                    <div class="box-body">
+                        <div class="alert alert-info">No tasks assigned to ${treasuryName} found.</div>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        // Create table HTML
+        let tableRows = '';
+        
+        todoItems.forEach(row => {
+            const jobId = row[0] || '';
+            const subject = row[1] || '';
+            const description = row[2] || '';
+            const linkUrl = row[3] || '#';
+            const lastDate = row[4] || '';
+            const status = row[5] || 'Pending';
+            
+            // Determine status label class
+            let statusClass = 'label-danger';
+            const statusLower = status.toLowerCase();
+            if (statusLower.includes('complete') || statusLower.includes('done')) {
+                statusClass = 'label-success';
+            } else if (statusLower.includes('progress') || statusLower.includes('working')) {
+                statusClass = 'label-warning';
+            }
+            
+            tableRows += `
+                <tr>
+                    <td>${jobId}</td>
+                    <td><strong>${subject}</strong></td>
+                    <td>${description}</td>
+                    <td>${formatDate(lastDate)}</td>
+                    <td>
+                        <a href="${linkUrl}" target="_blank" rel="noopener noreferrer" class="btn btn-default">
+                            View <i class="fa fa-external-link"></i>
+                        </a>
+                    </td>
+                    <td><span class="label ${statusClass}">${status}</span></td>
+                </tr>
+            `;
+        });
+        
+        container.innerHTML += `
+            <div class="box">
+                <div class="box-header">
+                    <h3 class="box-title">To Do List - ${treasuryName}</h3>
+                    <div class="box-tools">
+                        <div class="input-group input-group-sm" style="width: 250px;">
+                            <input type="text" name="table_search" class="form-control" placeholder="Search tasks...">
+                            <span class="input-group-btn">
+                                <button type="button" class="btn btn-default btn-search">
+                                    <i class="fa fa-search"></i>
+                                </button>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="box-body table-responsive no-padding">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Subject</th>
+                                <th>Description</th>
+                                <th>Last Date</th>
+                                <th>Action</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        
+        // Add search functionality
+        addSearchFunctionality();
+    }
+    
+    // Format date for display as DD/MM/YYYY
+    function formatDate(dateString) {
+        if (!dateString) return '';
+        
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString;
+            
+            // Get day, month, and year components
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            
+            return `${month}/${day}/${year}`;
+        } catch (e) {
+            return dateString;
+        }
+    }
+    
+    // Add search functionality to the To Do table
+    function addSearchFunctionality() {
+        const searchInput = document.querySelector('input[name="table_search"]');
+        const searchButton = document.querySelector('.btn-search');
+        
+        const performSearch = () => {
+            const query = searchInput.value.toLowerCase();
+            const rows = document.querySelectorAll('.table-hover tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        };
+        
+        searchInput.addEventListener('keyup', performSearch);
+        if (searchButton) {
+            searchButton.addEventListener('click', performSearch);
+        }
+    }
+</script>
+</body>
+</html>
