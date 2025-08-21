@@ -240,7 +240,7 @@
         // Configuration
         const CONFIG = {
             mainSpreadsheetId: '1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM',
-            employeeSpreadsheetId: '1pOhA7N0HufnqmwD7KBCW8xhDKCh-gxZ-tOeZ2-4qq7k',
+            employeeSpreadsheetId: '1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM',
             apiKey: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
         };
 
@@ -419,14 +419,14 @@
         async function autofillEmployeeDetails(pen, prefix) {
             try {
                 // Fetch all employee data
-                const employeeData = await fetchSheetData(CONFIG.employeeSpreadsheetId, 'A2:E', 'employee');
+                const employeeData = await fetchSheetData(CONFIG.employeeSpreadsheetId, 'A2:E', 'umas-onboard');
                 
                 // Find employee with matching PEN
-                const employee = employeeData.find(row => row[2] === pen);
+                const employee = employeeData.find(row => row[1] === pen);
                 
                 if (employee) {
                     // Update form fields
-                    $(`#${prefix}Name`).val(employee[1]);
+                    $(`#${prefix}Name`).val(employee[2]);
                     $(`#${prefix}Designation`).val(employee[3]).trigger('change');
                     $(`#${prefix}Role`).val(employee[4]).trigger('change');
                 } else {
