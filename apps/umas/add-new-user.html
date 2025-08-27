@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UMAS Onboarding - Add Employee Data</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <!-- Flatpickr CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #d7e2ff6e;
+            padding: 15px;
+        }
+        .form-container {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            margin: 0 auto;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .section-header {
+            background-color: #f0f7ff;
+            padding: 10px 15px;
+            margin: 25px 0 15px 0;
+            border-left: 4px solid #4285f4;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .form-control[readonly] {
+            background-color: #f8f9fa;
+        }
+        .select2-container--bootstrap-5 .select2-selection {
+            border: 1px solid #dee2e6 !important;
+            padding: 0.375rem 0.75rem;
+            min-height: calc(1.5em + 0.75rem + 2px);
+        }
+        .select2-container--bootstrap-5 .select2-selection:focus {
+            border-color: #86b7fe !important;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+        }
+        .select2-container--bootstrap-5 .select2-dropdown {
+            border: 1px solid #dee2e6 !important;
+        }
+        .form-label {
+            margin-bottom: .5rem;
+            font-weight: 500;
+        }
+        .required:after {
+            content: " *";
+            color: red;
+        }
+        .is-invalid {
+            border-color: #dc3545 !important;
+            padding-right: calc(1.5em + 0.75rem);
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23dc3545' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23dc3545' stroke='none'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+        }
+        .is-invalid + .select2 .select2-selection {
+            border-color: #dc3545 !important;
+        }
+        .is-validating {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2306f' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%2306f' stroke='none'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right calc(0.375em + 0.1875rem) center;
+            background-size: calc(0.75em + 0.375rem) calc(0.75em + 0.375rem);
+            border-color: #06f;
+        }
+        .alert {
+            margin-top: 15px;
+        }
+        .dot-spinner {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px;
+        }
+        .dot {
+            width: 12px;
+            height: 12px;
+            margin: 0 4px;
+            background-color: #4285f4;
+            border-radius: 50%;
+            animation: dot-pulse 1.5s infinite ease-in-out;
+        }
+        .dot:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+        .dot:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+        @keyframes dot-pulse {
+            0%, 100% { transform: scale(0.8); opacity: 0.7; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="min-width:100%;margin-top: 25px !important; margin-bottom: 25px !important;">
+        <div class="row justify-content-center">
+            <div class="col-lg-12">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h5 class="t">User Management - Add New Employee Data</h5>
+                        <hr>
+                       
+                        <div class="form-container">
+						   <div class="col-md-12 mt-4">
+                                        <div class="section-header">Basic Details</div>
+                                    </div>
+                            <form id="addForm" method="post">
+                                <div class="row gy-3">
+                                 
+                                    
+                                    <!-- Employee Name and Designation -->
+                                    <div class="col-md-3">
+                                        <label for="pen" class="form-label required">PEN</label>
+                                        <input type="text" class="form-control" id="pen" name="pen" required>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <label for="employeeName" class="form-label required">Employee Name</label>
+                                        <input type="text" class="form-control" id="employeeName" name="employeeName" required oninput="this.value = this.value.toUpperCase()">
+                                    </div>
+                                 
+                                    <div class="col-md-6">
+                                        <label for="phoneNumber" class="form-label required">Phone Number</label>
+                                        <input type="tel" class="form-control" id="phoneNumber" name="phoneNumber" placeholder="Mobile number (must be start with +91 format)" required title="Phone number must start with +91 followed by 10 digits.">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="email" class="form-label required">Email-ID</label>
+                                        <input type="email" class="form-control" id="email" name="email" autocomplete="email" required pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="designation" class="form-label required">Designation</label>
+                                        <select class="form-select select2" id="designation" name="designation" required>
+                                            <option value="">Select Designation</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <!-- Role and Role Status -->
+                                    <div class="col-md-3">
+                                        <label for="role" class="form-label required">Role</label>
+                                        <select class="form-select select2" id="role" name="role" required>
+                                            <option value="">Select Role</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label for="roleStatus" class="form-label required">Role Status</label>
+                                        <select class="form-select select2" id="roleStatus" name="roleStatus" required>
+                                            <option value="">Select Role Status</option>
+                                        </select>
+                                    </div>
+									 <div class="col-md-3" style="">
+                                        <label for="ipAddress" class="form-label">IP Address</label>
+                                        <input type="text" class="form-control" id="ipAddress" name="ipAddress" placeholder="Optional">
+                                    </div>
+                                    
+                                    <!-- Dates Section -->
+                                    <div class="col-md-12 mt-4">
+                                        <div class="section-header">Joining and Retirement Date</div>
+                                        <hr>
+                                    </div>
+                                    
+                                    <div class="col-md-4">
+                                        <label for="joinedDate" class="form-label required">Joined Date</label>
+                                        <input type="text" class="form-control datepicker" id="joinedDate" name="joinedDate" placeholder="DD/MM/YYYY" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="retirementDate" class="form-label">Retirement Date</label>
+                                        <input type="text" class="form-control datepicker" id="retirementDate" name="retirementDate" placeholder="DD/MM/YYYY">
+                                    </div>
+                                    
+
+                               
+                                    <div class="col-md-12 mt-4">
+                                        <div class="section-header">Treasury Details</div>
+                                        <hr>
+                                    </div>
+                                    <!-- From Treasury -->
+                                    <div class="col-md-4">
+                                        <label for="fromTreasury" class="form-label required">From Treasury (Lean Office)</label>
+                                        <select class="form-select select2" id="fromTreasury" name="fromTreasury" required>
+                                            <option value="">Select From Treasury</option>
+                                        </select>
+                                    </div>
+                                    <!-- Treasury  -->
+                                    <div class="col-md-4">
+                                        <label for="toTreasury" class="form-label required">To Treasury Name</label>
+                                        <select class="form-select select2" id="toTreasury" name="toTreasury" required>
+                                            <option value="">Select Treasury</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="workingArrangement" class="form-label required">Working Arrangement</label>
+                                        <select class="form-select select2" id="workingArrangement" name="workingArrangement" required>
+                                            <option value="">Select Working Arrangement</option>
+                                        </select>
+                                    </div>
+                                    <!-- Submit Button -->
+                                    <div class="col-12 text-center mt-4">
+                                        <!-- Color Dot Spinner hidden by default -->
+                                        <div id="spinner" class="dot-spinner" style="display: none;">
+                                            <div class="dot"></div>
+                                            <div class="dot"></div>
+                                            <div class="dot"></div>
+                                        </div>
+                                        <!-- Submit Button -->
+                                        <button type="submit" id="submitBtn" class="btn btn-primary me-2">Add Data</button>
+                                        <button type="reset" class="btn btn-secondary">Reset</button>
+                                    </div>
+                                </div>
+                            </form>
+                            <div id="addMessage" class="mt-3 text-center"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery, Bootstrap, Select2, Flatpickr -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        // Google Sheets API configuration
+        const API_KEY = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+        const SHEET_ID = '1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM';
+        const MAIN_SHEET_NAME = 'umas-onboard-';
+        const SETTINGS_SHEET_NAME = 'settings';
+        
+        $(document).ready(function() {
+            // Initialize Select2 with Bootstrap 5 theme
+            $('.select2').select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                dropdownAutoWidth: true
+            });
+            
+            // Initialize date pickers
+            flatpickr(".datepicker", {
+                dateFormat: "d/m/Y",
+                allowInput: true,
+                defaultDate: "today"
+            });
+            
+            // Load dropdown options from Google Sheets
+            loadDropdownOptions();
+            
+            // PEN validation on lost focus
+            $('#pen').on('blur', function() {
+                const penValue = $(this).val().trim();
+                
+                if (penValue) {
+                    // Show loading indicator
+                    $(this).addClass('is-validating');
+                    
+                    // Check for duplicate PEN
+                    checkPENAndGetDetails(penValue)
+                        .then(result => {
+                            $('#pen').removeClass('is-validating');
+                            
+                            if (result.isDuplicate) {
+                                // Show SweetAlert warning
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Duplicate PEN Found!',
+                                    html: `This PEN/User is already onboarded. Please initiate Option-"Edit User Data".<br><br>
+                                            <strong>From Treasury:</strong> ${result.fromTreasury}<br>
+                                            <strong>To Treasury:</strong> ${result.toTreasury}`,
+                                    confirmButtonText: 'OK',
+                                    confirmButtonColor: '#3085d6',
+                                });
+                                
+                                // Highlight the field as invalid
+                                $('#pen').addClass('is-invalid');
+                            } else {
+                                // Remove invalid class if it was previously set
+                                $('#pen').removeClass('is-invalid');
+                            }
+                        })
+                        .catch(error => {
+                            $('#pen').removeClass('is-validating');
+                            console.error('Error checking PEN:', error);
+                        });
+                }
+            });
+            
+            // Form submission
+            $('#addForm').submit(function(e) {
+                e.preventDefault();
+                
+                // Validate form
+                let isValid = true;
+                $('.is-invalid').removeClass('is-invalid');
+                
+                $('#addForm').find('[required]').each(function() {
+                    if (!$(this).val()) {
+                        isValid = false;
+                        $(this).addClass('is-invalid');
+                        if ($(this).hasClass('select2-hidden-accessible')) {
+                            $(this).next('.select2-container').find('.select2-selection').addClass('is-invalid');
+                        }
+                    }
+                });
+                
+                // Validate phone number format
+                const phoneInput = document.getElementById("phoneNumber");
+                const phonePattern = /^\+91\d{10}$/;
+                if (!phonePattern.test(phoneInput.value.replace(/\s/g, ''))) {
+                    isValid = false;
+                    phoneInput.classList.add('is-invalid');
+                }
+                
+                if (!isValid) {
+                    $('#addMessage').html('<div class="alert alert-danger">Please fill all required fields correctly</div>');
+                    return;
+                }
+                
+                // Show spinner and hide button
+                $('#spinner').show();
+                $('#submitBtn').hide();
+                $('#addMessage').html('');
+                
+                // Create URL-encoded form data instead of FormData
+                const formData = $('#addForm').serialize();
+                
+                // Submit the form using AJAX
+                const xhr = new XMLHttpRequest();
+                xhr.open("POST", "https://script.google.com/macros/s/AKfycbyTjZGNnhUQpEtouZq62IAjNOdCYwWE9edwZ1Se0K_QMSZEXxHm6id1P5ZiqCA2zbyTNg/exec", true);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                
+                xhr.onload = function() {
+                    // Hide spinner and show the button after response
+                    $('#spinner').hide();
+                    $('#submitBtn').show();
+                    
+                    if (xhr.status == 200) {
+                        // Show success message
+                        Swal.fire({
+                            title: 'Success!',
+                            text: 'Employee data has been added successfully.',
+                            icon: 'success',
+                            confirmButtonText: 'OK'
+                        }).then(function() {
+                            $('#addForm')[0].reset();
+                            $('.select2').val(null).trigger('change');
+                        });
+                    } else {
+                        // Error handling if the form submission fails
+                        Swal.fire({
+                            title: 'Error!',
+                            text: 'There was an issue submitting the form. Please try again.',
+                            icon: 'error',
+                            confirmButtonText: 'OK'
+                        });
+                    }
+                };
+                
+                xhr.onerror = function() {
+                    // Hide spinner and show the button after error
+                    $('#spinner').hide();
+                    $('#submitBtn').show();
+                    
+                    Swal.fire({
+                        title: 'Network Error!',
+                        text: 'There was a network error. Please check your connection and try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                };
+                
+                xhr.send(formData);
+            });
+        });
+        
+        // Load dropdown options from Google Sheets
+        function loadDropdownOptions() {
+            // Fetch data from settings sheet
+            fetchSheetData(SETTINGS_SHEET_NAME, 'A2:A').then(data => {
+                populateDropdown('toTreasury', data.values || []);
+                populateDropdown('fromTreasury', data.values || []);
+            });
+            
+            fetchSheetData(SETTINGS_SHEET_NAME, 'B2:B').then(data => {
+                populateDropdown('designation', data.values || []);
+            });
+            
+            fetchSheetData(SETTINGS_SHEET_NAME, 'C2:C').then(data => {
+                populateDropdown('role', data.values || []);
+            });
+            
+            fetchSheetData(SETTINGS_SHEET_NAME, 'M2:M').then(data => {
+                populateDropdown('roleStatus', data.values || []);
+                populateDropdown('workingArrangement', data.values || []);
+            });
+        }
+        
+        // Fetch data from Google Sheets
+        async function fetchSheetData(sheetName, range) {
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${sheetName}!${range}?key=${API_KEY}`;
+            
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching sheet data:', error);
+                return {values: []};
+            }
+        }
+        
+        // Populate a dropdown with options
+        function populateDropdown(elementId, options) {
+            const $select = $('#' + elementId);
+            $select.empty();
+            const label = elementId.replace(/([A-Z])/g, ' $1').replace(/^./, function(str) { 
+                return str.toUpperCase(); 
+            });
+            $select.append('<option value="">Select ' + label + '</option>');
+            
+            options.forEach(optionArray => {
+                if (optionArray[0]) {
+                    $select.append($('<option>').val(optionArray[0]).text(optionArray[0]));
+                }
+            });
+        }
+        
+        // Check for duplicate PEN
+        async function checkPENAndGetDetails(pen) {
+            // Fetch data from main sheet to check for duplicates
+            const data = await fetchSheetData(MAIN_SHEET_NAME, 'A2:M');
+            
+            if (data.values) {
+                // Column B (index 1) contains PEN values
+                for (let i = 0; i < data.values.length; i++) {
+                    if (data.values[i][1] && data.values[i][1].toString().trim() === pen.toString().trim()) {
+                        // Found duplicate - return details
+                        return {
+                            isDuplicate: true,
+                            fromTreasury: data.values[i][12] || '', // M column (index 12)
+                            toTreasury: data.values[i][0] || ''     // A column (index 0)
+                        };
+                    }
+                }
+            }
+            
+            // No duplicate found
+            return {isDuplicate: false};
+        }
+        
+        // Phone number formatting
+        document.getElementById('phoneNumber').addEventListener('input', function(e) {
+            // Remove all non-digit characters except the plus at the beginning
+            let input = e.target.value.replace(/(?!^\+)\D/g, '');
+            
+            // Ensure it starts with +91
+            if (!input.startsWith('+91')) {
+                if (input.startsWith('91')) {
+                    input = '+' + input;
+                } else if (input.startsWith('0')) {
+                    input = '+91' + input.substring(1);
+                } else {
+                    input = '+91' + input;
+                }
+            }
+            
+            // Limit to 13 characters (+91 followed by 10 digits)
+            if (input.length > 13) {
+                input = input.substring(0, 13);
+            }
+            
+            e.target.value = input;
+        });
+    </script>
+</body>
+</html>
