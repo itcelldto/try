@@ -451,12 +451,14 @@
                     missingRefCount++;
                 }
                 
-                // Extract pension type from first row's remitter reference if available
-                if (index === 0 && row[refCol]) {
-                    const ref = row[refCol];
-                    const pensionCodeMatch = ref.match(/Pension Code:(\d+)/);
-                    if (pensionCodeMatch) {
-                        detectedPensionCode = pensionCodeMatch[1];
+                // Extract pension type from first row's fifth column (First Reference)
+                if (index === 0 && csvHeaders.length >= 5) {
+                    const firstRefCol = csvHeaders[4]; // Fifth column (index 4)
+                    if (row[firstRefCol]) {
+                        const refParts = row[firstRefCol].split('/');
+                        if (refParts.length >= 2) {
+                            detectedPensionCode = refParts[1]; // Middle part is pension type
+                        }
                     }
                 }
             });
@@ -789,31 +791,40 @@
                 const [year, month] = monthYear.split('-');
                 const monthYearDisplay = `${month}/${year}`;
                 
-                // Get column names
-                const refCol = csvHeaders[referenceColumnIndex];
+                // Get column indices
                 const amountCol = csvHeaders[amountColumnIndex];
-                const nameCol = csvHeaders.find(h => h.toLowerCase() === 'name');
-                const communicationCol = csvHeaders.find(h => h.toLowerCase() === 'communication');
+                const refCol = csvHeaders[referenceColumnIndex];
                 
-                if (!refCol || !amountCol || !nameCol) {
-                    alert('Required columns (Reference, Amount, Name) not found in CSV.');
-                    return;
-                }
+                // Get the specific column indices for the new CSV format
+                const moValueIndex = 1; // 2nd column (B)
+                const receiverNameIndex = 6; // 7th column (G)
+                const firstReferenceIndex = 4; // 5th column (E)
+                const otherReferenceIndex = 5; // 6th column (F)
+                
+                // Get column names based on indices
+                const moValueCol = csvHeaders[moValueIndex];
+                const receiverNameCol = csvHeaders[receiverNameIndex];
+                const firstReferenceCol = csvHeaders[firstReferenceIndex];
+                const otherReferenceCol = csvHeaders[otherReferenceIndex];
                 
                 // Group by beneficiary reference and sum amounts
                 const beneficiaryMap = new Map();
                 
                 csvData.forEach(row => {
                     const ref = row[refCol] || '';
-                    const name = row[nameCol] || '';
-                    const communication = communicationCol ? row[communicationCol] || '' : '';
+                    const moValue = row[moValueCol] || '';
+                    const receiverName = row[receiverNameCol] || '';
+                    const firstReference = row[firstReferenceCol] || '';
+                    const otherReference = row[otherReferenceCol] || '';
                     const amount = parseFloat(row[amountCol]) || 0;
                     
                     if (ref) {
                         if (!beneficiaryMap.has(ref)) {
                             beneficiaryMap.set(ref, {
-                                name: name,
-                                communication: communication,
+                                moValue: moValue,
+                                receiverName: receiverName,
+                                firstReference: firstReference,
+                                otherReference: otherReference,
                                 amount: 0,
                                 count: 0
                             });
@@ -827,14 +838,18 @@
                 
                 // Convert map to array for display and submission
                 const beneficiaryData = [];
+                const timestamp = new Date().toISOString();
+                
                 beneficiaryMap.forEach((value, key) => {
                     beneficiaryData.push({
                         amount: value.amount,
-                        name: value.name,
-                        communication: value.communication,
-                        remitterReference: key,
+                        name: value.receiverName,
+                        communication: value.firstReference,
+                        remitterReference: value.otherReference,
                         monthYear: monthYearDisplay,
-                        pensionType: pensionType
+                        pensionType: pensionType,
+                        timestamp: timestamp,
+                        moValue: value.moValue
                     });
                 });
                 
@@ -862,12 +877,14 @@
                 <table class="table table-bordered">
                     <thead>
                         <tr>
-                            <th>Amount</th>
+                            <th>MO Value</th>
                             <th>Name</th>
                             <th>Communication</th>
                             <th>Remitter Reference</th>
+                            <th>Amount</th>
                             <th>Month & Year</th>
                             <th>Credit Type</th>
+                            <th>Timestamp</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -876,12 +893,14 @@
             data.forEach(item => {
                 tableHTML += `
                     <tr>
-                        <td>${item.amount.toFixed(2)}</td>
+                        <td>${item.moValue}</td>
                         <td>${item.name}</td>
                         <td>${item.communication}</td>
                         <td>${item.remitterReference}</td>
+                        <td>${item.amount.toFixed(2)}</td>
                         <td>${item.monthYear}</td>
                         <td>${item.pensionType}</td>
+                        <td>${new Date(item.timestamp).toLocaleString()}</td>
                     </tr>
                 `;
             });
