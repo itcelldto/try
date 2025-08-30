@@ -761,210 +761,242 @@
             }
         }
         
-        function saveBeneficiaryDetails() {
-            try {
-                if (csvData.length === 0) {
-                    alert('No data available to save. Please upload and process a CSV file first.');
-                    return;
-                }
-                
-                const pensionType = document.getElementById('pensionType').value;
-                const monthYear = document.getElementById('monthYear').value;
-                
-                if (!pensionType) {
-                    Swal.fire({
-                        icon: "warning",
-                        text: "Please select a Credit type.",
-                    });
-                    return;
-                }
-                
-                if (!monthYear) {
-                    Swal.fire({
-                        icon: "warning",
-                        text: "Please select a month and year.",
-                    });
-                    return;
-                }
-                
-                // Parse month/year (format is YYYY-MM)
-                const [year, month] = monthYear.split('-');
-                const monthYearDisplay = `${month}/${year}`;
-                
-                // Get column indices
-                const amountCol = csvHeaders[amountColumnIndex];
-                const refCol = csvHeaders[referenceColumnIndex];
-                
-                // Get the specific column indices for the new CSV format
-                const moValueIndex = 1; // 2nd column (B)
-                const receiverNameIndex = 6; // 7th column (G)
-                const firstReferenceIndex = 4; // 5th column (E)
-                const otherReferenceIndex = 5; // 6th column (F)
-                
-                // Get column names based on indices
-                const moValueCol = csvHeaders[moValueIndex];
-                const receiverNameCol = csvHeaders[receiverNameIndex];
-                const firstReferenceCol = csvHeaders[firstReferenceIndex];
-                const otherReferenceCol = csvHeaders[otherReferenceIndex];
-                
-                // Group by beneficiary reference and sum amounts
-                const beneficiaryMap = new Map();
-                
-                csvData.forEach(row => {
-                    const ref = row[refCol] || '';
-                    const moValue = row[moValueCol] || '';
-                    const receiverName = row[receiverNameCol] || '';
-                    const firstReference = row[firstReferenceCol] || '';
-                    const otherReference = row[otherReferenceCol] || '';
-                    const amount = parseFloat(row[amountCol]) || 0;
-                    
-                    if (ref) {
-                        if (!beneficiaryMap.has(ref)) {
-                            beneficiaryMap.set(ref, {
-                                moValue: moValue,
-                                receiverName: receiverName,
-                                firstReference: firstReference,
-                                otherReference: otherReference,
-                                amount: 0,
-                                count: 0
-                            });
-                        }
-                        
-                        const beneficiary = beneficiaryMap.get(ref);
-                        beneficiary.amount += amount;
-                        beneficiary.count++;
-                    }
-                });
-                
-                // Convert map to array for display and submission
-                const beneficiaryData = [];
-                const timestamp = new Date().toISOString();
-                
-                beneficiaryMap.forEach((value, key) => {
-                    beneficiaryData.push({
-                        amount: value.amount,
-                        name: value.receiverName,
-                        communication: value.firstReference,
-                        remitterReference: value.otherReference,
-                        monthYear: monthYearDisplay,
-                        pensionType: pensionType,
-                        timestamp: timestamp,
-                        moValue: value.moValue
-                    });
-                });
-                
-                // Display the combined data
-                displayBeneficiaryTable(beneficiaryData);
-                
-                // Submit the data to Google Sheets
-                submitToGoogleSheets(beneficiaryData);
-                
-            } catch (error) {
-                alert('Error saving beneficiary details: ' + error.message);
-                console.error('Save error:', error);
-            }
+    function saveBeneficiaryDetails() {
+    try {
+        if (csvData.length === 0) {
+            alert('No data available to save. Please upload and process a CSV file first.');
+            return;
         }
         
-        function displayBeneficiaryTable(data) {
-            const container = document.getElementById('beneficiaryTableContainer');
-            
-            if (data.length === 0) {
-                container.innerHTML = '<p>No beneficiary data to display.</p>';
-                return;
-            }
-            
-            let tableHTML = `
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>MO Value</th>
-                            <th>Name</th>
-                            <th>Communication</th>
-                            <th>Remitter Reference</th>
-                            <th>Amount</th>
-                            <th>Month & Year</th>
-                            <th>Credit Type</th>
-                            <th>Timestamp</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
-            
-            data.forEach(item => {
-                tableHTML += `
-                    <tr>
-                        <td>${item.moValue}</td>
-                        <td>${item.name}</td>
-                        <td>${item.communication}</td>
-                        <td>${item.remitterReference}</td>
-                        <td>${item.amount.toFixed(2)}</td>
-                        <td>${item.monthYear}</td>
-                        <td>${item.pensionType}</td>
-                        <td>${new Date(item.timestamp).toLocaleString()}</td>
-                    </tr>
-                `;
-            });
-            
-            tableHTML += `</tbody></table>`;
-            container.innerHTML = tableHTML;
-            
-            // Show the beneficiary table section
-            document.getElementById('beneficiaryTableSection').style.display = 'block';
-        }
+        const pensionType = document.getElementById('pensionType').value;
+        const monthYear = document.getElementById('monthYear').value;
         
-        function submitToGoogleSheets(data) {
-            const scriptUrl = 'https://script.google.com/macros/s/AKfycbw8LCJ1eM65Gd9ANANUYbMOzogbWUq0bHREccZMiPZzWumrYKi-K4Qc4cKFRykiP5Tn/exec';
-            
-            // Show loading alert
+        if (!pensionType) {
             Swal.fire({
-                title: 'Saving Data',
-                html: 'Please wait while we save beneficiary details...',
-                allowOutsideClick: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
+                icon: "warning",
+                text: "Please select a Credit type.",
             });
-
-            // Create URL-encoded form data
-            const params = new URLSearchParams();
-            params.append('action', 'saveBeneficiaryData');
-            params.append('sheetName', 'IndividualDetails');
-            params.append('data', JSON.stringify(data));
-            
-            // Create and send fetch request
-            fetch(scriptUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                },
-                body: params.toString()
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Network response was not ok');
-                return response.json();
-            })
-            .then(response => {
-                if (response.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Success!',
-                        text: response.message || 'Beneficiary details saved successfully!',
-                        confirmButtonText: 'OK'
-                    });
-                } else {
-                    throw new Error(response.message || 'Unknown error');
-                }
-            })
-            .catch(error => {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: 'Error saving to Google Sheets: ' + error.message,
-                    confirmButtonText: 'OK'
-                });
-                console.error('Error details:', error);
-            });
+            return;
         }
+        
+        if (!monthYear) {
+            Swal.fire({
+                icon: "warning",
+                text: "Please select a month and year.",
+            });
+            return;
+        }
+        
+        // Parse month/year (format is YYYY-MM)
+        const [year, month] = monthYear.split('-');
+        const monthYearDisplay = `${month}/${year}`;
+        
+        // Get column indices
+        const amountCol = csvHeaders[amountColumnIndex];
+        const refCol = csvHeaders[referenceColumnIndex];
+        
+        // Get the specific column indices for the new CSV format
+        const moValueIndex = 1; // 2nd column (B)
+        const receiverNameIndex = 6; // 7th column (G)
+        const firstReferenceIndex = 4; // 5th column (E)
+        const otherReferenceIndex = 5; // 6th column (F)
+        
+        // Get column names based on indices
+        const moValueCol = csvHeaders[moValueIndex];
+        const receiverNameCol = csvHeaders[receiverNameIndex];
+        const firstReferenceCol = csvHeaders[firstReferenceIndex];
+        const otherReferenceCol = csvHeaders[otherReferenceIndex];
+        
+        // Group by beneficiary reference and sum amounts
+        const beneficiaryMap = new Map();
+        
+        csvData.forEach(row => {
+            const ref = row[refCol] || '';
+            const moValue = row[moValueCol] || '';
+            const receiverName = row[receiverNameCol] || '';
+            const firstReference = row[firstReferenceCol] || '';
+            const otherReference = row[otherReferenceCol] || '';
+            const amount = parseFloat(row[amountCol]) || 0;
+            
+            if (ref) {
+                if (!beneficiaryMap.has(ref)) {
+                    beneficiaryMap.set(ref, {
+                        moValue: moValue,
+                        receiverName: receiverName,
+                        firstReference: firstReference,
+                        otherReference: otherReference,
+                        amount: 0,
+                        count: 0
+                    });
+                }
+                
+                const beneficiary = beneficiaryMap.get(ref);
+                beneficiary.amount += amount;
+                beneficiary.count++;
+            }
+        });
+        
+        // Convert map to array for display and submission
+        const beneficiaryData = [];
+        const timestamp = new Date().toISOString();
+        
+        beneficiaryMap.forEach((value, key) => {
+            // Format the first reference as -Trcode:TRYcode-Pension Code:PensionType/PensionerCode
+            let formattedFirstReference = "";
+            if (value.firstReference) {
+                // Split the first reference by '/' to extract components
+                const parts = value.firstReference.split('/');
+                if (parts.length >= 3) {
+                    const tryCode = parts[0];
+                    const pensionTypeCode = parts[1];
+                    const pensionerCode = parts.slice(2).join('/'); // In case there are more parts
+                    formattedFirstReference = `Trcode:${tryCode}-Pension Code:${pensionTypeCode}/${pensionerCode}`;
+                } else {
+                    // If format is unexpected, use the original value
+                    formattedFirstReference = value.firstReference;
+                }
+            }
+            
+            beneficiaryData.push({
+                amount: value.amount,
+                name: value.receiverName,
+                communication: value.otherReference, // Use otherReference for remitterReference
+                remitterReference: formattedFirstReference,
+                monthYear: monthYearDisplay,
+                pensionType: pensionType,
+                timestamp: timestamp,
+                moValue: value.moValue,
+                formattedFirstReference: formattedFirstReference
+            });
+        });
+        
+        // Display the combined data
+        displayBeneficiaryTable(beneficiaryData);
+        
+        // Submit the data to Google Sheets
+        submitToGoogleSheets(beneficiaryData);
+        
+    } catch (error) {
+        alert('Error saving beneficiary details: ' + error.message);
+        console.error('Save error:', error);
+    }
+}
+function displayBeneficiaryTable(data) {
+    const container = document.getElementById('beneficiaryTableContainer');
+    
+    if (data.length === 0) {
+        container.innerHTML = '<p>No beneficiary data to display.</p>';
+        return;
+    }
+    
+    let tableHTML = `
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>MO Value</th>
+                    <th>Name</th>
+                    <th>Communication</th>
+                    <th>Remitter Reference</th>
+                    <th>Formatted First Reference</th>
+                    <th>Amount</th>
+                    <th>Month & Year</th>
+                    <th>Credit Type</th>
+                    <th>Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    data.forEach(item => {
+        tableHTML += `
+            <tr>
+                <td>${item.moValue}</td>
+                <td>${item.name}</td>
+                <td>${item.communication}</td>
+                <td>${item.remitterReference}</td>
+                <td>${item.formattedFirstReference}</td>
+                <td>${item.amount.toFixed(2)}</td>
+                <td>${item.monthYear}</td>
+                <td>${item.pensionType}</td>
+                <td>${new Date(item.timestamp).toLocaleString()}</td>
+            </tr>
+        `;
+    });
+    
+    tableHTML += `</tbody></table>`;
+    container.innerHTML = tableHTML;
+    
+    // Show the beneficiary table section
+    document.getElementById('beneficiaryTableSection').style.display = 'block';
+}
+        
+  function submitToGoogleSheets(data) {
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbw8LCJ1eM65Gd9ANANUYbMOzogbWUq0bHREccZMiPZzWumrYKi-K4Qc4cKFRykiP5Tn/exec';
+    
+    // Show loading alert
+    Swal.fire({
+        title: 'Saving Data',
+        html: 'Please wait while we save beneficiary details...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    // Create URL-encoded form data
+    const params = new URLSearchParams();
+    params.append('action', 'saveBeneficiaryData');
+    params.append('sheetName', 'IndividualDetails');
+    
+    // Prepare data for submission including the formatted first reference
+    const submissionData = data.map(item => ({
+        moValue: item.moValue,
+        name: item.name,
+        communication: item.communication,
+        remitterReference: item.remitterReference,
+        formattedFirstReference: item.formattedFirstReference,
+        amount: item.amount,
+        monthYear: item.monthYear,
+        pensionType: item.pensionType,
+        timestamp: item.timestamp
+    }));
+    
+    params.append('data', JSON.stringify(submissionData));
+    
+    // Create and send fetch request
+    fetch(scriptUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: params.toString()
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+    })
+    .then(response => {
+        if (response.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: response.message || 'Beneficiary details saved successfully!',
+                confirmButtonText: 'OK'
+            });
+        } else {
+            throw new Error(response.message || 'Unknown error');
+        }
+    })
+    .catch(error => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error saving to Google Sheets: ' + error.message,
+            confirmButtonText: 'OK'
+        });
+        console.error('Error details:', error);
+    });
+}
     </script>
 </body>
 </html>
