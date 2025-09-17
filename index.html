@@ -310,7 +310,125 @@ background-color: #091c34c7;
 .user-footer .btn {
     margin: 0 5px;
 }
-
+  /* Chatbot Css */
+ .chat-icon {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            background: #4a6fc7;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .chat-icon:hover {
+            background: #3b5aa6;
+            transform: scale(1.05);
+        }
+        
+        .chat-icon i {
+            font-size: 24px;
+        }
+        
+        /* Popup styles */
+        .chat-popup {
+            position: fixed;
+            bottom: 100px;
+            right: 25px;
+            width: 360px;
+            height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .popup-header {
+            background: #4a6fc7;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .popup-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .close-btn:hover {
+            transform: rotate(90deg);
+        }
+        
+        .popup-iframe {
+            flex: 1;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Overlay when popup is active */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+         /* Responsive design */
+        @media (max-width: 768px) {
+            .chat-popup {
+                width: 320px;
+                height: 400px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .chat-popup {
+                width: 300px;
+                right: 10px;
+                bottom: 80px;
+            }
+            
+            .chat-icon {
+                right: 15px;
+                bottom: 15px;
+                width: 50px;
+                height: 50px;
+            }
+        }
+		
+ /* Chatbot Css */	
+		
     </style>
 
 <script>
@@ -480,7 +598,63 @@ function openForgotPasswordPopup() {
             <strong>Copyright &copy; 2025 <a href="#">IT Cell HelpDesk</a>.</strong> All rights reserved.
         </footer>
     </div>
+    <!--  chat bot area -->
+     <!-- Chat Icon -->
+    <div class="chat-icon" id="chatIcon">
+        <i class="fas fa-comment"></i>
+    </div>
 
+    <!-- Chat Popup -->
+    <div class="chat-popup" id="chatPopup">
+        <div class="popup-header">
+            <h3>Customer Support</h3>
+            <button class="close-btn" id="closePopup">&times;</button>
+        </div>
+        <iframe src="https://itcelltreasury.github.io/try/chat/" class="popup-iframe" id="chatIframe"></iframe>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatIcon = document.getElementById('chatIcon');
+            const chatPopup = document.getElementById('chatPopup');
+            const closePopup = document.getElementById('closePopup');
+            const overlay = document.getElementById('overlay');
+            
+            // Open popup when chat icon is clicked
+            chatIcon.addEventListener('click', function() {
+                chatPopup.style.display = 'flex';
+                overlay.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            });
+            
+            // Close popup when X button is clicked
+            closePopup.addEventListener('click', function() {
+                chatPopup.style.display = 'none';
+                overlay.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+            
+            // Close popup when clicking outside
+            overlay.addEventListener('click', function() {
+                chatPopup.style.display = 'none';
+                overlay.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+            
+            // Close popup when pressing Escape key
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    chatPopup.style.display = 'none';
+                    overlay.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        });
+    </script>
+	<!-- chatbot area -->
     <!-- jQuery 3 -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <!-- Bootstrap 3.3.7 -->
