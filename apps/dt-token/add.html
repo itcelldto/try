@@ -12,7 +12,6 @@
             min-height: 100vh;
             padding: 15px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-           /* background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);*/
             background: #fff;
         }
         .card {
@@ -29,6 +28,7 @@
             padding: 20px;
         }
         .section-btn {
+            position: relative;
             transition: all 0.3s ease;
             margin: 8px;
             border-radius: 10px;
@@ -96,6 +96,12 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             color: white;
         }
+        .action-btn:disabled {
+            background: linear-gradient(135deg, #cccccc 0%, #999999 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
         .spinner-border {
             display: none;
         }
@@ -157,6 +163,24 @@
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 20px;
+        }
+        
+        /* Badge styling for queue counts */
+        .queue-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, #ff6384, #ff002b);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
     </style>
 </head>
@@ -259,6 +283,9 @@
         let currentTokenNumber = 0;
         let treasuries = [];
         let sections = [];
+        let queueCounts = {};
+        let queueUpdateInterval;
+        let isTokenSubmitted = false;
         
         // Initialize toast notification
         const Toast = Swal.mixin({
@@ -313,6 +340,9 @@
                 if (data.values && data.values.length > 0) {
                     sections = data.values.flat().filter(s => s.trim() !== '');
                     populateSectionButtons(sections);
+                    
+                    // Start updating queue counts every 2 seconds
+                    startQueueCountUpdates();
                 } else {
                     document.getElementById('sectionButtons').innerHTML = '<div class="text-danger">No sections found</div>';
                 }
@@ -320,6 +350,106 @@
                 console.error('Error fetching sections:', error);
                 document.getElementById('sectionButtons').innerHTML = '<div class="text-danger">Error loading sections</div>';
             }
+        }
+        
+        // Start updating queue counts
+        function startQueueCountUpdates() {
+            // Clear any existing interval
+            if (queueUpdateInterval) {
+                clearInterval(queueUpdateInterval);
+            }
+            
+            // Update counts immediately and then every 2 seconds
+            updateAllQueueCounts();
+            queueUpdateInterval = setInterval(updateAllQueueCounts, 2000);
+        }
+        
+        // Update queue counts for all treasuries and sections
+        async function updateAllQueueCounts() {
+            if (!treasuries.length || !sections.length) return;
+            
+            try {
+                // Fetch all token data
+                const allTokenData = await fetchAllTokenData();
+                
+                // Reset counts
+                queueCounts = {};
+                
+                // Count "In Que" tokens for each treasury-section combination
+                allTokenData.forEach(row => {
+                    if (row.length >= 6 && row[5] === "In Que") {
+                        const treasury = row[0];
+                        const section = row[1];
+                        
+                        if (treasury && section) {
+                            const key = `${treasury}-${section}`;
+                            queueCounts[key] = (queueCounts[key] || 0) + 1;
+                        }
+                    }
+                });
+                
+                // Update the badges on section buttons
+                updateQueueBadges();
+                
+            } catch (error) {
+                console.error('Error updating queue counts:', error);
+            }
+        }
+        
+        // Fetch all token data from all treasury sheets
+        async function fetchAllTokenData() {
+            const allData = [];
+            
+            try {
+                // For each treasury, fetch its data
+                for (const treasury of treasuries) {
+                    try {
+                        const range = `${treasury}!A2:F`;
+                        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`;
+                        
+                        const response = await fetch(url);
+                        const data = await response.json();
+                        
+                        if (data.values && data.values.length > 0) {
+                            // Add treasury name to each row and push to allData
+                            data.values.forEach(row => {
+                                allData.push(row);
+                            });
+                        }
+                    } catch (error) {
+                        console.error(`Error fetching data for ${treasury}:`, error);
+                    }
+                }
+            } catch (error) {
+                console.error('Error fetching all token data:', error);
+            }
+            
+            return allData;
+        }
+        
+        // Update queue badges on section buttons
+        function updateQueueBadges() {
+            const sectionButtons = document.querySelectorAll('#sectionButtons .section-btn');
+            
+            sectionButtons.forEach(button => {
+                const section = button.dataset.section;
+                const key = `${currentTreasury}-${section}`;
+                const count = queueCounts[key] || 0;
+                
+                // Remove existing badge if any
+                const existingBadge = button.querySelector('.queue-badge');
+                if (existingBadge) {
+                    button.removeChild(existingBadge);
+                }
+                
+                // Add new badge if there are queued tokens
+                if (count > 0) {
+                    const badge = document.createElement('span');
+                    badge.className = 'queue-badge';
+                    badge.textContent = count;
+                    button.appendChild(badge);
+                }
+            });
         }
         
         // Populate treasury dropdown
@@ -376,6 +506,9 @@
                 currentTreasury = this.value;
                 document.getElementById('treasury').value = currentTreasury;
                 document.getElementById('currentTreasuryDisplay').textContent = currentTreasury || 'Not selected';
+                
+                // Update queue counts when treasury changes
+                updateAllQueueCounts();
             });
         }
         
@@ -414,6 +547,10 @@
                 
                 // Display the token
                 displayToken(currentTokenNumber, currentSection);
+                
+                // Reset the submission flag and enable the print button
+                isTokenSubmitted = false;
+                document.getElementById('printAndSubmitBtn').disabled = false;
                 
             } catch (error) {
                 console.error('Error generating token:', error);
@@ -482,6 +619,16 @@
         
         // Print and submit the token
         function printAndSubmitToken() {
+            // Check if token has already been submitted
+			 document.getElementById('printAndSubmitBtn').disabled = true;
+            if (isTokenSubmitted) {
+                Toast.fire({
+                    icon: 'warning',
+                    title: 'This token has already been submitted. Generate a new token first.'
+                });
+                return;
+            }
+            
             // Disable section buttons to prevent duplicate submissions
             disableSectionButtons();
             
@@ -494,33 +641,31 @@
             
             // Show spinner and hide the button
             spinner.style.display = "flex";
-            submitButton.style.display = "none";
             
             var formData = new FormData(document.getElementById("tokenForm"));
             var xhr = new XMLHttpRequest();
             
             xhr.open("POST", APP_SCRIPT_URL, true);
             xhr.onload = function() {
-                // Hide spinner and show the submit button after response
+                // Hide spinner
                 spinner.style.display = "none";
-                submitButton.style.display = "inline-block";
                 
                 // Re-enable section buttons after submission is complete
                 enableSectionButtons();
                 
                 if (xhr.status == 200) {
+                    // Mark token as submitted and disable the print button
+                    isTokenSubmitted = true;
+                    submitButton.disabled = true;
+                    
                     // Show success toast notification
                     Toast.fire({
                         icon: 'success',
                         title: 'Token submitted successfully'
                     });
                     
-                    // Hide the token display and button
-                    document.getElementById('tokenDisplay').style.display = 'none';
-                    document.getElementById('printAndSubmitBtn').style.display = 'none';
-                    
-                    // Reset the form
-                    document.getElementById('tokenForm').reset();
+                    // Update queue counts after submission
+                    updateAllQueueCounts();
                     
                 } else {
                     // Error handling if the form submission fails
@@ -532,16 +677,15 @@
             };
             
             xhr.onerror = function() {
-                // Hide spinner and show the submit button after error
+                // Hide spinner
                 spinner.style.display = "none";
-                submitButton.style.display = "inline-block";
                 
                 // Re-enable section buttons after error
                 enableSectionButtons();
-                
+                document.getElementById('printAndSubmitBtn').disabled = true;
                 Toast.fire({
                     icon: 'warning',
-                    title: 'Issue on Network; token submitted'
+                    title: 'Network issue; token may not have been submitted'
                 });
             };
             
