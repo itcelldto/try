@@ -43,6 +43,12 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
             background: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);
         }
+        .section-btn:disabled {
+            background: linear-gradient(135deg, #cccccc 0%, #999999 100%);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
         .token-display {
             background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
             border-radius: 15px;
@@ -347,6 +353,22 @@
             });
         }
         
+        // Function to disable all section buttons
+        function disableSectionButtons() {
+            const sectionButtons = document.querySelectorAll('#sectionButtons .section-btn');
+            sectionButtons.forEach(button => {
+                button.disabled = true;
+            });
+        }
+        
+        // Function to enable all section buttons
+        function enableSectionButtons() {
+            const sectionButtons = document.querySelectorAll('#sectionButtons .section-btn');
+            sectionButtons.forEach(button => {
+                button.disabled = false;
+            });
+        }
+        
         // Set up event listeners
         function setupEventListeners() {
             // Treasury select change event
@@ -460,6 +482,9 @@
         
         // Print and submit the token
         function printAndSubmitToken() {
+            // Disable section buttons to prevent duplicate submissions
+            disableSectionButtons();
+            
             // First print the token
             window.print();
             
@@ -479,6 +504,9 @@
                 // Hide spinner and show the submit button after response
                 spinner.style.display = "none";
                 submitButton.style.display = "inline-block";
+                
+                // Re-enable section buttons after submission is complete
+                enableSectionButtons();
                 
                 if (xhr.status == 200) {
                     // Show success toast notification
@@ -507,6 +535,9 @@
                 // Hide spinner and show the submit button after error
                 spinner.style.display = "none";
                 submitButton.style.display = "inline-block";
+                
+                // Re-enable section buttons after error
+                enableSectionButtons();
                 
                 Toast.fire({
                     icon: 'warning',
