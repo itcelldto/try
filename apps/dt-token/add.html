@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            min-height: 100vh;
+            padding: 15px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .card {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            margin-bottom: 30px;
+            border: none;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #3494e6, #3457D5);
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        .section-btn {
+            transition: all 0.3s ease;
+            margin: 8px;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            border: none;
+            color: white;
+        }
+        .section-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            background: linear-gradient(135deg, #2575fc 0%, #6a11cb 100%);
+        }
+        .token-display {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            margin-top: 20px;
+            width: 100%;
+            display: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        .token-number {
+            font-size: 5rem;
+            font-weight: bold;
+            color: #2c3e50;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .section-name {
+            font-size: 2rem;
+            color: #34495e;
+            margin: 15px 0;
+        }
+        .timestamp {
+            font-size: 1.2rem;
+            color: #7f8c8d;
+        }
+        .treasury-name {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .action-btn {
+            background: linear-gradient(135deg, #3494e6, #3457D5);
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            border-radius: 50px;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            color: white;
+            margin: 10px;
+        }
+        .action-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            color: white;
+        }
+        .spinner-border {
+            display: none;
+        }
+        .treasury-select {
+            padding: 12px;
+            border-radius: 10px;
+            border: 2px solid #ddd;
+            width: 100%;
+            font-size: 1.1rem;
+        }
+        .instructions {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3457D5;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .btn-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .token-print, .token-print * {
+                visibility: visible;
+            }
+            .token-print {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+        
+        /* Toast notification styling */
+        .swal2-popup.swal2-toast {
+            padding: 10px 15px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        /* Loading spinner */
+        #spinner {
+            display: none;
+            justify-content: center;
+            margin: 10px 0;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #3457D5;
+        }
+        
+        .treasury-info {
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="min-width:100%">
+        <div class="row justify-content-center">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-ticket-alt me-2"></i>Token Management System</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="treasury-info no-print">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="section-title">Current Treasury:</div>
+                                    <div id="currentTreasuryDisplay" class="fw-bold">Not selected</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="section-title">Current Section:</div>
+                                    <div id="currentSectionDisplay" class="fw-bold">Not selected</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4 no-print">
+                            <div class="col-md-2">
+                                <label for="treasurySelect" class="form-label fw-bold">Select Treasury:</label>
+                                <select id="treasurySelect" class="treasury-select">
+                                    <option value="">Loading treasuries...</option>
+                                </select>
+                            </div>
+                            <div class="col-md-10">
+                                <label class="form-label fw-bold">Sections:</label>
+                                <div id="sectionButtons" class="d-flex flex-wrap">
+                                    <!-- Section buttons will be generated here -->
+                                    <div class="text-center w-100">
+                                        <div class="spinner-border text-primary" role="status">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row mb-3 ">
+                            <div class="col-md-6">
+                                <div id="tokenDisplay" class="token-display" >
+                                    <div class="token-print">
+                                        <h3>Token Number</h3>
+                                        <div class="token-number" id="printTokenNumber">001</div>
+                                        <div class="section-name" id="printSection">Section Name</div>
+                                        <div class="timestamp" id="printTimestamp">00:00:00</div>
+                                        <div class="treasury-name mt-3" id="printTreasury">Treasury Name</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">                      
+                                <form id="tokenForm" class="mt-4 no-print">
+                                    <input type="hidden" id="treasury" name="treasury">
+                                    <input type="hidden" id="section" name="section">
+                                    <input type="hidden" id="tokenNo" name="tokenNo">
+                                    <input type="hidden" id="timeStamp" name="timeStamp">
+                                    <input type="hidden" name="status" value="In Que">
+                                    
+                                    <div class="mb-3">
+                                        <label for="remarks" class="form-label fw-bold">Remarks (Optional):</label>
+                                        <textarea class="form-control" id="remarks" name="remarks" rows="2" placeholder="Add any additional notes here"></textarea>
+                                    </div>
+                                </form>
+                                
+                                <div class="btn-container no-print">
+                                    <button class="btn btn-success action-btn" id="printAndSubmitBtn" onclick="printAndSubmitToken()" style="display: none;">
+                                        <i class="fas fa-print me-2"></i>Print & Submit Token
+                                    </button>
+                                </div>
+                                
+                                <div id="spinner" class="justify-content-center mt-3">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Submitting...</span>
+                                    </div>
+                                    <span class="ms-2">Submitting token...</span>
+                                </div>
+                            </div>					
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API configuration
+        const SPREADSHEET_ID = "11AWbKR2rR2YQYm6AdjEQsw-na9QObL0wfw6eAi4MEdM";
+        const API_KEY = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+        const APP_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxnC-6vx4ohX-qs8O4XurRBqfRJvYd5LXeSTDWl2sOfaKe34SwkH4jCTK0QmZo6bq-uiA/exec";
+        
+        // Global variables
+        let currentTreasury = "";
+        let currentSection = "";
+        let currentTokenNumber = 0;
+        let treasuries = [];
+        let sections = [];
+        
+        // Initialize toast notification
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchTreasuries();
+            setupEventListeners();
+        });
+        
+        // Fetch treasuries from Google Sheets
+        async function fetchTreasuries() {
+            try {
+                const range = 'settings!A2:A';
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.values && data.values.length > 0) {
+                    treasuries = data.values.flat().filter(t => t.trim() !== '');
+                    populateTreasurySelect(treasuries);
+                    fetchSections();
+                } else {
+                    document.getElementById('treasurySelect').innerHTML = '<option value="">No treasuries found</option>';
+                }
+            } catch (error) {
+                console.error('Error fetching treasuries:', error);
+                document.getElementById('treasurySelect').innerHTML = '<option value="">Error loading treasuries</option>';
+            }
+        }
+        
+        // Fetch sections from Google Sheets
+        async function fetchSections() {
+            try {
+                const range = 'settings!B2:B';
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.values && data.values.length > 0) {
+                    sections = data.values.flat().filter(s => s.trim() !== '');
+                    populateSectionButtons(sections);
+                } else {
+                    document.getElementById('sectionButtons').innerHTML = '<div class="text-danger">No sections found</div>';
+                }
+            } catch (error) {
+                console.error('Error fetching sections:', error);
+                document.getElementById('sectionButtons').innerHTML = '<div class="text-danger">Error loading sections</div>';
+            }
+        }
+        
+        // Populate treasury dropdown
+        function populateTreasurySelect(treasuryList) {
+            const select = document.getElementById('treasurySelect');
+            select.innerHTML = '<option value="">Select a Treasury</option>';
+            
+            treasuryList.forEach(treasury => {
+                const option = document.createElement('option');
+                option.value = treasury;
+                option.textContent = treasury;
+                select.appendChild(option);
+            });
+        }
+        
+        // Populate section buttons
+        function populateSectionButtons(sectionList) {
+            const container = document.getElementById('sectionButtons');
+            container.innerHTML = '';
+            
+            sectionList.forEach(section => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'btn btn-primary section-btn';
+                button.textContent = section;
+                button.dataset.section = section;
+                button.addEventListener('click', function() {
+                    handleSectionClick(this.dataset.section);
+                });
+                container.appendChild(button);
+            });
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Treasury select change event
+            document.getElementById('treasurySelect').addEventListener('change', function() {
+                currentTreasury = this.value;
+                document.getElementById('treasury').value = currentTreasury;
+                document.getElementById('currentTreasuryDisplay').textContent = currentTreasury || 'Not selected';
+            });
+        }
+        
+        // Handle section button click
+        async function handleSectionClick(section) {
+            if (!currentTreasury) {
+                Swal.fire({
+                    title: 'Select Treasury First',
+                    text: 'Please select a treasury before choosing a section',
+                    icon: 'warning',
+                    confirmButtonText: 'OK'
+                });
+                return;
+            }
+            
+            currentSection = section;
+            document.getElementById('currentSectionDisplay').textContent = currentSection;
+            
+            try {
+                // Show loading state
+                Swal.fire({
+                    title: 'Generating Token',
+                    text: 'Please wait...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                // Get the last token value and add 1
+                const lastToken = await getLastTokenNumber(currentTreasury);
+                currentTokenNumber = lastToken + 1;
+                
+                // Close the loading dialog
+                Swal.close();
+                
+                // Display the token
+                displayToken(currentTokenNumber, currentSection);
+                
+            } catch (error) {
+                console.error('Error generating token:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'There was an issue generating the token. Please try again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        }
+        
+        // Get the last token number for the selected treasury
+        async function getLastTokenNumber(treasury) {
+            try {
+                // Fetch the last token from the treasury sheet (column C)
+                const range = `${treasury}!C2:C`;
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.values && data.values.length > 0) {
+                    // Get the last token value
+                    const tokenValues = data.values.flat()
+                        .map(val => parseInt(val))
+                        .filter(val => !isNaN(val));
+                    
+                    if (tokenValues.length > 0) {
+                        return Math.max(...tokenValues);
+                    }
+                }
+                
+                return 0;
+            } catch (error) {
+                console.error('Error fetching last token:', error);
+                throw error;
+            }
+        }
+        
+        // Display the token
+        function displayToken(tokenNumber, section) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            const dateString = now.toLocaleDateString();
+            
+            // Update the token display
+            document.getElementById('printTokenNumber').textContent = tokenNumber.toString().padStart(3, '0');
+            document.getElementById('printSection').textContent = section;
+            document.getElementById('printTimestamp').textContent = `${dateString} ${timeString}`;
+            document.getElementById('printTreasury').textContent = currentTreasury;
+            
+            // Set form values
+            document.getElementById('treasury').value = currentTreasury;
+            document.getElementById('section').value = section;
+            document.getElementById('tokenNo').value = tokenNumber;
+            document.getElementById('timeStamp').value = now.toISOString();
+            
+            // Show the token display and print button
+            document.getElementById('tokenDisplay').style.display = 'block';
+            document.getElementById('printAndSubmitBtn').style.display = 'block';
+            
+            // Scroll to the token display
+            document.getElementById('tokenDisplay').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Print and submit the token
+        function printAndSubmitToken() {
+            // First print the token
+            window.print();
+            
+            // Then submit the form using XMLHttpRequest to avoid CORS issues
+            const submitButton = document.getElementById("printAndSubmitBtn");
+            const spinner = document.getElementById("spinner");
+            
+            // Show spinner and hide the button
+            spinner.style.display = "flex";
+            submitButton.style.display = "none";
+            
+            var formData = new FormData(document.getElementById("tokenForm"));
+            var xhr = new XMLHttpRequest();
+            
+            xhr.open("POST", APP_SCRIPT_URL, true);
+            xhr.onload = function() {
+                // Hide spinner and show the submit button after response
+                spinner.style.display = "none";
+                submitButton.style.display = "inline-block";
+                
+                if (xhr.status == 200) {
+                    // Show success toast notification
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Token submitted successfully'
+                    });
+                    
+                    // Hide the token display and button
+                    document.getElementById('tokenDisplay').style.display = 'none';
+                    document.getElementById('printAndSubmitBtn').style.display = 'none';
+                    
+                    // Reset the form
+                    document.getElementById('tokenForm').reset();
+                    
+                } else {
+                    // Error handling if the form submission fails
+                    Toast.fire({
+                        icon: 'error',
+                        title: 'Error submitting token'
+                    });
+                }
+            };
+            
+            xhr.onerror = function() {
+                // Hide spinner and show the submit button after error
+                spinner.style.display = "none";
+                submitButton.style.display = "inline-block";
+                
+                Toast.fire({
+                    icon: 'warning',
+                    title: 'Issue on Network; token submitted'
+                });
+            };
+            
+            xhr.send(formData);
+        }
+    </script>
+</body>
+</html>
