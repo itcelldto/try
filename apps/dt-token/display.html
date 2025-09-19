@@ -120,6 +120,35 @@
             box-shadow: 0 0 8px rgba(255, 204, 0, 0.5);
         }
         
+        /* Scroll reel styles */
+        .scroll-reel-container {
+            background: linear-gradient(to right, #1a5276, #2e86c1);
+            padding: 10px;
+            border-top: 2px solid #ffcc00;
+            border-bottom: 2px solid #ffcc00;
+            overflow: hidden;
+            position: relative;
+            display: none; /* Hidden by default, shown when content exists */
+        }
+        
+        .scroll-reel {
+            white-space: nowrap;
+            animation: scroll 30s linear infinite;
+        }
+        
+        .scroll-reel-content {
+            display: inline-block;
+            padding-right: 50px;
+            font-size: 2vw;
+            color: #ffcc00;
+            font-weight: bold;
+        }
+        
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+        
         .footer {
             background: linear-gradient(to right, #1a5276, #2e86c1);
             padding: 15px;
@@ -166,6 +195,7 @@
             th { font-size: 3.2vw; }
             .current-token { font-size: 3.8vw; }
             .queued-token { font-size: 2.8vw; padding: 8px 12px; }
+            .scroll-reel-content { font-size: 2.5vw; }
         }
         
         @media (max-width: 768px) {
@@ -176,6 +206,7 @@
             h1 { font-size: 4.5vw; }
             .subheading { font-size: 3.5vw; }
             .last-updated, .clock { font-size: 3vw; }
+            .scroll-reel-content { font-size: 3vw; }
         }
         
         @media (max-height: 800px) {
@@ -183,6 +214,7 @@
             th { font-size: 2.6vw; padding: 15px 10px; }
             .current-token { font-size: 2.8vw; }
             .queued-token { font-size: 2vw; padding: 5px 8px; }
+            .scroll-reel-content { font-size: 2vw; }
         }
     </style>
 </head>
@@ -199,6 +231,13 @@
             </div>
         </div>
         
+        <!-- Scroll reel area -->
+        <div class="scroll-reel-container" id="scroll-reel-container">
+            <div class="scroll-reel">
+                <div class="scroll-reel-content" id="scroll-reel-content"></div>
+            </div>
+        </div>
+        
         <div class="footer">
             <div class="last-updated" id="last-updated"></div>
             <div class="clock" id="clock"></div>
@@ -210,6 +249,10 @@
         const SPREADSHEET_ID = '11AWbKR2rR2YQYm6AdjEQsw-na9QObL0wfw6eAi4MEdM';
         const API_KEY = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
         const SHEET_NAME = '101';
+        const SETTINGS_SHEET = 'settings';
+        
+        // Store previous token data for comparison
+        let previousTokenData = {};
         
         // Function to fetch data from Google Sheets
         async function fetchTokenData() {
@@ -229,6 +272,44 @@
                     '<div class="loading">Error loading token data. Please try again later.</div>';
                 return null;
             }
+        }
+        
+        // Function to fetch scroll reel content
+        async function fetchScrollReelContent() {
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SETTINGS_SHEET}!C2:C?key=${API_KEY}`;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                return processScrollReelData(data.values);
+            } catch (error) {
+                console.error('Error fetching scroll reel content:', error);
+                return null;
+            }
+        }
+        
+        // Process scroll reel data
+        function processScrollReelData(values) {
+            if (!values || values.length === 0) return null;
+            
+            // Combine all non-empty cells into a single string
+            let content = '';
+            for (let i = 0; i < values.length; i++) {
+                if (values[i] && values[i][0] && values[i][0].trim() !== '') {
+                    content += values[i][0] + ' • ';
+                }
+            }
+            
+            // Remove the last separator
+            if (content.endsWith(' • ')) {
+                content = content.slice(0, -3);
+            }
+            
+            return content;
         }
         
         // Process the data from Google Sheets
@@ -273,6 +354,54 @@
             }
             
             return sectionsMap;
+        }
+        
+        // Check for changes and announce if needed
+        function checkForChangesAndAnnounce(newData) {
+            if (!newData || Object.keys(previousTokenData).length === 0) {
+                previousTokenData = JSON.parse(JSON.stringify(newData));
+                return;
+            }
+            
+            // Check each section for changes
+            for (const section in newData) {
+                if (previousTokenData[section]) {
+                    const newToken = newData[section].currentToken;
+                    const oldToken = previousTokenData[section].currentToken;
+                    
+                    if (newToken !== oldToken && newToken !== null) {
+                        // Token has changed, announce it
+                        announceToken(section, newToken);
+                    }
+                }
+            }
+            
+            // Update previous data
+            previousTokenData = JSON.parse(JSON.stringify(newData));
+        }
+        
+        // Announce token using speech synthesis
+        function announceToken(section, tokenNumber) {
+            if ('speechSynthesis' in window) {
+                const speech = new SpeechSynthesisUtterance();
+                speech.text = `Token Number ${tokenNumber} for ${section}`;
+                speech.volume = 1;
+                speech.rate = 0.9;
+                speech.pitch = 1;
+                
+                // Try to find a female voice
+                const voices = speechSynthesis.getVoices();
+                const femaleVoice = voices.find(voice => 
+                    voice.name.includes('Female') || voice.name.includes('Woman') || 
+                    voice.name.includes('Zira') || voice.lang.includes('en-US')
+                );
+                
+                if (femaleVoice) {
+                    speech.voice = femaleVoice;
+                }
+                
+                window.speechSynthesis.speak(speech);
+            }
         }
         
         // Generate the HTML table from processed data
@@ -337,12 +466,27 @@
         async function updateTable() {
             const data = await fetchTokenData();
             if (data) {
+                checkForChangesAndAnnounce(data);
                 document.getElementById('token-table').innerHTML = generateTable(data);
                 
                 // Update last updated timestamp
                 const now = new Date();
                 document.getElementById('last-updated').textContent = 
                     `Last updated: ${now.toLocaleTimeString()}`;
+            }
+        }
+        
+        // Update scroll reel content
+        async function updateScrollReel() {
+            const content = await fetchScrollReelContent();
+            const container = document.getElementById('scroll-reel-container');
+            const contentElement = document.getElementById('scroll-reel-content');
+            
+            if (content && content.trim() !== '') {
+                contentElement.textContent = content;
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
             }
         }
         
@@ -357,10 +501,12 @@
         // Initial load
         updateTable();
         updateClock();
+        updateScrollReel();
         
-        // Set up periodic refresh every 2 seconds
+        // Set up periodic refresh
         setInterval(updateTable, 2000);
         setInterval(updateClock, 1000);
+        setInterval(updateScrollReel, 30000); // Update scroll reel every 30 seconds
     </script>
 </body>
 </html>
