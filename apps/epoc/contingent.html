@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ePOC Clearance RBI Contingent</title>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            padding: 20px;
+            color: #495057;
+        }
+        .header {
+            background: linear-gradient(135deg, #6a89cc 0%, #4a69bd 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .card {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: none;
+            border-radius: 10px;
+            background-color: #ffffff;
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background:#dfe4ea;
+            color: #2f3542;
+            font-weight: 600;
+            border-radius: 10px 10px 0 0 !important;
+            padding: 15px 20px;
+        }
+        .table-container {
+            overflow-x: auto;
+            border-radius: 0 0 10px 10px;
+        }
+        .table th {
+            background-color: #dfe4ea;
+            color: #2f3542;
+            font-weight: 600;
+        }
+        .footer-total {
+            font-weight: bold;
+            background-color: #e9ecef;
+        }
+        .action-buttons {
+            margin-bottom: 20px;
+        }
+        #loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        .spinner-border {
+            width: 3rem; 
+            height: 3rem;
+            color: #4a69bd;
+        }
+        .signature-area {
+            margin-top: 100px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4a69bd 0%, #6a89cc 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #1e3799 0%, #4a69bd 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .select2-container--default .select2-selection--single {
+            border: 1px solid #ced4da;
+            border-radius: 8px;
+            height: 45px;
+            padding: 8px 16px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 43px;
+        }
+        .form-check-input:checked {
+            background-color: #4a69bd;
+            border-color: #4a69bd;
+        }
+        .print-btn {
+            background: #f2f2f2;
+            color: #2f3542;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 600;
+        }
+        .print-btn:hover {
+            background: #f2f2f2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #certificate, #certificate * {
+                visibility: visible;
+            }
+            #certificate {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header text-center">
+            <h3><i class="bi bi-file-earmark-text"></i> ePOC Clearance-Contingent</h3>
+           
+        </div>
+
+        <!-- Controls Card -->
+        <div class="card mb-4">
+            <div class="card-header">Select Bill Control Code</div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <select id="billControlCode" class="form-select">
+                            <option value="">Loading Bill Control Codes...</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button id="viewBtn" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> View Details
+                        </button>
+                    </div>
+					 <div class="col-md-2">
+                        <a  class="btn btn-primary w-100" href="https://docs.google.com/spreadsheets/d/1x7Ktrj3uizeLWvstu32hk04Ue3GV3CuiwfMZh0w5etE/edit?gid=979673625#gid=979673625" target="_blank">
+                             View Data Sheet
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="card">
+            <div class="card-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Fetching data from Google Sheets...</p>
+            </div>
+        </div>
+
+        <!-- Results Table -->
+        <div id="resultsSection" class="card" style="display: none;">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-table"></i> Transaction Details</span>
+                <div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="checkbox" id="selectAll">
+                        <label class="form-check-label text-dark" for="selectAll">Select All</label>
+                    </div>
+                    <button id="printCertificate" class="btn print-btn ms-2">
+                        <i class="bi bi-printer"></i> Print Certificate
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table id="resultsTable" class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Sl. No.</th>
+                                <th>Bill Control Code</th>
+                                <th>Credit Date</th>
+                                <th>Beneficiary Name</th>
+                                <th>Account No</th>
+                                <th>Amount</th>
+                                <th>Select</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be populated here -->
+                        </tbody>
+                        <tfoot>
+                            <tr class="footer-total">
+                                <td colspan="5" class="text-end">Total Amount:</td>
+                                <td id="totalAmount">0.00</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Certificate Template (Hidden) -->
+    <div id="certificate" style="display: none; padding: 20mm; font-family: Arial, sans-serif;">
+        <div style="text-align: left; font-size: 16pt; font-weight: bold;" id="certificateHeader"></div>
+        <div style="text-align: right; font-size: 12pt;" id="certificateDate"></div>
+        <hr style="border-top: 1px solid black; margin: 10px 0 20px 0;">
+        <div style="font-size: 12pt; line-height: 1.5; margin-bottom: 20px;">
+            <p id="certificateLine1"></p>
+            <p id="certificateLine2"></p>
+        </div>
+        <table id="certificateTable" style="width: 100%; border-collapse: collapse; font-size: 11pt; margin-top: 20px;">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Sl. No.</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Bill Control Code</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Credit Date</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Beneficiary Name</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Account No</th>
+                    <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Certificate table data will be populated here -->
+            </tbody>
+        </table>
+        <div class="signature-area">
+            <div style="height: 60px;"></div>
+            <div style="text-align: right; font-weight: bold;" id="designation"></div>
+            <div style="text-align: right; font-weight: bold;" id="office"></div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Select2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
+    <script>
+        // Global variables
+        const API_KEY = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+        const SPREADSHEET_ID = '1x7Ktrj3uizeLWvstu32hk04Ue3GV3CuiwfMZh0w5etE';
+        let allData = [];
+        let pdfData = {};
+
+        // Initialize when document is ready
+        $(document).ready(function() {
+            // Initialize Select2
+            $('#billControlCode').select2({
+                placeholder: "Select a Bill Control Code",
+                allowClear: true
+            });
+
+            // Fetch bill control codes on page load
+            fetchBillControlCodes();
+            
+            // Fetch PDF data on page load
+            fetchPdfData();
+
+            // View button click event
+            $('#viewBtn').click(function() {
+                const selectedCode = $('#billControlCode').val();
+                if (selectedCode) {
+                    fetchDataByBillControlCode(selectedCode);
+                } else {
+                    alert('Please select a Bill Control Code');
+                }
+            });
+
+            // Select All checkbox event
+            $('#selectAll').change(function() {
+                $('.row-checkbox').prop('checked', this.checked);
+            });
+
+            // Print Certificate button click event
+            $('#printCertificate').click(function() {
+                generateCertificate();
+            });
+        });
+
+        // Fetch bill control codes from Google Sheets
+        function fetchBillControlCodes() {
+            $('#loading').show();
+            const range = 'Data!B3:B';
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    $('#loading').hide();
+                    if (data.values) {
+                        // Get unique bill control codes
+                        const codes = [...new Set(data.values.flat())].filter(code => code);
+                        populateBillControlCodes(codes);
+                    } else {
+                        $('#billControlCode').html('<option value="">No data found</option>');
+                    }
+                })
+                .catch(error => {
+                    $('#loading').hide();
+                    console.error('Error fetching bill control codes:', error);
+                    $('#billControlCode').html('<option value="">Error loading data</option>');
+                });
+        }
+
+        // Populate bill control codes dropdown
+        function populateBillControlCodes(codes) {
+            let options = '<option value=""></option>';
+            codes.forEach(code => {
+                options += `<option value="${code}">${code}</option>`;
+            });
+            $('#billControlCode').html(options);
+            $('#billControlCode').select2({
+                placeholder: "Select a Bill Control Code",
+                allowClear: true
+            });
+        }
+
+        // Fetch data by bill control code
+        function fetchDataByBillControlCode(billControlCode) {
+            $('#loading').show();
+            const range = 'Data!A2:F';
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    $('#loading').hide();
+                    if (data.values && data.values.length > 1) {
+                        allData = data.values;
+                        const headers = data.values[0];
+                        const rows = data.values.slice(1);
+                        
+                        // Filter rows by bill control code
+                        const filteredRows = rows.filter(row => {
+                            return row.length > 1 && row[1] === billControlCode;
+                        });
+                        
+                        displayResults(filteredRows);
+                    } else {
+                        alert('No data found for the selected Bill Control Code');
+                    }
+                })
+                .catch(error => {
+                    $('#loading').hide();
+                    console.error('Error fetching data:', error);
+                    alert('Error fetching data from Google Sheets');
+                });
+        }
+
+        // Display results in table
+        function displayResults(rows) {
+            const tbody = $('#resultsTable tbody');
+            tbody.empty();
+            
+            let totalAmount = 0;
+            
+            rows.forEach((row, index) => {
+                const amount = parseFloat(row[5] || 0);
+                totalAmount += amount;
+                
+                const tr = $('<tr>');
+                tr.append(`<td>${index + 1}</td>`);
+                tr.append(`<td>${row[1] || ''}</td>`);
+                tr.append(`<td>${row[2] || ''}</td>`);
+                tr.append(`<td>${row[3] || ''}</td>`);
+                tr.append(`<td>${row[4] || ''}</td>`);
+                tr.append(`<td>${amount.toFixed(2)}</td>`);
+                tr.append(`<td><input type="checkbox" class="row-checkbox" data-amount="${amount}"></td>`);
+                
+                tbody.append(tr);
+            });
+            
+            $('#totalAmount').text(totalAmount.toFixed(2));
+            $('#resultsSection').show();
+        }
+
+        // Fetch PDF data from the "pdf" sheet
+        function fetchPdfData() {
+            const range = 'pdf!A1:D5';
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${range}?key=${API_KEY}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.values) {
+                        // Store PDF data in an object for later use
+                        data.values.forEach((row, index) => {
+                            if (row.length >= 4) {
+                                // Store by row index (A1, A2, etc.)
+                                pdfData[`A${index + 1}`] = {
+                                    B: row[1] || '',
+                                    D: row[3] || ''
+                                };
+                            }
+                        });
+                        console.log('PDF Data loaded:', pdfData);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching PDF data:', error);
+                });
+        }
+
+        // Generate certificate PDF
+        function generateCertificate() {
+            // Get selected rows
+            const selectedRows = [];
+            let selectedTotal = 0;
+            
+            $('.row-checkbox:checked').each(function() {
+                const row = $(this).closest('tr');
+                const rowData = {
+                    slNo: row.find('td:eq(0)').text(),
+                    billControlCode: row.find('td:eq(1)').text(),
+                    creditDate: row.find('td:eq(2)').text(),
+                    beneficiaryName: row.find('td:eq(3)').text(),
+                    accountNo: row.find('td:eq(4)').text(),
+                    amount: parseFloat(row.find('td:eq(5)').text())
+                };
+                selectedRows.push(rowData);
+                selectedTotal += rowData.amount;
+            });
+            
+            if (selectedRows.length === 0) {
+                alert('Please select at least one row to generate certificate');
+                return;
+            }
+            
+            // Populate certificate content from pdfData
+            $('#certificateHeader').text(pdfData['A2'] ? pdfData['A2'].B : 'Certificate Heading');
+            $('#certificateDate').text(new Date().toLocaleDateString());
+            
+            // Certificate lines from PDF sheet - updated format
+            $('#certificateLine1').html(`This is to certify that the total amount of ₹. ${selectedTotal.toFixed(2)}`);
+            
+            // Convert amount to words
+            const amountInWords = convertAmountToWords(selectedTotal);
+            $('#certificateLine2').html(`( Rupees ${amountInWords}) was returned to Parent Government Account through the e-POC clearance procedure, which was rejected due to incorrect beneficiary details.<br><br>The details of beneficiaries and references are listed below:`);
+            
+            // Populate certificate table
+            const certTbody = $('#certificateTable tbody');
+            certTbody.empty();
+            
+            selectedRows.forEach((row, index) => {
+                const tr = $('<tr>');
+                tr.append(`<td style="border: 1px solid #ddd; padding: 8px;">${index + 1}</td>`);
+                tr.append(`<td style="border: 1px solid #ddd; padding: 8px;">${row.billControlCode}</td>`);
+                tr.append(`<td style="border: 1px solid #ddd; padding: 8px;">${row.creditDate}</td>`);
+                tr.append(`<td style="border: 1px solid #ddd; padding: 8px;">${row.beneficiaryName}</td>`);
+                tr.append(`<td style="border: 1px solid #ddd; padding: 8px;">${row.accountNo}</td>`);
+                tr.append(`<td style="border: 1px solid #ddd; padding: 8px;">${row.amount.toFixed(2)}</td>`);
+                certTbody.append(tr);
+            });
+            
+            // Add designation and office from PDF sheet
+            $('#designation').text(pdfData['A2'] ? pdfData['A2'].D : '');
+            $('#office').text(pdfData['A3'] ? pdfData['A3'].D : '');
+            
+            // Generate PDF using jsPDF
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            // Add certificate content to PDF
+            doc.setFontSize(16);
+            doc.setFont(undefined, 'bold');
+            doc.text($('#certificateHeader').text(), 20, 20);
+            
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'normal');
+            doc.text($('#certificateDate').text(), 180, 20, { align: 'right' });
+            
+            // Horizontal line
+            doc.line(20, 25, 190, 25);
+            
+            // Certificate text - fixed spacing issue
+            doc.setFontSize(12);
+            
+            // First line - fixed spacing
+          //  doc.text("This is to certify that the total amount of Rs. " + selectedTotal.toFixed(2), 20, 35);
+            
+            // Second line - split into multiple lines if needed
+            const line2 = "This is to certify that the total amount of Rs. " + selectedTotal+ "/- ( Rupees " + convertAmountToWords(selectedTotal) + ") was returned to Parent Government Account through the e-POC clearance procedure, which was rejected due to incorrect beneficiary details.";
+            const splitLine2 = doc.splitTextToSize(line2, 170);
+            doc.text(splitLine2, 20, 45);
+            
+            // Third line
+            const line2Height = splitLine2.length * 6;
+            doc.text("The details of beneficiaries and references are listed below:", 20, 45 + line2Height + 5);
+            
+            // Add table
+            doc.autoTable({
+                html: '#certificateTable',
+                startY: 45 + line2Height + 15,
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [242, 242, 242],
+                    textColor: 0
+                },
+                styles: {
+                    fontSize: 10,
+                    cellPadding: 3
+                }
+            });
+            
+            // Add signature area
+            const finalY = doc.lastAutoTable.finalY + 30;
+            doc.setFont(undefined, 'bold');
+            doc.text($('#designation').text(), 180, finalY, { align: 'right' });
+            doc.text($('#office').text(), 180, finalY + 8, { align: 'right' });
+            
+            // Save the PDF
+            doc.save('epoc-clearance-certificate.pdf');
+        }
+
+        // Helper function to convert amount to words (simplified)
+        function convertAmountToWords(amount) {
+            // This is a simplified version - you might want to use a more robust solution
+            const a = [
+                '', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ',
+                'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '
+            ];
+            const b = [
+                '', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'
+            ];
+            
+            let num = Math.floor(amount);
+            if (num === 0) return 'Zero';
+            
+            let words = '';
+            
+            // Crores
+            if (num >= 10000000) {
+                words += convertNumberToWords(Math.floor(num / 10000000)) + 'Crore ';
+                num %= 10000000;
+            }
+            
+            // Lakhs
+            if (num >= 100000) {
+                words += convertNumberToWords(Math.floor(num / 100000)) + 'Lakh ';
+                num %= 100000;
+            }
+            
+            // Thousands
+            if (num >= 1000) {
+                words += convertNumberToWords(Math.floor(num / 1000)) + 'Thousand ';
+                num %= 1000;
+            }
+            
+            // Hundreds
+            if (num >= 100) {
+                words += convertNumberToWords(Math.floor(num / 100)) + 'Hundred ';
+                num %= 100;
+            }
+            
+            // Tens and Ones
+            if (num > 0) {
+                if (num < 20) {
+                    words += a[num];
+                } else {
+                    words += b[Math.floor(num / 10)] + ' ' + a[num % 10];
+                }
+            }
+            
+            return words + 'Only';
+        }
+
+        // Helper function for number to words conversion
+        function convertNumberToWords(num) {
+            const a = [
+                '', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ',
+                'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '
+            ];
+            const b = [
+                '', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'
+            ];
+            
+            let words = '';
+            
+            // Hundreds
+            if (num >= 100) {
+                words += a[Math.floor(num / 100)] + 'Hundred ';
+                num %= 100;
+            }
+            
+            // Tens and Ones
+            if (num > 0) {
+                if (num < 20) {
+                    words += a[num];
+                } else {
+                    words += b[Math.floor(num / 10)] + ' ' + a[num % 10];
+                }
+            }
+            
+            return words;
+        }
+    </script>
+</body>
+</html>
