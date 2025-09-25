@@ -136,11 +136,13 @@
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4">
+						<label class="form-label" for="">Select Bill Refernce Number</label>
                         <select id="billControlCode" class="form-select">
                             <option value="">Loading Bill Control Codes...</option>
                         </select>
                     </div>
 					 <div class="col-md-4">
+						 <label class="form-label" for="">Return Head of Account (optional)</label>
                          <input type="text" class="form-control" name="hoA" id="hoA" placeholder="Head of Account; ex:1234-56-789-00-00" required>
                     </div>
                     <div class="col-md-2">
@@ -163,7 +165,7 @@
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-                <p class="mt-2">Fetching data from Google Sheets...</p>
+                <p class="mt-2">Fetching details ...</p>
             </div>
         </div>
 
@@ -360,7 +362,7 @@
                 .catch(error => {
                     $('#loading').hide();
                     console.error('Error fetching data:', error);
-                    alert('Error fetching data from Google Sheets');
+                    alert('Error fetching data ');
                 });
         }
 
@@ -500,7 +502,7 @@ function generateCertificate() {
     doc.setFontSize(12);
     
     // First line
- //   doc.text("This is to certify that the total amount of Rs. " + selectedTotal.toFixed(2), 20, 35);
+ 
     
     // Second line - with conditional Head of Account
     const line2 = "This is to certify that the total amount of Rs. " + selectedTotal+ "(Rupees " + amountInWords + ") was returned to Parent Government Account/R.O.P " + (headOfacc ? "(Head of Account " + headOfacc + ")" : "") + ", through the e-POC clearance procedure, which was rejected due to incorrect beneficiary details.";
