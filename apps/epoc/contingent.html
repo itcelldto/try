@@ -458,7 +458,7 @@ function generateCertificate() {
     // Conditionally show Head of Account in bracket if available
     const hoAText = headOfacc ? `(Head of Account ${headOfacc})` : '';
     
-    $('#certificateLine2').html(`( Rupees ${amountInWords}) was returned to Parent Government Account ${hoAText}, through the e-POC clearance procedure, which was rejected due to incorrect beneficiary details.<br><br>The details of beneficiaries and references are listed below:`);
+    $('#certificateLine2').html(`( Rupees ${amountInWords}) was returned to Parent Government Account/R.O.P ${hoAText}, through the e-POC clearance procedure, which was rejected due to incorrect beneficiary details.<br><br>The details of beneficiaries and references are listed below:`);
     
     // Rest of your code remains the same...
     // Populate certificate table
@@ -500,10 +500,10 @@ function generateCertificate() {
     doc.setFontSize(12);
     
     // First line
-   // doc.text("This is to certify that the total amount of Rs. " + selectedTotal.toFixed(2), 20, 35);
+    doc.text("This is to certify that the total amount of Rs. " + selectedTotal.toFixed(2), 20, 35);
     
     // Second line - with conditional Head of Account
-    const line2 = "This is to certify that the total amount of Rs. " + selectedTotal+ "/- ( Rupees " + convertAmountToWords(selectedTotal) + ") was returned to Parent Government Account/R.O.P " + (headOfacc ? "(Head of Account " + headOfacc + ")" : "") + ", through the e-POC clearance procedure, which was rejected due to incorrect beneficiary details.";
+    const line2 = "(Rupees " + amountInWords + ") was returned to Parent Government Account/R.O.P " + (headOfacc ? "(Head of Account " + headOfacc + ")" : "") + ", through the e-POC clearance procedure, which was rejected due to incorrect beneficiary details.";
     const splitLine2 = doc.splitTextToSize(line2, 170);
     doc.text(splitLine2, 20, 45);
     
