@@ -135,10 +135,13 @@
             <div class="card-header">Select Bill Control Code</div>
             <div class="card-body">
                 <div class="row">
-                    <div class="col-md-8">
+                    <div class="col-md-4">
                         <select id="billControlCode" class="form-select">
                             <option value="">Loading Bill Control Codes...</option>
                         </select>
+                    </div>
+					 <div class="col-md-4">
+                         <input type="text" class="form-control" name="hoA" id="hoA" placeholder="Head of Account; ex:1234-56-789-00-00" required>
                     </div>
                     <div class="col-md-2">
                         <button id="viewBtn" class="btn btn-primary w-100">
@@ -448,8 +451,9 @@
             $('#certificateLine1').html(`This is to certify that the total amount of ₹. ${selectedTotal.toFixed(2)}`);
             
             // Convert amount to words
+			const headOfacc =document.getElementById("hoA").value();
             const amountInWords = convertAmountToWords(selectedTotal);
-            $('#certificateLine2').html(`( Rupees ${amountInWords}) was returned to Parent Government Account through the e-POC clearance procedure, which was rejected due to incorrect beneficiary details.<br><br>The details of beneficiaries and references are listed below:`);
+            $('#certificateLine2').html(`( Rupees ${amountInWords}) was returned to Parent Government Account/R.O.P Head of Account- ${headOfacc}+, through the e-POC clearance procedure, which was rejected due to incorrect beneficiary details.<br><br>The details of beneficiaries and references are listed below:`);
             
             // Populate certificate table
             const certTbody = $('#certificateTable tbody');
