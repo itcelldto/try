@@ -500,7 +500,7 @@ function generateCertificate() {
     doc.setFontSize(12);
     
     // First line
-    doc.text("This is to certify that the total amount of Rs. " + selectedTotal.toFixed(2), 20, 35);
+ //   doc.text("This is to certify that the total amount of Rs. " + selectedTotal.toFixed(2), 20, 35);
     
     // Second line - with conditional Head of Account
     const line2 = "This is to certify that the total amount of Rs. " + selectedTotal+ "(Rupees " + amountInWords + ") was returned to Parent Government Account/R.O.P " + (headOfacc ? "(Head of Account " + headOfacc + ")" : "") + ", through the e-POC clearance procedure, which was rejected due to incorrect beneficiary details.";
