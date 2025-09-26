@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UTR Lookup Tool</title>
+    <title>UTR New Format</title>
     <style>
         * {
             box-sizing: border-box;
@@ -319,28 +319,29 @@
 </head>
 <body>
     <div class="container">
-        <h1>UTR Lookup</h1>
+        <h1>UTR New Format </h1>
        
        
         
         <div class="input-section">
             <div class="input-group">
-                <label for="utr-input">Enter UTR </label>
+                <label for="utr-input">Enter UTR (Start with RBISN..)</label>
 				
 			
                 <div class="input-with-button">
                     <input type="text" id="utr-input" placeholder="e.g., RBISH0123456789 or /XUTR/RBISH0123456789" maxlength="50">
                     <button id="lookup-btn">Search</button>
                 </div>
+				<div class="input-with-button">
+                <button id="clear-btn" style="flex: 1;">Clear</button>
+            </div>
             </div>
             
             <div class="extracted-utr" id="extracted-utr" style="display: none;">
                 <strong>Extracted UTR for search:</strong> <span id="extracted-value"></span>
             </div>
             
-            <div class="input-with-button">
-                <button id="clear-btn" style="flex: 1;">Clear</button>
-            </div>
+            
         </div>
         
         <div class="result-section" id="result-section">
