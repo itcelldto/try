@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UTR Lookup Tool</title>
     <style>
-        * {
+   * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
@@ -13,7 +13,7 @@
         }
         
         body {
-         
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -103,12 +103,12 @@
         }
         
         #clear-btn {
-           background-color: #e74c3c;
+            background-color: #e74c3c;
             color: white;
         }
         
         #clear-btn:hover {
-            background-color: #C0392B;
+            background-color: #c0392b;
         }
         
         .format-info {
@@ -242,11 +242,43 @@
             padding: 15px;
             margin-top: 25px;
             border-radius: 0 6px 6px 0;
+            position: relative;
+        }
+        
+        .instructions.hidden {
+            display: none;
+        }
+        
+        .instructions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
         }
         
         .instructions h3 {
             color: #d35400;
-            margin-bottom: 10px;
+            margin: 0;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #d35400;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+        
+        .close-btn:hover {
+            background-color: rgba(211, 84, 0, 0.1);
         }
         
         .instructions ol {
@@ -322,19 +354,43 @@
             justify-content: flex-end;
             margin-top: 10px;
         }
+        
+        .show-instructions-btn {
+            background-color: #fff;
+            color: #3498db;
+            margin-top: 15px;
+            display: none;
+        }
+        
+        .show-instructions-btn:hover {
+            background-color: #fff;
+        }
+		.last-updated {
+    text-align: center;
+    color: #7f8c8d;
+    margin-bottom: 30px;
+    line-height: 1.5;
+    font-size: 14px;
+    font-style: italic;
+}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>UTR New Format Search</h1>
-        <hr>
-		    <div class="instructions">
-            <h3>How to Use This Tool:</h3>
+      <h1>UTR New Format Search</h1>
+<div class="last-updated" id="last-updated">Last updated: Loading...</div>
+<hr>
+      
+		   <div class="instructions" id="instructions">
+            <div class="instructions-header">
+                <h3>How to Use </h3>
+                <button class="close-btn" id="close-instructions">×</button>
+            </div>
             <ol>
                 <li>Enter UTR with RBISH format and click Search</li>
-                <li>Search New UTR with BiMS > UTR Search</li>
+                <li>Search New UTR with BiMS &gt; UTR Search</li>
             </ol>
-        </div>
+        </div> <button class="show-instructions-btn" id="show-instructions" style="display: none;">Show Instructions</button>
         <br>
         <div class="input-section">
             <div class="input-group">
@@ -356,7 +412,7 @@
         <div class="result-section" id="result-section">
             <div class="result-card">
                 <div class="result-header">
-                    <span class="result-label">Lookup Result</span>
+                    <span class="result-label">Search Result</span>
                     <span class="result-status" id="result-status">Found</span>
                 </div>
                 <div class="result-details">
@@ -364,26 +420,28 @@
                         <span class="detail-label">Search UTR:</span>
                         <span class="detail-value" id="search-utr">-</span>
                     </div>
-                    <div class="detail-row">
+                    <div class="detail-row"style="display:none;">
                         <span class="detail-label">Extracted UTR:</span>
                         <span class="detail-value" id="extracted-utr-display">-</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">New UTR:</span>
-                        <span class="detail-value" id="new-utr">-</span>
+                        <span class="detail-value" id="new-utr"style="color:red;font-weight:bold">-</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Date:</span>
                         <span class="detail-value" id="result-date">-</span>
                     </div>
-                    <div class="detail-row">
-                        <span class="detail-label">Full Cell Value:</span>
+				
+                    <div class="detail-row" style="display:none;">
+                        <span class="detail-label">Full Value:</span>
                         <span class="detail-value" id="full-cell-value">-</span>
                     </div>
-                    <div class="detail-row">
+                    <div class="detail-row"style="display:none;">
                         <span class="detail-label">Status:</span>
                         <span class="detail-value" id="result-message">-</span>
                     </div>
+					
                 </div>
             </div>
         </div>
@@ -425,15 +483,21 @@
             const historyList = document.getElementById('history-list');
             const extractedUtrDiv = document.getElementById('extracted-utr');
             const extractedValue = document.getElementById('extracted-value');
+            const instructionsDiv = document.getElementById('instructions');
+            const closeInstructionsBtn = document.getElementById('close-instructions');
+            const showInstructionsBtn = document.getElementById('show-instructions');
             
             let searchHistory = JSON.parse(localStorage.getItem('utrSearchHistory')) || [];
+            let instructionsHidden = localStorage.getItem('instructionsHidden') === 'true';
             
-            // Initialize history display
-            updateHistoryDisplay();
+            // Initialize instructions display
+            updateInstructionsDisplay();
             
             // Event Listeners
             lookupBtn.addEventListener('click', performLookup);
             clearBtn.addEventListener('click', clearSearch);
+            closeInstructionsBtn.addEventListener('click', hideInstructions);
+            showInstructionsBtn.addEventListener('click', showInstructions);
             
             utrInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
@@ -457,7 +521,28 @@
                 // Enable/disable lookup button based on input
                 lookupBtn.disabled = !this.value.trim();
             });
-            
+            // Add this function to fetch last updated date
+async function fetchLastUpdatedDate() {
+    try {
+        const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!E1?key=${API_KEY}`;
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.values && data.values.length > 0 && data.values[0].length > 0) {
+            const lastUpdatedElement = document.getElementById('last-updated');
+            lastUpdatedElement.textContent = `Last updated: ${data.values[0][0]}`;
+        }
+    } catch (error) {
+        console.error('Error fetching last updated date:', error);
+        const lastUpdatedElement = document.getElementById('last-updated');
+        lastUpdatedElement.textContent = 'Last updated: Date unavailable';
+    }
+}
             // Extract UTR from various formats
             function extractUTR(input) {
                 if (!input) return '';
@@ -533,7 +618,7 @@
                 const data = await response.json();
                 
                 if (!data.values || data.values.length === 0) {
-                    return { found: false, message: 'No data found in sheet' };
+                    return { found: false, message: 'No data found ' };
                 }
                 
                 // Skip header row and search for UTR in column B (index 1)
@@ -549,7 +634,7 @@
                                 date: row[0] || 'N/A',
                                 newUTR: row[2] || 'N/A',
                                 fullCellValue: cellValue,
-                                message: 'UTR found in database'
+                                message: 'UTR found '
                             };
                         }
                     }
@@ -634,7 +719,7 @@
                             <div style="color: ${item.found ? '#28a745' : '#dc3545'}; font-weight: 600;">
                                 ${item.found ? 'Found' : 'Not Found'}
                             </div>
-                            <div style="font-size: 12px; color: #3498db;">${item.newUTR}</div>
+                            <div style="font-size: 12px; color: #666;">${item.newUTR}</div>
                         </div>
                     `;
                     
@@ -685,6 +770,31 @@
                 }
             }
             
+            // Hide instructions
+            function hideInstructions() {
+                instructionsHidden = true;
+                localStorage.setItem('instructionsHidden', 'true');
+                updateInstructionsDisplay();
+            }
+            
+            // Show instructions
+            function showInstructions() {
+                instructionsHidden = false;
+                localStorage.setItem('instructionsHidden', 'false');
+                updateInstructionsDisplay();
+            }
+            
+            // Update instructions display
+            function updateInstructionsDisplay() {
+                if (instructionsHidden) {
+                    instructionsDiv.classList.add('hidden');
+                    showInstructionsBtn.style.display = 'block';
+                } else {
+                    instructionsDiv.classList.remove('hidden');
+                    showInstructionsBtn.style.display = 'none';
+                }
+            }
+            fetchLastUpdatedDate();
             // Auto-focus on input
             utrInput.focus();
         });
