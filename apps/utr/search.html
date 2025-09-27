@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-       <title>UTR New Format</title>
+    <title>UTR Lookup Tool</title>
     <style>
         * {
             box-sizing: border-box;
@@ -13,7 +13,7 @@
         }
         
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+         
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -98,17 +98,17 @@
         }
         
         #lookup-btn:disabled {
-            background-color: #95a5a6;
+            background-color: #bdc3c7;
             cursor: not-allowed;
         }
         
         #clear-btn {
-            background-color: #e74c3c;
+           background-color: #e74c3c;
             color: white;
         }
         
         #clear-btn:hover {
-            background-color: #c0392b;
+            background-color: #C0392B;
         }
         
         .format-info {
@@ -315,31 +315,41 @@
             margin: 10px 0;
             font-family: monospace;
         }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-      <h1>UTR New Format </h1>
-       
-       
-        
+        <h1>UTR New Format Search</h1>
+        <hr>
+		    <div class="instructions">
+            <h3>How to Use This Tool:</h3>
+            <ol>
+                <li>Enter UTR with RBISH format and click Search</li>
+                <li>Search New UTR with BiMS > UTR Search</li>
+            </ol>
+        </div>
+        <br>
         <div class="input-section">
             <div class="input-group">
-              <label for="utr-input">Enter UTR (Start with RBISN..)</label>
-				
-			
+                <label for="utr-input">Enter UTR Number</label>
                 <div class="input-with-button">
                     <input type="text" id="utr-input" placeholder="e.g., RBISH0123456789 or /XUTR/RBISH0123456789" maxlength="50">
                     <button id="lookup-btn">Search</button>
+					<button id="clear-btn">Clear</button>
                 </div>
             </div>
             
+              <div class="status" id="status"></div>
+            
             <div class="extracted-utr" id="extracted-utr" style="display: none;">
                 <strong>Extracted UTR for search:</strong> <span id="extracted-value"></span>
-            </div>
-            
-            <div class="input-with-button">
-                <button id="clear-btn" style="flex: 1;">Clear</button>
             </div>
         </div>
         
@@ -377,14 +387,9 @@
                 </div>
             </div>
         </div>
-        	<div class="instructions">
-            <h3>How to use this :</h3>
-            <ol>
-                <li>Enter UTR with RBISH format & Search</li>
-                <li>Search New UTR with BiMS > UTR Search </li>
-               
-            </ol>
-        </div>
+        
+    
+        
         <div class="history-section" id="history-section">
             <div class="history-title">Recent Searches:</div>
             <div class="history-list" id="history-list">
@@ -392,11 +397,7 @@
             </div>
         </div>
         
-        <div class="status" id="status"></div>
-        
-       
-        
-       
+      
     </div>
 
     <script>
@@ -633,7 +634,7 @@
                             <div style="color: ${item.found ? '#28a745' : '#dc3545'}; font-weight: 600;">
                                 ${item.found ? 'Found' : 'Not Found'}
                             </div>
-                            <div style="font-size: 12px; color: #666;">${item.newUTR}</div>
+                            <div style="font-size: 12px; color: #3498db;">${item.newUTR}</div>
                         </div>
                     `;
                     
