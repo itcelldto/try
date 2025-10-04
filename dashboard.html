@@ -607,7 +607,7 @@
                     <td>${formatDate(fromDate)}</td>
                     <td>${formatDate(toDate)}</td>
                     <td>
-                        <a href="${url}" target="_blank" rel="noopener noreferrer" class="btn btn-urgent">
+                        <a href="${url}" target="" rel="noopener noreferrer" class="btn btn-urgent">
                             View <i class="fa fa-external-link"></i>
                         </a>
                     </td>
@@ -659,6 +659,7 @@
             const colorClass = `contact-card-color-${index % 8}`; // Cycle through 8 color classes
             
             contactCardsHTML += `
+			     <h2>Contact</h2>
                 <div class="contact-card ${colorClass}">
                     <div class="contact-name">${row[1] || ''}</div>
                     <div class="contact-designation">${row[0] || ''}</div>
