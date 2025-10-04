@@ -543,7 +543,7 @@
                 container.innerHTML += `<h2 class="section-heading">HelpDesk Contact</h2>`;
                 renderContactCards(container, settingsData.values);
             }
-            // Add WhatsApp Group Box
+                      // Add WhatsApp Group Box
             container.innerHTML += `
                 <div class="whatsapp-box">
                     <div class="whatsapp-box-header">
@@ -583,27 +583,6 @@
         return await response.json();
     }
     
-    // Check if current date is between from and to dates
-    function isDateInRange(fromDateStr, toDateStr) {
-        if (!fromDateStr || !toDateStr) return false;
-        
-        try {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0); // Set to beginning of day for accurate comparison
-            
-            const fromDate = new Date(fromDateStr);
-            fromDate.setHours(0, 0, 0, 0);
-            
-            const toDate = new Date(toDateStr);
-            toDate.setHours(0, 0, 0, 0);
-            
-            return today >= fromDate && today <= toDate;
-        } catch (e) {
-            console.error('Error parsing dates:', e);
-            return false;
-        }
-    }
-    
     // Render Urgent Tasks table
     function renderUrgentTasks(container, rows) {
         if (!rows || rows.length === 0) return;
@@ -614,16 +593,10 @@
             rows.shift();
         }
         
-        // Filter only confirmed items (F column = "Yes") AND current date is between from and to dates
+        // Filter only confirmed items (F column = "Yes")
         const urgentItems = rows.filter(row => {
             const confirmValue = (row[5] || '').toString().trim().toLowerCase();
-            const fromDate = row[3] || '';
-            const toDate = row[4] || '';
-            
-            const isConfirmed = confirmValue === 'yes' || confirmValue === 'y';
-            const isCurrentDateInRange = isDateInRange(fromDate, toDate);
-            
-            return isConfirmed && isCurrentDateInRange;
+            return confirmValue === 'yes' || confirmValue === 'y';
         });
         
         if (urgentItems.length === 0) return;
@@ -683,7 +656,8 @@
             </div>
         `;
     }
-         // Render Contact Cards
+    
+    // Render Contact Cards
     function renderContactCards(container, rows) {
         if (!rows || rows.length === 0) return;
         
@@ -696,6 +670,7 @@
             const colorClass = `contact-card-color-${index % 8}`; // Cycle through 8 color classes
             
             contactCardsHTML += `
+			     
                 <div class="contact-card ${colorClass}">
                     <div class="contact-name">${row[1] || ''}</div>
                     <div class="contact-designation">${row[0] || ''}</div>
@@ -719,7 +694,7 @@
         container.innerHTML += contactCardsHTML;
     }
     
-        // Render To Do List table
+    // Render To Do List table
     function renderTodoList(container, rows, treasuryName) {
         // Remove header if exists
         const headers = rows[0];
@@ -830,8 +805,6 @@
         addSearchFunctionality();
     }
     
-  
-
     // Format date for display as DD/MM/YYYY
     function formatDate(dateString) {
         if (!dateString) return '';
