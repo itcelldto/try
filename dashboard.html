@@ -23,6 +23,16 @@
             margin: 0 auto;
         }
         
+        /* HelpDesk Contact Heading */
+        .section-heading {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 20px 0 10px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+        
         /* Urgent Tasks Box */
         .urgent-tasks-box {
             background: #fff;
@@ -511,8 +521,9 @@
                 renderUrgentTasks(container, urgentTasksData.values);
             }
             
-            // Render contact cards
+            // Render contact cards with heading
             if (settingsData.values && settingsData.values.length > 0) {
+                container.innerHTML += `<h2 class="section-heading">HelpDesk Contact</h2>`;
                 renderContactCards(container, settingsData.values);
             }
             
@@ -572,6 +583,27 @@
         return await response.json();
     }
     
+    // Check if current date is between from and to dates
+    function isDateInRange(fromDateStr, toDateStr) {
+        if (!fromDateStr || !toDateStr) return false;
+        
+        try {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0); // Set to beginning of day for accurate comparison
+            
+            const fromDate = new Date(fromDateStr);
+            fromDate.setHours(0, 0, 0, 0);
+            
+            const toDate = new Date(toDateStr);
+            toDate.setHours(0, 0, 0, 0);
+            
+            return today >= fromDate && today <= toDate;
+        } catch (e) {
+            console.error('Error parsing dates:', e);
+            return false;
+        }
+    }
+    
     // Render Urgent Tasks table
     function renderUrgentTasks(container, rows) {
         if (!rows || rows.length === 0) return;
@@ -582,10 +614,16 @@
             rows.shift();
         }
         
-        // Filter only confirmed items (F column = "Yes")
+        // Filter only confirmed items (F column = "Yes") AND current date is between from and to dates
         const urgentItems = rows.filter(row => {
             const confirmValue = (row[5] || '').toString().trim().toLowerCase();
-            return confirmValue === 'yes' || confirmValue === 'y';
+            const fromDate = row[3] || '';
+            const toDate = row[4] || '';
+            
+            const isConfirmed = confirmValue === 'yes' || confirmValue === 'y';
+            const isCurrentDateInRange = isDateInRange(fromDate, toDate);
+            
+            return isConfirmed && isCurrentDateInRange;
         });
         
         if (urgentItems.length === 0) return;
@@ -607,7 +645,7 @@
                     <td>${formatDate(fromDate)}</td>
                     <td>${formatDate(toDate)}</td>
                     <td>
-                        <a href="${url}" target="" rel="noopener noreferrer" class="btn btn-urgent">
+                        <a href="${url}" target="_blank" rel="noopener noreferrer" class="btn btn-urgent">
                             View <i class="fa fa-external-link"></i>
                         </a>
                     </td>
@@ -659,7 +697,6 @@
             const colorClass = `contact-card-color-${index % 8}`; // Cycle through 8 color classes
             
             contactCardsHTML += `
-			     
                 <div class="contact-card ${colorClass}">
                     <div class="contact-name">${row[1] || ''}</div>
                     <div class="contact-designation">${row[0] || ''}</div>
