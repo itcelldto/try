@@ -521,11 +521,7 @@
                 renderUrgentTasks(container, urgentTasksData.values);
             }
             
-            // Render contact cards with heading
-            if (settingsData.values && settingsData.values.length > 0) {
-                container.innerHTML += `<h2 class="section-heading">HelpDesk Contact</h2>`;
-                renderContactCards(container, settingsData.values);
-            }
+           
             
             // Render To Do list
             if (todoData.values && todoData.values.length > 0) {
@@ -542,7 +538,11 @@
                     </div>
                 `;
             }
-            
+             // Render contact cards with heading
+            if (settingsData.values && settingsData.values.length > 0) {
+                container.innerHTML += `<h2 class="section-heading">HelpDesk Contact</h2>`;
+                renderContactCards(container, settingsData.values);
+            }
             // Add WhatsApp Group Box
             container.innerHTML += `
                 <div class="whatsapp-box">
