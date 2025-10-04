@@ -23,6 +23,59 @@
             margin: 0 auto;
         }
         
+        /* Urgent Tasks Box */
+        .urgent-tasks-box {
+            background: #fff;
+            border-radius: 10px;
+            border-top: 5px solid #ff6b6b;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .urgent-tasks-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .urgent-tasks-header {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .urgent-tasks-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .urgent-tasks-title i {
+            font-size: 24px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .urgent-tasks-subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            margin: 0;
+        }
+        
         /* Contact Cards Container */
         .contact-cards {
             display: flex;
@@ -245,6 +298,17 @@
             border-color: #ddd;
         }
         
+        .btn-urgent {
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            font-weight: 600;
+        }
+        
+        .btn-urgent:hover {
+            background-color: #ff5252;
+        }
+        
         /* Loading Spinner */
         .loading {
             text-align: center;
@@ -308,8 +372,14 @@
             .contact-card {
                 min-width: 100%;
             }
+            
+            .urgent-tasks-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
-         .whatsapp-box {
+        
+        .whatsapp-box {
             background: #fff;
             border-radius: 6px;
             border-top: 3px solid #25D366;
@@ -388,6 +458,10 @@
         apiKey: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4',
         spreadsheetId: '11wvVQ2G41ke3g6RdfYX8AJAl0w-fnf2NQ_Agufz0wXY',
         sheets: {
+            urgentTasks: {
+                name: 'Urgent Tasks',
+                range: 'A:F' // SL.No, Task, URL, from date, To date, Confirm
+            },
             todo: {
                 name: 'To Do List',
                 range: 'A:H' // Job ID, Subject, Description, Link Url, Last Date, Status, Offices Assigned, Confirm
@@ -424,12 +498,18 @@
             }
             
             // Load data
-            const [todoData, settingsData] = await Promise.all([
+            const [urgentTasksData, todoData, settingsData] = await Promise.all([
+                loadSheetData(CONFIG.sheets.urgentTasks),
                 loadSheetData(CONFIG.sheets.todo),
                 loadSheetData(CONFIG.sheets.settings)
             ]);
             
             container.innerHTML = '';
+            
+            // Render urgent tasks table (at the top)
+            if (urgentTasksData.values && urgentTasksData.values.length > 0) {
+                renderUrgentTasks(container, urgentTasksData.values);
+            }
             
             // Render contact cards
             if (settingsData.values && settingsData.values.length > 0) {
@@ -490,6 +570,80 @@
         }
         
         return await response.json();
+    }
+    
+    // Render Urgent Tasks table
+    function renderUrgentTasks(container, rows) {
+        if (!rows || rows.length === 0) return;
+        
+        // Remove header if exists
+        const headers = rows[0];
+        if (headers && headers[0] === 'SL.No') {
+            rows.shift();
+        }
+        
+        // Filter only confirmed items (F column = "Yes")
+        const urgentItems = rows.filter(row => {
+            const confirmValue = (row[5] || '').toString().trim().toLowerCase();
+            return confirmValue === 'yes' || confirmValue === 'y';
+        });
+        
+        if (urgentItems.length === 0) return;
+        
+        // Create table HTML
+        let tableRows = '';
+        
+        urgentItems.forEach(row => {
+            const slNo = row[0] || '';
+            const task = row[1] || '';
+            const url = row[2] || '#';
+            const fromDate = row[3] || '';
+            const toDate = row[4] || '';
+            
+            tableRows += `
+                <tr>
+                    <td>${slNo}</td>
+                    <td><strong>${task}</strong></td>
+                    <td>${formatDate(fromDate)}</td>
+                    <td>${formatDate(toDate)}</td>
+                    <td>
+                        <a href="${url}" target="_blank" rel="noopener noreferrer" class="btn btn-urgent">
+                            View <i class="fa fa-external-link"></i>
+                        </a>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        container.innerHTML += `
+            <div class="urgent-tasks-box">
+                <div class="urgent-tasks-header">
+                    <div>
+                        <h3 class="urgent-tasks-title">
+                            <i class="fa fa-exclamation-triangle"></i>
+                            Most Urgent Tasks
+                        </h3>
+                        <p class="urgent-tasks-subtitle">Priority tasks requiring immediate attention</p>
+                    </div>
+                </div>
+                <div class="box-body table-responsive no-padding">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>SL.No</th>
+                                <th>Task</th>
+                                <th>From Date</th>
+                                <th>To Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
     }
     
     // Render Contact Cards
