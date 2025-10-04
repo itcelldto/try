@@ -683,44 +683,7 @@
             </div>
         `;
     }
-    
-    // Render Contact Cards
-    function renderContactCards(container, rows) {
-        if (!rows || rows.length === 0) return;
-        
-        let contactCardsHTML = '<div class="contact-cards">';
-        
-        rows.forEach((row, index) => {
-            // Skip empty rows
-            if (!row || row.length < 5 || !row[1]) return;
-            
-            const colorClass = `contact-card-color-${index % 8}`; // Cycle through 8 color classes
-            
-            contactCardsHTML += `
-                <div class="contact-card ${colorClass}">
-                    <div class="contact-name">${row[1] || ''}</div>
-                    <div class="contact-designation">${row[0] || ''}</div>
-                    <div class="contact-detail">
-                        <i class="fa fa-phone"></i>
-                        <span>CUG: ${row[4] || ''}</span>
-                    </div>
-                    <div class="contact-detail">
-                        <i class="fa fa-mobile"></i>
-                        <span>Personal: ${row[2] || ''}</span>
-                    </div>
-                    <div class="contact-detail">
-                        <i class="fa fa-envelope"></i>
-                        <a href="mailto:${row[3] || ''}">${row[3] || ''}</a>
-                    </div>
-                </div>
-            `;
-        });
-        
-        contactCardsHTML += '</div>';
-        container.innerHTML += contactCardsHTML;
-    }
-    
-    // Render To Do List table
+        // Render To Do List table
     function renderTodoList(container, rows, treasuryName) {
         // Remove header if exists
         const headers = rows[0];
@@ -831,6 +794,43 @@
         addSearchFunctionality();
     }
     
+    // Render Contact Cards
+    function renderContactCards(container, rows) {
+        if (!rows || rows.length === 0) return;
+        
+        let contactCardsHTML = '<div class="contact-cards">';
+        
+        rows.forEach((row, index) => {
+            // Skip empty rows
+            if (!row || row.length < 5 || !row[1]) return;
+            
+            const colorClass = `contact-card-color-${index % 8}`; // Cycle through 8 color classes
+            
+            contactCardsHTML += `
+                <div class="contact-card ${colorClass}">
+                    <div class="contact-name">${row[1] || ''}</div>
+                    <div class="contact-designation">${row[0] || ''}</div>
+                    <div class="contact-detail">
+                        <i class="fa fa-phone"></i>
+                        <span>CUG: ${row[4] || ''}</span>
+                    </div>
+                    <div class="contact-detail">
+                        <i class="fa fa-mobile"></i>
+                        <span>Personal: ${row[2] || ''}</span>
+                    </div>
+                    <div class="contact-detail">
+                        <i class="fa fa-envelope"></i>
+                        <a href="mailto:${row[3] || ''}">${row[3] || ''}</a>
+                    </div>
+                </div>
+            `;
+        });
+        
+        contactCardsHTML += '</div>';
+        container.innerHTML += contactCardsHTML;
+    }
+    
+
     // Format date for display as DD/MM/YYYY
     function formatDate(dateString) {
         if (!dateString) return '';
