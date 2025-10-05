@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forms & Proforma's</title>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            min-width: 100%;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: white;
+            padding: 25px 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .table-container {
+            padding: 25px;
+            overflow-x: auto;
+        }
+        
+        .search-container {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            font-size: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #4285f4;
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.2);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #5f6368;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th {
+            background-color: #f1f3f4;
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: #3c4043;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            color: #5f6368;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .file-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        .view-btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        
+        .view-btn:hover {
+            background-color: #3367d6;
+        }
+        
+        .format-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .pdf {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .doc {
+            background-color: #e8eaf6;
+            color: #303f9f;
+        }
+        
+        .xls {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #5f6368;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 30px;
+            color: #d93025;
+            background-color: #fce8e6;
+            border-radius: 8px;
+            margin: 20px;
+        }
+        
+        .dataTables_wrapper .dataTables_filter {
+            display: none;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 8px 12px;
+            margin-left: 2px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #4285f4;
+            color: white !important;
+            border: 1px solid #4285f4;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #3367d6;
+            color: white !important;
+            border: 1px solid #3367d6;
+        }
+        
+        .dataTables_info {
+            padding-top: 15px;
+            color: #5f6368;
+        }
+        
+        @media (max-width: 768px) {
+            th, td {
+                padding: 12px 15px;
+            }
+            
+            .container {
+                border-radius: 0;
+            }
+            
+            .search-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Orders & Circulars</h1>
+           <p class="subtitle"></p>
+        </header>
+        
+        <div class="table-container">
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search files by name or type...">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <div class="table-info" id="tableInfo"></div>
+            </div>
+            
+            <div class="loading" id="loadingMessage">
+                Loading files from Google Drive...
+            </div>
+            
+            <div class="error" id="errorMessage" style="display: none;">
+                Error loading files. Please check your connection and try again.
+            </div>
+            
+            <table id="filesTable" class="display" style="display: none; width:100%">
+                <thead>
+                    <tr>
+                        <th>SL.No</th>
+                        <th>Subject/Description</th>
+                        <th>Format</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="filesTableBody">
+                    <!-- Files will be populated here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- jQuery and DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+    <script>
+        // Configuration
+        const FOLDER_ID = '1jESNrjs1iYVU14fhTZqR18cGKJtiX8V3';
+        const API_KEY = 'AIzaSyAbjIeVAXnYweF7PLH63ENzcNQKgCVAHDU';
+        
+        // DOM elements
+        const loadingMessage = document.getElementById('loadingMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const filesTable = document.getElementById('filesTable');
+        const filesTableBody = document.getElementById('filesTableBody');
+        const searchInput = document.getElementById('searchInput');
+        const tableInfo = document.getElementById('tableInfo');
+        
+        // Fixed File type icons (SVG data URLs)
+        const fileIcons = {
+            pdf: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2MzMDgwMCI+PHBhdGggZD0iTTggMTZIOFY4SDhWMThNMTAgMTZIMTBWOFYxNk0xMiAxNkgxMlY4SDEyVjE2TTE0IDJINkEyIDIgMCAwIDAgNCA0VjIwQTIgMiAwIDAgMCA2IDIySDE4QTIgMiAwIDAgMCAyMCAyMFY4TDE0IDJNMTQgNEgxNFY4SDE4TDE0IDRaIi8+PC9zdmc+',
+            doc: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzFBNTlGRiI+PHBhdGggZD0iTTE0IDJINkEyIDIgMCAwIDAgNCA0VjIwQTIgMiAwIDAgMCA2IDIySDE4QTIgMiAwIDAgMCAyMCAyMFY4TDE0IDJNMTQgNEgxNFY4SDE4TDE0IDRaIi8+PC9zdmc+',
+            xls: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzFBNzA0QyI+PHBhdGggZD0iTTE0IDJINkEyIDIgMCAwIDAgNCA0VjIwQTIgMiAwIDAgMCA2IDIySDE4QTIgMiAwIDAgMCAyMCAyMFY4TDE0IDJNMTQgNEgxNFY4SDE4TDE0IDRaIi8+PC9zdmc+',
+            default: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzVGNjM2OCI+PHBhdGggZD0iTTE0IDJINkEyIDIgMCAwIDAgNCA0VjIwQTIgMiAwIDAgMCA2IDIySDE4QTIgMiAwIDAgMCAyMCAyMFY4TDE0IDJNMTQgNEgxNFY4SDE4TDE0IDRaIi8+PC9zdmc+'
+        };
+        
+        // DataTable instance
+        let dataTable;
+        
+        // Function to get file icon based on file type
+        function getFileIcon(mimeType) {
+            if (mimeType.includes('pdf')) return fileIcons.pdf;
+            if (mimeType.includes('document') || mimeType.includes('word')) return fileIcons.doc;
+            if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return fileIcons.xls;
+            return fileIcons.default;
+        }
+        
+        // Function to get file format badge class
+        function getFormatClass(mimeType) {
+            if (mimeType.includes('pdf')) return 'pdf';
+            if (mimeType.includes('document') || mimeType.includes('word')) return 'doc';
+            if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'xls';
+            return '';
+        }
+        
+        // Function to get file format display name
+        function getFormatName(mimeType) {
+            if (mimeType.includes('pdf')) return 'PDF';
+            if (mimeType.includes('document') || mimeType.includes('word')) return 'DOC';
+            if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'XLS';
+            return mimeType.split('/').pop().toUpperCase();
+        }
+        
+        // Function to fetch files from Google Drive
+        async function fetchFiles() {
+            try {
+                // Build the API URL
+                const apiUrl = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents&key=${API_KEY}&fields=files(id,name,mimeType,webViewLink,webContentLink)`;
+                
+                // Make the API request
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Hide loading message
+                loadingMessage.style.display = 'none';
+                
+                // Check if we have files
+                if (data.files && data.files.length > 0) {
+                    // Populate the table
+                    populateTable(data.files);
+                    filesTable.style.display = 'table';
+                    initializeDataTable();
+                } else {
+                    errorMessage.textContent = 'No files found in the specified folder.';
+                    errorMessage.style.display = 'block';
+                }
+                
+            } catch (error) {
+                console.error('Error fetching files:', error);
+                loadingMessage.style.display = 'none';
+                errorMessage.textContent = `Error loading files: ${error.message}`;
+                errorMessage.style.display = 'block';
+            }
+        }
+        
+        // Function to populate the table with file data
+        function populateTable(files) {
+            filesTableBody.innerHTML = '';
+            
+            files.forEach((file, index) => {
+                const row = document.createElement('tr');
+                
+                // SL.No
+                const slCell = document.createElement('td');
+                slCell.textContent = index + 1;
+                row.appendChild(slCell);
+                
+                // File Name
+                const nameCell = document.createElement('td');
+                const icon = document.createElement('img');
+                icon.src = getFileIcon(file.mimeType);
+                icon.alt = 'File icon';
+                icon.className = 'file-icon';
+                nameCell.appendChild(icon);
+                nameCell.appendChild(document.createTextNode(file.name));
+                row.appendChild(nameCell);
+                
+                // File Format
+                const formatCell = document.createElement('td');
+                const formatBadge = document.createElement('span');
+                formatBadge.className = `format-badge ${getFormatClass(file.mimeType)}`;
+                formatBadge.textContent = getFormatName(file.mimeType);
+                formatCell.appendChild(formatBadge);
+                row.appendChild(formatCell);
+                
+                // View Button
+                const actionCell = document.createElement('td');
+                const viewButton = document.createElement('button');
+                viewButton.className = 'view-btn';
+                viewButton.textContent = 'View';
+                viewButton.onclick = () => {
+                    // Open the file in a new tab
+                    window.open(file.webViewLink || `https://drive.google.com/file/d/${file.id}/view`, '_blank');
+                };
+                actionCell.appendChild(viewButton);
+                row.appendChild(actionCell);
+                
+                filesTableBody.appendChild(row);
+            });
+        }
+        
+        // Function to initialize DataTable
+        function initializeDataTable() {
+            dataTable = $('#filesTable').DataTable({
+                "pageLength": 10,
+                "lengthMenu": [5, 10, 25, 50],
+                "dom": '<"top"if>rt<"bottom"lp><"clear">',
+                "language": {
+                    "emptyTable": "No files found",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ files",
+                    "infoEmpty": "Showing 0 to 0 of 0 files",
+                    "infoFiltered": "(filtered from _MAX_ total files)",
+                    "lengthMenu": "Show _MENU_ files",
+                    "loadingRecords": "Loading...",
+                    "processing": "Processing...",
+                    "search": "Search:",
+                    "zeroRecords": "No matching files found",
+                    "paginate": {
+                        "first": "First",
+                        "last": "Last",
+                        "next": "Next",
+                        "previous": "Previous"
+                    }
+                },
+                "columnDefs": [
+                    { "orderable": true, "targets": [0, 1, 2] },
+                    { "orderable": false, "targets": [3] }
+                ],
+                "order": [[0, 'asc']]
+            });
+            
+            // Custom search functionality
+            searchInput.addEventListener('keyup', function() {
+                dataTable.search(this.value).draw();
+            });
+            
+            // Update table info on draw
+            dataTable.on('draw', function() {
+                updateTableInfo();
+            });
+            
+            // Initial table info update
+            updateTableInfo();
+        }
+        
+        // Function to update table information
+        function updateTableInfo() {
+            if (dataTable) {
+                const pageInfo = dataTable.page.info();
+                tableInfo.textContent = `Showing ${pageInfo.recordsDisplay} of ${pageInfo.recordsTotal} files`;
+            }
+        }
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', fetchFiles);
+    </script>
+</body>
+</html>
