@@ -81,6 +81,10 @@
             color: #007bff !important;
             font-weight: bold !important;
         }
+        .btn-disabled-custom {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body style="background-color: #ecf0f5;">
@@ -114,7 +118,7 @@
                     <div class="col-md-4 d-flex align-items-end">
                         <button id="viewBtn" class="btn btn-primary">View</button>
                         <button id="pdfBtn" class="btn btn-danger ms-2">Report</button>
-						<button id="downloadBtn"class="btn btn-warning ms-2">AG CoverLetter</button>
+						<button id="downloadBtn" class="btn btn-warning ms-2">AG Reort(Latest)</button>
                         <button class="btn btn-success dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="margin-left:10px">
                             Menu
                         </button>
@@ -194,32 +198,12 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-     <script>
-        document.getElementById('downloadBtn').addEventListener('click', function() {
-            const spreadsheetId = '1Nfv3GvplDB0v6lI8PQ4fTks8KVClH6C8_0lddbfaesc';
-            const sheetName = 'Report';
-            
-            // Construct the PDF download URL
-            const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?` +
-                `format=pdf&` +
-                `size=a4&` +
-                `portrait=true&` +
-                `fitw=true&` +
-                `sheetnames=false&` +
-                `printtitle=false&` +
-                `pagenumbers=false&` +
-                `gridlines=false&` +
-                `fzr=false`;
-            
-            // Open the PDF in a new tab
-            window.open(url, '_blank');
-        });
-    </script>
     <script>
         // Global variables to store DataTable instances
         let rbdDataTable = null;
         let cashLopDataTable = null;
         let currentRBDData = [];
+        let isRBDStatusAgreed = false;
         
         // Initialize jsPDF
         const { jsPDF } = window.jspdf;
@@ -228,15 +212,22 @@
             // Initialize Select2
             $('.select2').select2();
             
-            // Set current year as default in the text input
-            const currentYear = new Date().getFullYear().toString();
-            $('#yearInput').val(currentYear);
-            
-            // Set current month as default
+            // Set previous month as default
             const months = ["January", "February", "March", "April", "May", "June", 
                            "July", "August", "September", "October", "November", "December"];
-            const currentMonth = months[new Date().getMonth()];
-            $('#monthSelect').val(currentMonth).trigger('change');
+            const currentDate = new Date();
+            currentDate.setMonth(currentDate.getMonth() - 1); // Get previous month
+            const previousMonth = months[currentDate.getMonth()];
+            
+            // Set current year as default in the text input
+            const currentYear = currentDate.getFullYear().toString();
+            $('#yearInput').val(currentYear);
+            
+            // Set previous month as default
+            $('#monthSelect').val(previousMonth).trigger('change');
+            
+            // Initialize AG CoverLetter button as disabled
+            $('#downloadBtn').prop('disabled', true).addClass('btn-disabled-custom');
             
             // Function to open document in popup
             function openDocumentPopup(url) {
@@ -331,190 +322,257 @@
                     populateCashLopTable(uniqueCashLopData);
                     checkRBDStatus(uniqueRBDData, uniqueCashLopData);
                     $('#reportContainer').show();
-                    viewBtn.html('View Report');
+                    viewBtn.html('View');
                     viewBtn.prop('disabled', false);
                 }).catch(error => {
                     console.error('Error:', error);
                     alert('Error fetching data. Please check console for details.');
-                    viewBtn.html('View Report');
+                    viewBtn.html('View');
                     viewBtn.prop('disabled', false);
                 });
             });
             
             // PDF button click handler
-$('#pdfBtn').click(function() {
-    const selectedMonth = $('#monthSelect').val();
-    const selectedYear = $('#yearInput').val();
-    
-    if (!selectedYear || !/^\d{4}$/.test(selectedYear)) {
-        alert('Please enter a valid 4-digit year (e.g. 2023)');
-        return;
-    }
-    
-    if (currentRBDData.length === 0) {
-        alert('Please view the report first before generating PDF');
-        return;
-    }
-    
-    generatePDF(selectedMonth, selectedYear, currentRBDData);
-});
+            $('#pdfBtn').click(function() {
+                const selectedMonth = $('#monthSelect').val();
+                const selectedYear = $('#yearInput').val();
+                
+                if (!selectedYear || !/^\d{4}$/.test(selectedYear)) {
+                    alert('Please enter a valid 4-digit year (e.g. 2023)');
+                    return;
+                }
+                
+                if (currentRBDData.length === 0) {
+                    alert('Please view the report first before generating PDF');
+                    return;
+                }
+                
+                generatePDF(selectedMonth, selectedYear, currentRBDData);
+            });
+            
+            // AG CoverLetter button click handler
+            $('#downloadBtn').click(function() {
+                if (!isRBDStatusAgreed) {
+                    alert('AG CoverLetter can only be downloaded when RBD status is "Agreed with Treasury RBD"');
+                    return;
+                }
+                
+                const selectedMonth = $('#monthSelect').val();
+                const selectedYear = $('#yearInput').val();
+                
+                if (!selectedYear || !/^\d{4}$/.test(selectedYear)) {
+                    alert('Please enter a valid 4-digit year (e.g. 2023)');
+                    return;
+                }
+                
+                // Show loading state
+                const downloadBtn = $('#downloadBtn');
+                const originalText = downloadBtn.html();
+                downloadBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Generating...');
+                downloadBtn.prop('disabled', true);
+                
+                // Call backend service to convert sheet to PDF
+                generateAGCoveLetterPDF(selectedMonth, selectedYear)
+                    .then(() => {
+                        downloadBtn.html(originalText);
+                        downloadBtn.prop('disabled', false);
+                    })
+                    .catch(error => {
+                        console.error('Error generating AG CoverLetter:', error);
+                        alert('Error generating AG CoverLetter. Please try again.');
+                        downloadBtn.html(originalText);
+                        downloadBtn.prop('disabled', false);
+                    });
+            });
+            
+            // Function to generate AG CoverLetter PDF via backend
+            function generateAGCoveLetterPDF(month, year) {
+                return new Promise((resolve, reject) => {
+                    const spreadsheetId = '1Nfv3GvplDB0v6lI8PQ4fTks8KVClH6C8_0lddbfaesc';
+                    const sheetName = 'Report';
+                    
+                    // Create a hidden iframe to download the PDF
+                    const iframe = document.createElement('iframe');
+                    iframe.style.display = 'none';
+                    document.body.appendChild(iframe);
+                    
+                    // Construct the PDF download URL
+                    const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?` +
+                        `format=pdf&` +
+                        `size=a4&` +
+                        `portrait=true&` +
+                        `fitw=true&` +
+                        `sheetnames=false&` +
+                        `printtitle=false&` +
+                        `pagenumbers=false&` +
+                        `gridlines=false&` +
+                        `fzr=false`;
+                    
+                    iframe.src = url;
+                    
+                    // Resolve the promise after a short delay to allow download to start
+                    setTimeout(() => {
+                        document.body.removeChild(iframe);
+                        resolve();
+                    }, 2000);
+                });
+            }
             
             // Function to generate PDF with updated requirements
-// Function to generate PDF with updated requirements
-function generatePDF(selectedMonth, selectedYear, data) {
-    // Create a new PDF document in portrait mode, A4 size
-    const doc = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-    });
-    
-    // Set font and size for the document
-    doc.setFont('helvetica');
-    
-    // Add heading
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Consolidated Report of Receipts, Payments and Net Amount', 105, 20, { align: 'center' });
-    
-    // Add sub-heading
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`for the Month of ${selectedMonth} ${selectedYear}`, 105, 28, { align: 'center' });
-    
-    // Add district treasury name
-    doc.text('Name of District Treasury: District Treasury Trivandrum', 105, 35, { align: 'center' });
-    
-    // Calculate totals
-    let totalTreasuryReceipt = 0;
-    let totalTreasuryPayment = 0;
-    let totalTreasuryNet = 0;
-    let totalBankReceipt = 0;
-    let totalBankPayment = 0;
-    let totalBankNet = 0;
-    let totalDifference = 0;
-    
-    // Prepare data for the table (excluding SL.No and Remark columns)
-    const tableData = data.map((item) => {
-        const treasuryReceipt = parseFloat(item['Total Receipt amount of the Treasury']) || 0;
-        const treasuryPayment = parseFloat(item['Total Payment amount of the Treasury']) || 0;
-        const treasuryNet = parseFloat(item['Total Net amount in Treasury']) || 0;
-        const bankReceipt = parseFloat(item['Total Receipt amount of the Bank']) || 0;
-        const bankPayment = parseFloat(item['Total Payment amount of the Bank']) || 0;
-        const bankNet = parseFloat(item['Total Net amount of the Bank']) || 0;
-        const difference = parseFloat(item['Difference']) || 0;
-        
-        // Update totals
-        totalTreasuryReceipt += treasuryReceipt;
-        totalTreasuryPayment += treasuryPayment;
-        totalTreasuryNet += treasuryNet;
-        totalBankReceipt += bankReceipt;
-        totalBankPayment += bankPayment;
-        totalBankNet += bankNet;
-        totalDifference += difference;
-        
-        return [
-            item['Treasury Name'],
-            treasuryReceipt.toLocaleString(),
-            treasuryPayment.toLocaleString(),
-            treasuryNet.toLocaleString(),
-            bankReceipt.toLocaleString(),
-            bankPayment.toLocaleString(),
-            bankNet.toLocaleString(),
-            difference.toLocaleString()
-        ];
-    });
-    
-    // Add totals row with bold font
-    tableData.push([
-        { content: 'Total', styles: { fontStyle: 'bold' } },
-        { content: totalTreasuryReceipt.toLocaleString(), styles: { fontStyle: 'bold' } },
-        { content: totalTreasuryPayment.toLocaleString(), styles: { fontStyle: 'bold' } },
-        { content: totalTreasuryNet.toLocaleString(), styles: { fontStyle: 'bold' } },
-        { content: totalBankReceipt.toLocaleString(), styles: { fontStyle: 'bold' } },
-        { content: totalBankPayment.toLocaleString(), styles: { fontStyle: 'bold' } },
-        { content: totalBankNet.toLocaleString(), styles: { fontStyle: 'bold' } },
-        { content: totalDifference.toLocaleString(), styles: { fontStyle: 'bold' } }
-    ]);
-    
-    // Define table headers (only include relevant columns)
-    const headers = [
-        ['Name of Treasury', 'Treasury Receipt', 'Treasury Payment', 'Treasury Net', 
-         'Bank Receipt', 'Bank Payment', 'Bank Net', 'Difference']
-    ];
-    
-    // Get current date in DD/MM/YYYY format
-    const today = new Date();
-    const day = String(today.getDate()).padStart(2, '0');
-    const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
-    const currentYear = today.getFullYear();
-    const formattedDate = `${day}/${currentMonth}/${currentYear}`;
-    
-    // Add the table to the PDF with normal borders
-    doc.autoTable({
-        head: headers,
-        body: tableData,
-        startY: 40,
-        margin: { left: 10, right: 10 },
-        styles: {
-            fontSize: 8,
-            cellPadding: 1,
-            valign: 'middle',
-            halign: 'center',
-            overflow: 'linebreak',
-            lineColor: [0, 0, 0], // Black borders
-            lineWidth: 0.2, // Normal border width
-            fillColor: false, // No background color
-            textColor: [0, 0, 0] // Black text
-        },
-        headStyles: {
-            fillColor: false, // No background color
-            textColor: [0, 0, 0],
-            fontStyle: 'bold',
-            lineWidth: 0.2
-        },
-        bodyStyles: {
-            fillColor: false, // No background color
-            lineWidth: 0.2
-        },
-        columnStyles: {
-            0: { cellWidth: 30, halign: 'left' },
-            1: { cellWidth: 20 },
-            2: { cellWidth: 20 },
-            3: { cellWidth: 20 },
-            4: { cellWidth: 20 },
-            5: { cellWidth: 20 },
-            6: { cellWidth: 20 },
-            7: { cellWidth: 20 }
-        },
-        didDrawPage: function(data) {
-            // Footer content
-            const pageCount = doc.internal.getNumberOfPages();
-            const currentPage = doc.internal.getCurrentPageInfo().pageNumber;
-            
-            if (currentPage === pageCount) {
-                // Add date and place
-                doc.setFontSize(10);
-                doc.text(`Date: ${formattedDate}`, 20, doc.internal.pageSize.height - 30);
-                doc.text('Place: Trivandrum', 20, doc.internal.pageSize.height - 20);
+            function generatePDF(selectedMonth, selectedYear, data) {
+                // Create a new PDF document in portrait mode, A4 size
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
                 
-                // Add signature space
-                doc.text('Signature:', doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 30);
-                doc.line(doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 25, 
-                         doc.internal.pageSize.width - 10, doc.internal.pageSize.height - 25);
+                // Set font and size for the document
+                doc.setFont('helvetica');
                 
-                // Add designation
-                doc.text('District Treasury Officer, Trivandrum', 
-                         doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 15);
+                // Add heading
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Consolidated Report of Receipts, Payments and Net Amount', 105, 20, { align: 'center' });
+                
+                // Add sub-heading
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`for the Month of ${selectedMonth} ${selectedYear}`, 105, 28, { align: 'center' });
+                
+                // Add district treasury name
+                doc.text('Name of District Treasury: District Treasury Trivandrum', 105, 35, { align: 'center' });
+                
+                // Calculate totals
+                let totalTreasuryReceipt = 0;
+                let totalTreasuryPayment = 0;
+                let totalTreasuryNet = 0;
+                let totalBankReceipt = 0;
+                let totalBankPayment = 0;
+                let totalBankNet = 0;
+                let totalDifference = 0;
+                
+                // Prepare data for the table (excluding SL.No and Remark columns)
+                const tableData = data.map((item) => {
+                    const treasuryReceipt = parseFloat(item['Total Receipt amount of the Treasury']) || 0;
+                    const treasuryPayment = parseFloat(item['Total Payment amount of the Treasury']) || 0;
+                    const treasuryNet = parseFloat(item['Total Net amount in Treasury']) || 0;
+                    const bankReceipt = parseFloat(item['Total Receipt amount of the Bank']) || 0;
+                    const bankPayment = parseFloat(item['Total Payment amount of the Bank']) || 0;
+                    const bankNet = parseFloat(item['Total Net amount of the Bank']) || 0;
+                    const difference = parseFloat(item['Difference']) || 0;
+                    
+                    // Update totals
+                    totalTreasuryReceipt += treasuryReceipt;
+                    totalTreasuryPayment += treasuryPayment;
+                    totalTreasuryNet += treasuryNet;
+                    totalBankReceipt += bankReceipt;
+                    totalBankPayment += bankPayment;
+                    totalBankNet += bankNet;
+                    totalDifference += difference;
+                    
+                    return [
+                        item['Treasury Name'],
+                        treasuryReceipt.toLocaleString(),
+                        treasuryPayment.toLocaleString(),
+                        treasuryNet.toLocaleString(),
+                        bankReceipt.toLocaleString(),
+                        bankPayment.toLocaleString(),
+                        bankNet.toLocaleString(),
+                        difference.toLocaleString()
+                    ];
+                });
+                
+                // Add totals row with bold font
+                tableData.push([
+                    { content: 'Total', styles: { fontStyle: 'bold' } },
+                    { content: totalTreasuryReceipt.toLocaleString(), styles: { fontStyle: 'bold' } },
+                    { content: totalTreasuryPayment.toLocaleString(), styles: { fontStyle: 'bold' } },
+                    { content: totalTreasuryNet.toLocaleString(), styles: { fontStyle: 'bold' } },
+                    { content: totalBankReceipt.toLocaleString(), styles: { fontStyle: 'bold' } },
+                    { content: totalBankPayment.toLocaleString(), styles: { fontStyle: 'bold' } },
+                    { content: totalBankNet.toLocaleString(), styles: { fontStyle: 'bold' } },
+                    { content: totalDifference.toLocaleString(), styles: { fontStyle: 'bold' } }
+                ]);
+                
+                // Define table headers (only include relevant columns)
+                const headers = [
+                    ['Name of Treasury', 'Treasury Receipt', 'Treasury Payment', 'Treasury Net', 
+                     'Bank Receipt', 'Bank Payment', 'Bank Net', 'Difference']
+                ];
+                
+                // Get current date in DD/MM/YYYY format
+                const today = new Date();
+                const day = String(today.getDate()).padStart(2, '0');
+                const currentMonth = String(today.getMonth() + 1).padStart(2, '0');
+                const currentYear = today.getFullYear();
+                const formattedDate = `${day}/${currentMonth}/${currentYear}`;
+                
+                // Add the table to the PDF with normal borders
+                doc.autoTable({
+                    head: headers,
+                    body: tableData,
+                    startY: 40,
+                    margin: { left: 10, right: 10 },
+                    styles: {
+                        fontSize: 8,
+                        cellPadding: 1,
+                        valign: 'middle',
+                        halign: 'center',
+                        overflow: 'linebreak',
+                        lineColor: [0, 0, 0], // Black borders
+                        lineWidth: 0.2, // Normal border width
+                        fillColor: false, // No background color
+                        textColor: [0, 0, 0] // Black text
+                    },
+                    headStyles: {
+                        fillColor: false, // No background color
+                        textColor: [0, 0, 0],
+                        fontStyle: 'bold',
+                        lineWidth: 0.2
+                    },
+                    bodyStyles: {
+                        fillColor: false, // No background color
+                        lineWidth: 0.2
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 30, halign: 'left' },
+                        1: { cellWidth: 20 },
+                        2: { cellWidth: 20 },
+                        3: { cellWidth: 20 },
+                        4: { cellWidth: 20 },
+                        5: { cellWidth: 20 },
+                        6: { cellWidth: 20 },
+                        7: { cellWidth: 20 }
+                    },
+                    didDrawPage: function(data) {
+                        // Footer content
+                        const pageCount = doc.internal.getNumberOfPages();
+                        const currentPage = doc.internal.getCurrentPageInfo().pageNumber;
+                        
+                        if (currentPage === pageCount) {
+                            // Add date and place
+                            doc.setFontSize(10);
+                            doc.text(`Date: ${formattedDate}`, 20, doc.internal.pageSize.height - 30);
+                            doc.text('Place: Trivandrum', 20, doc.internal.pageSize.height - 20);
+                            
+                            // Add signature space
+                            doc.text('Signature:', doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 30);
+                            doc.line(doc.internal.pageSize.width - 40, doc.internal.pageSize.height - 25, 
+                                     doc.internal.pageSize.width - 10, doc.internal.pageSize.height - 25);
+                            
+                            // Add designation
+                            doc.text('District Treasury Officer, Trivandrum', 
+                                     doc.internal.pageSize.width - 60, doc.internal.pageSize.height - 15);
+                        }
+                    }
+                });
+                
+                // Save the PDF
+                doc.save(`RBD_Report_${selectedMonth}_${selectedYear}.pdf`);
             }
-        }
-    });
-    
-    // Save the PDF
-    doc.save(`RBD_Report_${selectedMonth}_${selectedYear}.pdf`);
-}
-    
-// Function to fetch RBD sheet data
+            
+            // Function to fetch RBD sheet data
             function fetchRBDSheetData(month, year) {
                 const sheetId = '1Nfv3GvplDB0v6lI8PQ4fTks8KVClH6C8_0lddbfaesc';
                 const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
@@ -759,8 +817,12 @@ function generatePDF(selectedMonth, selectedYear, data) {
                 const statusElement = $('#rbdStatus');
                 if (Math.abs(totalCashDiff) === Math.abs(totalTreasuryNet)) {
                     statusElement.html('<i class="fas fa-check-circle green-status"></i> Agreed with Treasury RBD');
+                    isRBDStatusAgreed = true;
+                    $('#downloadBtn').prop('disabled', false).removeClass('btn-disabled-custom');
                 } else {
                     statusElement.html(`<i class="fas fa-times-circle red-status"></i> RBD difference of ${Math.abs(totalCashDiff - totalTreasuryNet).toLocaleString()}`);
+                    isRBDStatusAgreed = false;
+                    $('#downloadBtn').prop('disabled', true).addClass('btn-disabled-custom');
                 }
             }
             
