@@ -37,7 +37,7 @@
             background: linear-gradient(135deg, #4285f4, #34a853);
             color: white;
             padding: 25px 30px;
-            text-align: center;
+            
             position: relative;
         }
         
@@ -296,6 +296,12 @@
             cursor: pointer;
             z-index: 1001;
         }
+        
+        /* Date column styling */
+        .date-cell {
+            white-space: nowrap;
+            color: #5f6368;
+        }
     </style>
 </head>
 <body>
@@ -334,6 +340,7 @@
                     <tr>
                         <th>SL.No</th>
                         <th>Subject/Description</th>
+                        <th>Date</th>
                         <th>Format</th>
                         <th>Action</th>
                     </tr>
@@ -412,11 +419,21 @@
             return mimeType.split('/').pop().toUpperCase();
         }
         
+        // Function to format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+        
         // Function to fetch files from Google Drive
         async function fetchFiles() {
             try {
-                // Build the API URL
-                const apiUrl = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents&key=${API_KEY}&fields=files(id,name,mimeType,webViewLink,webContentLink)`;
+                // Build the API URL - now including modifiedTime in the fields
+                const apiUrl = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents&key=${API_KEY}&fields=files(id,name,mimeType,webViewLink,webContentLink,modifiedTime)`;
                 
                 // Make the API request
                 const response = await fetch(apiUrl);
@@ -432,6 +449,9 @@
                 
                 // Check if we have files
                 if (data.files && data.files.length > 0) {
+                    // Sort files by modified date (newest first)
+                    data.files.sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
+                    
                     // Populate the table
                     populateTable(data.files);
                     filesTable.style.display = 'table';
@@ -470,6 +490,12 @@
                 nameCell.appendChild(icon);
                 nameCell.appendChild(document.createTextNode(file.name));
                 row.appendChild(nameCell);
+                
+                // Date Column
+                const dateCell = document.createElement('td');
+                dateCell.className = 'date-cell';
+                dateCell.textContent = formatDate(file.modifiedTime);
+                row.appendChild(dateCell);
                 
                 // File Format
                 const formatCell = document.createElement('td');
@@ -519,10 +545,10 @@
                     }
                 },
                 "columnDefs": [
-                    { "orderable": true, "targets": [0, 1, 2] },
-                    { "orderable": false, "targets": [3] }
+                    { "orderable": true, "targets": [0, 1, 2, 3] },
+                    { "orderable": false, "targets": [4] }
                 ],
-                "order": [[0, 'asc']]
+                "order": [[2, 'desc']] // Default sort by date (newest first)
             });
             
             // Custom search functionality
