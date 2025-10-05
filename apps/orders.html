@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forms & Proforma's</title>
+    <title>File Search | IT Cell HelpDesk</title>
     <!-- DataTables CSS -->
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         * {
             margin: 0;
@@ -36,6 +38,7 @@
             color: white;
             padding: 25px 30px;
             text-align: center;
+            position: relative;
         }
         
         h1 {
@@ -47,6 +50,28 @@
         .subtitle {
             font-size: 1rem;
             opacity: 0.9;
+        }
+        
+        .upload-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .upload-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
         }
         
         .table-container {
@@ -224,6 +249,52 @@
             .search-box {
                 min-width: 100%;
             }
+            
+            .upload-btn {
+                position: static;
+                margin-top: 15px;
+                align-self: flex-end;
+            }
+        }
+        
+        /* Modal styles for upload */
+        .upload-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .upload-modal iframe {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 600px;
+            height: 500px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ea4335;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1001;
         }
     </style>
 </head>
@@ -231,7 +302,14 @@
     <div class="container">
         <header>
             <h1>Orders & Circulars</h1>
-           <p class="subtitle"></p>
+            <p class="subtitle"></p>
+            <button class="upload-btn" id="uploadBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                </svg>
+                Upload File
+            </button>
         </header>
         
         <div class="table-container">
@@ -244,7 +322,7 @@
             </div>
             
             <div class="loading" id="loadingMessage">
-                Loading files from Google Drive...
+                Loading files...
             </div>
             
             <div class="error" id="errorMessage" style="display: none;">
@@ -267,15 +345,25 @@
         </div>
     </div>
 
+    <!-- Upload Modal -->
+    <div class="upload-modal" id="uploadModal">
+        <button class="close-btn" id="closeModal">×</button>
+        <iframe id="uploadFrame" src=""></iframe>
+    </div>
+
     <!-- jQuery and DataTables JS -->
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         // Configuration
         const FOLDER_ID = '1jESNrjs1iYVU14fhTZqR18cGKJtiX8V3';
         const API_KEY = 'AIzaSyAbjIeVAXnYweF7PLH63ENzcNQKgCVAHDU';
+        // UPDATE THIS URL WITH YOUR APPS SCRIPT DEPLOYMENT URL
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIkgLX0g9EkT1jmdoeCG7M5bfWz9kuZvEDja8d79mY9ix7KtGvXtJXlwnW44uh9US0/exec';
         
         // DOM elements
         const loadingMessage = document.getElementById('loadingMessage');
@@ -284,6 +372,10 @@
         const filesTableBody = document.getElementById('filesTableBody');
         const searchInput = document.getElementById('searchInput');
         const tableInfo = document.getElementById('tableInfo');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadModal = document.getElementById('uploadModal');
+        const uploadFrame = document.getElementById('uploadFrame');
+        const closeModal = document.getElementById('closeModal');
         
         // Fixed File type icons (SVG data URLs)
         const fileIcons = {
@@ -455,8 +547,72 @@
             }
         }
         
+        // Function to open upload modal
+        function openUploadModal() {
+            // Show confirmation dialog first
+            Swal.fire({
+                title: 'File Upload',
+                text: "Verify that file name is renamed to its subject?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#4285f4',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'OK',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Load Apps Script upload interface
+                    uploadFrame.src = APP_SCRIPT_URL;
+                    uploadModal.style.display = 'block';
+                }
+            });
+        }
+        
+        // Function to close upload modal
+        function closeUploadModal() {
+            uploadModal.style.display = 'none';
+            uploadFrame.src = '';
+        }
+        
+        // Function to handle upload success
+        function handleUploadSuccess() {
+            closeUploadModal();
+            Swal.fire({
+                title: 'Success!',
+                text: 'File uploaded successfully',
+                icon: 'success',
+                confirmButtonColor: '#4285f4'
+            });
+            
+            // Refresh the file list
+            fetchFiles();
+        }
+        
+        // Listen for messages from the iframe
+        window.addEventListener('message', function(event) {
+            if (event.data === 'uploadSuccess') {
+                handleUploadSuccess();
+            }
+        });
+        
         // Initialize the page
-        document.addEventListener('DOMContentLoaded', fetchFiles);
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fetch files on page load
+            fetchFiles();
+            
+            // Set up upload button event listener
+            uploadBtn.addEventListener('click', openUploadModal);
+            
+            // Set up close modal event listener
+            closeModal.addEventListener('click', closeUploadModal);
+            
+            // Close modal when clicking outside
+            uploadModal.addEventListener('click', function(event) {
+                if (event.target === uploadModal) {
+                    closeUploadModal();
+                }
+            });
+        });
     </script>
 </body>
 </html>
