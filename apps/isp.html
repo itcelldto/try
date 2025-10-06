@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISP Contact Directory</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 30px 0;
+            color: white;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto 20px;
+        }
+        
+        .search-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #f5f7fa;
+            border-radius: 8px;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .search-box:focus-within {
+            box-shadow: 0 0 0 2px #3498db;
+            background: white;
+        }
+        
+        .search-icon {
+            color: #7f8c8d;
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        #search-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 1.1rem;
+            color: #2c3e50;
+        }
+        
+        #search-input::placeholder {
+            color: #95a5a6;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            padding: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }
+        
+        th {
+            background: #2c3e50;
+            color: white;
+            padding: 18px 15px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        tr:hover td {
+            background-color: #f9f9f9;
+        }
+        
+        .phone-number {
+            color: #2980b9;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            transition: all 0.2s ease;
+            margin-bottom: 5px;
+        }
+        
+        .phone-number:hover {
+            color: #e74c3c;
+            transform: translateX(5px);
+        }
+        
+        .phone-icon {
+            margin-right: 8px;
+            font-size: 1.1rem;
+            transform: rotate(90deg); /* Rotate icon to face right */
+        }
+        
+        .multiple-numbers {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .treasury-cell {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+            color: white;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 40px;
+            color: #e74c3c;
+            background: white;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d;
+            font-style: italic;
+            display: none;
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            th, td {
+                padding: 12px 10px;
+            }
+            
+            .search-container {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ISP Contact Directory</h1>
+            <p class="subtitle">Treasury Internet Service Providers contact details. Click on any phone number to call.</p>
+            
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Search by treasury or phone number...">
+                </div>
+            </div>
+        </header>
+        
+        <div class="card">
+            <div class="table-container">
+                <div class="loading" id="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Loading data...
+                </div>
+                <table id="isp-table" style="display: none;">
+                    <thead>
+                        <tr>
+                            <th>Treasuries</th>
+                            <th>KSWAN - Direct</th>
+                            <th>RailTel</th>
+                            <th>KFone</th>
+                            <th>BSNL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+                <div class="no-results" id="no-results">
+                    <i class="fas fa-search fa-2x" style="margin-bottom: 15px;"></i>
+                    <p>No matching results found. Try a different search term.</p>
+                </div>
+                <div class="error" id="error-message" style="display: none;"></div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Data sourced from IT Cell HelpDesk | ISP Contact Directory</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+            const spreadsheetId = '1x4zanU73IgQyIF8-28FiA93wBA_cHfd2TQLUMtbXUFQ';
+            const sheetName = 'ISP';
+            const range = 'A:E';
+            
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${sheetName}!${range}?key=${apiKey}`;
+            
+            const tableBody = document.getElementById('table-body');
+            const loadingElement = document.getElementById('loading');
+            const tableElement = document.getElementById('isp-table');
+            const errorElement = document.getElementById('error-message');
+            const noResultsElement = document.getElementById('no-results');
+            const searchInput = document.getElementById('search-input');
+            
+            let allRows = [];
+            
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    loadingElement.style.display = 'none';
+                    
+                    if (!data.values || data.values.length === 0) {
+                        throw new Error('No data found in the sheet');
+                    }
+                    
+                    // Skip the header row (index 0) and process data rows
+                    const rows = data.values.slice(1);
+                    allRows = rows;
+                    
+                    populateTable(rows);
+                    tableElement.style.display = 'table';
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    loadingElement.style.display = 'none';
+                    errorElement.textContent = `Error loading data: ${error.message}`;
+                    errorElement.style.display = 'block';
+                });
+            
+            // Search functionality
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                
+                if (searchTerm === '') {
+                    populateTable(allRows);
+                    noResultsElement.style.display = 'none';
+                    tableElement.style.display = 'table';
+                    return;
+                }
+                
+                const filteredRows = allRows.filter(row => {
+                    // Check if search term matches treasury name
+                    if (row[0] && row[0].toLowerCase().includes(searchTerm)) {
+                        return true;
+                    }
+                    
+                    // Check if search term matches any phone number in the row
+                    for (let i = 1; i < row.length; i++) {
+                        if (row[i] && row[i].toLowerCase().includes(searchTerm)) {
+                            return true;
+                        }
+                    }
+                    
+                    return false;
+                });
+                
+                populateTable(filteredRows);
+                
+                if (filteredRows.length === 0) {
+                    tableElement.style.display = 'none';
+                    noResultsElement.style.display = 'block';
+                } else {
+                    tableElement.style.display = 'table';
+                    noResultsElement.style.display = 'none';
+                }
+            });
+            
+            function populateTable(rows) {
+                // Clear existing table content
+                tableBody.innerHTML = '';
+                
+                rows.forEach(row => {
+                    const tr = document.createElement('tr');
+                    
+                    // Treasury column
+                    const treasuryTd = document.createElement('td');
+                    treasuryTd.textContent = row[0] || '-';
+                    treasuryTd.className = 'treasury-cell';
+                    tr.appendChild(treasuryTd);
+                    
+                    // KSWAN column
+                    const kswanTd = document.createElement('td');
+                    if (row[1]) {
+                        kswanTd.appendChild(createPhoneContent(row[1]));
+                    } else {
+                        kswanTd.textContent = '-';
+                    }
+                    tr.appendChild(kswanTd);
+                    
+                    // RailTel column
+                    const railTelTd = document.createElement('td');
+                    if (row[2]) {
+                        railTelTd.appendChild(createPhoneContent(row[2]));
+                    } else {
+                        railTelTd.textContent = '-';
+                    }
+                    tr.appendChild(railTelTd);
+                    
+                    // KFone column
+                    const kfoneTd = document.createElement('td');
+                    if (row[3]) {
+                        kfoneTd.appendChild(createPhoneContent(row[3]));
+                    } else {
+                        kfoneTd.textContent = '-';
+                    }
+                    tr.appendChild(kfoneTd);
+                    
+                    // BSNL column
+                    const bsnlTd = document.createElement('td');
+                    if (row[4]) {
+                        bsnlTd.appendChild(createPhoneContent(row[4]));
+                    } else {
+                        bsnlTd.textContent = '-';
+                    }
+                    tr.appendChild(bsnlTd);
+                    
+                    tableBody.appendChild(tr);
+                });
+            }
+            
+            function createPhoneContent(cellValue) {
+                // Check if the cell contains phone numbers
+                const phoneRegex = /[\d\s\+\-\(\)]+/g;
+                const phoneMatches = cellValue.match(phoneRegex);
+                
+                // If no phone numbers found, return plain text
+                if (!phoneMatches || phoneMatches.length === 0) {
+                    return document.createTextNode(cellValue);
+                }
+                
+                // If only one phone number found, create a single phone link
+                if (phoneMatches.length === 1) {
+                    return createPhoneLink(cellValue.trim());
+                }
+                
+                // If multiple phone numbers found, create a container with multiple links
+                const container = document.createElement('div');
+                container.className = 'multiple-numbers';
+                
+                // Split by commas and create links for each phone number
+                const phoneNumbers = cellValue.split(',').map(num => num.trim());
+                
+                phoneNumbers.forEach(number => {
+                    // Check if this segment contains a phone number
+                    if (number.match(phoneRegex)) {
+                        const link = createPhoneLink(number);
+                        container.appendChild(link);
+                    } else {
+                        // If it's not a phone number, just add as text
+                        const textNode = document.createTextNode(number);
+                        container.appendChild(textNode);
+                    }
+                });
+                
+                return container;
+            }
+            
+            function createPhoneLink(phoneNumber) {
+                // Clean the phone number - remove any non-digit characters except +
+                const cleanNumber = phoneNumber.replace(/[^\d+]/g, '');
+                
+                const link = document.createElement('a');
+                link.href = `tel:${cleanNumber}`;
+                link.className = 'phone-number';
+                
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-phone-alt phone-icon';
+                
+                link.appendChild(icon);
+                link.appendChild(document.createTextNode(phoneNumber));
+                
+                return link;
+            }
+        });
+    </script>
+</body>
+</html>
