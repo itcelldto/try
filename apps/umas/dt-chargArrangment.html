@@ -497,53 +497,56 @@
       });
     }
     
-    function loadEmployees(treasuryName, designation, role, targetId) {
-      $.ajax({
-        url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/umas-onboard!A2:E',
-        method: 'GET',
-        data: {
-          key: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
-        },
-        success: function(response) {
-          if (response.values) {
-            const employees = [];
-            response.values.forEach(row => {
-              if (row[0] === treasuryName && 
-                  row[3] === designation && 
-                  row[4] === role && 
-                  row[2]) {
-                employees.push({
-                  name: row[2],
-                  pen: row[1]
-                });
-              }
-            });
-            
-            const select = $(`#${targetId}`);
-            select.empty().append('<option value="">Select Employee</option>');
-            
-            employees.forEach(employee => {
-              select.append(`<option value="${employee.name}" data-pen="${employee.pen}">${employee.name}</option>`);
-            });
-            
-            // When employee is selected, update PEN field
-            select.on('change', function() {
-              const selectedOption = $(this).find('option:selected');
-              const penField = targetId === 'fromName' ? '#fromPEN' : '#toPEN';
-              $(penField).val(selectedOption.data('pen') || '');
+   function loadEmployees(treasuryName, designation, role, targetId) {
+  $.ajax({
+    url: 'https://sheets.googleapis.com/v4/spreadsheets/1laWjV6MFOfbb7Xg2kzBVz99Ho3S74PN81BM0UlqRcmM/values/umas-onboard!A2:E',
+    method: 'GET',
+    data: {
+      key: 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4'
+    },
+    success: function(response) {
+      if (response.values) {
+        const employees = [];
+        response.values.forEach(row => {
+          if (row[0] === treasuryName && 
+              row[3] === designation && 
+              row[4] === role && 
+              row[2]) {
+            employees.push({
+              name: row[2],
+              pen: row[1]
             });
           }
-        },
-        error: function() {
-          Swal.fire({
-            title: 'Error!',
-            text: 'Failed to load employees. Please try again.',
-            icon: 'error',
-            confirmButtonText: 'OK'
-          });
-        }
+        });
+        
+        const select = $(`#${targetId}`);
+        select.empty().append('<option value="">Select Employee</option>');
+        
+        // Add "Vacant" option with PEN value 0
+        select.append(`<option value="Vacant" data-pen="0">Vacant</option>`);
+        
+        employees.forEach(employee => {
+          select.append(`<option value="${employee.name}" data-pen="${employee.pen}">${employee.name}</option>`);
+        });
+        
+        // When employee is selected, update PEN field
+        select.on('change', function() {
+          const selectedOption = $(this).find('option:selected');
+          const penField = targetId === 'fromName' ? '#fromPEN' : '#toPEN';
+          $(penField).val(selectedOption.data('pen') || '');
+        });
+      }
+    },
+    error: function() {
+      Swal.fire({
+        title: 'Error!',
+        text: 'Failed to load employees. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'OK'
       });
     }
+  });
+}
     
     function loadPEN(treasuryName, designation, role, name, targetId) {
       $.ajax({
