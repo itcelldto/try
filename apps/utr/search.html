@@ -26,7 +26,7 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             border: none;
             width: 100%;
-            max-width: 800px;
+            max-width: 900px;
         }
         
         .card-header {
@@ -138,41 +138,25 @@
             word-break: break-all;
         }
         
-        /* Custom input group styling */
-        .custom-input-group {
-            display: flex;
-            flex-wrap: nowrap;
-            width: 100%;
-        }
-        
-        .custom-input-group .form-control {
-            flex: 0 0 50%;
-            max-width: 50%;
-        }
-        
-        .custom-input-group .btn-group {
-            flex: 0 0 50%;
-            max-width: 50%;
-            display: flex;
-        }
-        
-        .custom-input-group .btn-group .btn {
-            flex: 1;
+        .sheet-selector {
+            min-width: 180px;
         }
         
         @media (max-width: 768px) {
-            .custom-input-group {
+            .sheet-selector {
+                min-width: 150px;
+            }
+            
+            .input-group {
                 flex-direction: column;
             }
             
-            .custom-input-group .form-control,
-            .custom-input-group .btn-group {
-                flex: 0 0 100%;
-                max-width: 100%;
+            .input-group > * {
+                margin-bottom: 10px;
             }
             
-            .custom-input-group .btn-group {
-                margin-top: 10px;
+            .input-group > :not(:last-child) {
+                margin-right: 0;
             }
         }
     </style>
@@ -182,10 +166,7 @@
         <div class="card">
             <div class="card-header text-center">
                 <h1 class="mb-2">UTR New Format Search</h1>
-                <div class="last-updated" id="last-updated">
-                    <i class="fas fa-info-circle me-1"></i>
-                    <span>Transactions are updated up to <span id="update-date">Loading...</span>, kindly wait for further updates</span>
-                </div>
+              
             </div>
             
             <div class="card-body">
@@ -195,8 +176,9 @@
                         <button type="button" class="btn-close" id="close-instructions"></button>
                     </div>
                     <ol class="mb-0">
+                        <li>Select the date range from dropdown</li>
                         <li>Enter UTR with RBISH format and click Search</li>
-                        <li>Search New UTR with BiMS &gt; UTR Search</li>
+                        <li>Search New UTR with BiMS > UTR Search</li>
                     </ol>
                 </div>
                 
@@ -205,12 +187,20 @@
                 </button>
                 
                 <div class="mb-4">
-                    <label for="utr-input" class="form-label fw-bold">Enter UTR Number</label>
-                    <div class="custom-input-group mb-2">
-                        <input type="text" class="form-control me-2" id="utr-input" placeholder="e.g., RBISH0123456789" maxlength="50">
-                        <div class="btn-group">
-                            <button class="btn btn-primary" type="button" id="lookup-btn">Search</button>
-                            <button class="btn btn-outline-secondary" type="button" id="clear-btn">Clear</button>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label for="sheet-select" class="form-label fw-bold">Date Range</label>
+                            <select class="form-select sheet-selector" id="sheet-select">
+                                <option value="" selected disabled>Loading sheets...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label for="utr-input" class="form-label fw-bold">Enter UTR Number</label>
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control" id="utr-input" placeholder="e.g., RBISH0123456789" maxlength="50">
+                                <button class="btn btn-primary" type="button" id="lookup-btn">Search</button>
+                                <button class="btn btn-outline-secondary" type="button" id="clear-btn">Clear</button>
+                            </div>
                         </div>
                     </div>
                     
@@ -229,6 +219,10 @@
                         </div>
                         
                         <div class="result-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Selected Range:</span>
+                                <span class="detail-value" id="selected-sheet">-</span>
+                            </div>
                             <div class="detail-row">
                                 <span class="detail-label">Search UTR:</span>
                                 <span class="detail-value" id="search-utr">-</span>
@@ -275,15 +269,16 @@
             // API Configuration
             const API_KEY = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
             const SPREADSHEET_ID = '10W5sxg5tyoE7N4h2khLd5t5tCfR6-YYyUl9OJuS41ZI';
-            const SHEET_NAME = 'DB';
             const RANGE = 'A:C'; // Columns: Date, Old UTR, New UTR
             
             // DOM Elements
+            const sheetSelect = document.getElementById('sheet-select');
             const utrInput = document.getElementById('utr-input');
             const lookupBtn = document.getElementById('lookup-btn');
             const clearBtn = document.getElementById('clear-btn');
             const resultSection = document.getElementById('result-section');
             const resultStatus = document.getElementById('result-status');
+            const selectedSheetElement = document.getElementById('selected-sheet');
             const searchUtr = document.getElementById('search-utr');
             const extractedUtrDisplay = document.getElementById('extracted-utr-display');
             const newUtr = document.getElementById('new-utr');
@@ -298,10 +293,11 @@
             const instructionsDiv = document.getElementById('instructions');
             const closeInstructionsBtn = document.getElementById('close-instructions');
             const showInstructionsBtn = document.getElementById('show-instructions');
-            const updateDateElement = document.getElementById('update-date');
+            
             
             let searchHistory = JSON.parse(localStorage.getItem('utrSearchHistory')) || [];
             let instructionsHidden = localStorage.getItem('instructionsHidden') === 'true';
+            let availableSheets = [];
             
             // Initialize instructions display
             updateInstructionsDisplay();
@@ -331,14 +327,30 @@
                     extractedUtrDiv.style.display = 'none';
                 }
                 
-                // Enable/disable lookup button based on input
-                lookupBtn.disabled = !this.value.trim();
+                // Enable/disable lookup button based on input and sheet selection
+                updateLookupButtonState();
             });
             
-            // Add this function to fetch last updated date
-            async function fetchLastUpdatedDate() {
+            sheetSelect.addEventListener('change', function() {
+                updateLookupButtonState();
+            });
+            
+            // Fetch available sheets and initialize
+            fetchAvailableSheets();
+            
+            // Update lookup button state based on input and selection
+            function updateLookupButtonState() {
+                const hasInput = utrInput.value.trim();
+                const hasSheet = sheetSelect.value && sheetSelect.value !== '';
+                lookupBtn.disabled = !hasInput || !hasSheet;
+            }
+            
+            // Fetch available sheets from Google Sheets
+            async function fetchAvailableSheets() {
                 try {
-                    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!E1?key=${API_KEY}`;
+                    showStatus('Loading available date ranges...', 'progress');
+                    
+                    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}?key=${API_KEY}`;
                     const response = await fetch(url);
                     
                     if (!response.ok) {
@@ -347,12 +359,44 @@
                     
                     const data = await response.json();
                     
-                    if (data.values && data.values.length > 0 && data.values[0].length > 0) {
-                        updateDateElement.textContent = data.values[0][0];
+                    if (data.sheets && data.sheets.length > 0) {
+                        availableSheets = data.sheets.map(sheet => sheet.properties.title);
+                        populateSheetDropdown(availableSheets);
+                        showStatus('Date-range loaded successfully', 'success');
+                        setTimeout(() => statusDiv.style.display = 'none', 2000);
+                    } else {
+                        throw new Error('No sheets found in the spreadsheet');
                     }
+                    
                 } catch (error) {
-                    console.error('Error fetching last updated date:', error);
-                    updateDateElement.textContent = 'Date unavailable';
+                    console.error('Error fetching sheets:', error);
+                    showStatus('Error loading sheets: ' + error.message, 'error');
+                    sheetSelect.innerHTML = '<option value="" selected disabled>Error loading sheets</option>';
+                }
+            }
+            
+            // Populate sheet dropdown
+            function populateSheetDropdown(sheets) {
+                sheetSelect.innerHTML = '';
+                
+                if (sheets.length === 0) {
+                    sheetSelect.innerHTML = '<option value="" selected disabled>No sheets available</option>';
+                    return;
+                }
+                
+                // Sort sheets to put most recent first (assuming newer sheets have later names)
+                const sortedSheets = sheets.sort().reverse();
+                
+                sortedSheets.forEach(sheetName => {
+                    const option = document.createElement('option');
+                    option.value = sheetName;
+                    option.textContent = sheetName;
+                    sheetSelect.appendChild(option);
+                });
+                
+                // Auto-select the first sheet
+                if (sortedSheets.length > 0) {
+                    sheetSelect.value = sortedSheets[0];
                 }
             }
             
@@ -388,7 +432,13 @@
             
             // Perform UTR lookup
             async function performLookup() {
+                const selectedSheet = sheetSelect.value;
                 const inputValue = utrInput.value.trim();
+                
+                if (!selectedSheet) {
+                    showStatus('Please select a date range', 'error');
+                    return;
+                }
                 
                 if (!inputValue) {
                     showStatus('Please enter a UTR value', 'error');
@@ -403,13 +453,13 @@
                     return;
                 }
                 
-                showStatus('Searching for UTR...', 'progress');
+                showStatus(`Searching for UTR in ${selectedSheet}...`, 'progress');
                 lookupBtn.disabled = true;
                 
                 try {
-                    const result = await searchUTRInSheet(extractedUTR);
-                    displayResult(inputValue, extractedUTR, result);
-                    addToHistory(inputValue, extractedUTR, result);
+                    const result = await searchUTRInSheet(selectedSheet, extractedUTR);
+                    displayResult(selectedSheet, inputValue, extractedUTR, result);
+                    addToHistory(selectedSheet, inputValue, extractedUTR, result);
                     
                 } catch (error) {
                     console.error('Lookup error:', error);
@@ -418,9 +468,9 @@
                 }
             }
             
-            // Search UTR in Google Sheet
-            async function searchUTRInSheet(utrValue) {
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!${RANGE}?key=${API_KEY}`;
+            // Search UTR in specific Google Sheet
+            async function searchUTRInSheet(sheetName, utrValue) {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${sheetName}!${RANGE}?key=${API_KEY}`;
                 
                 const response = await fetch(url);
                 
@@ -431,7 +481,7 @@
                 const data = await response.json();
                 
                 if (!data.values || data.values.length === 0) {
-                    return { found: false, message: 'No data found ' };
+                    return { found: false, message: 'No data found in selected range' };
                 }
                 
                 // Skip header row and search for UTR in column B (index 1)
@@ -447,17 +497,18 @@
                                 date: row[0] || 'N/A',
                                 newUTR: row[2] || 'N/A',
                                 fullCellValue: cellValue,
-                                message: 'UTR found '
+                                message: 'UTR found in selected range'
                             };
                         }
                     }
                 }
                 
-                return { found: false, message: 'UTR not found in database' };
+                return { found: false, message: 'UTR not found in selected range' };
             }
             
             // Display search result
-            function displayResult(inputValue, extractedUTR, result) {
+            function displayResult(sheetName, inputValue, extractedUTR, result) {
+                selectedSheetElement.textContent = sheetName;
                 searchUtr.textContent = inputValue;
                 extractedUtrDisplay.textContent = extractedUTR;
                 
@@ -485,8 +536,9 @@
             }
             
             // Add search to history
-            function addToHistory(inputValue, extractedUTR, result) {
+            function addToHistory(sheetName, inputValue, extractedUTR, result) {
                 const historyItem = {
+                    sheet: sheetName,
                     input: inputValue,
                     extracted: extractedUTR,
                     found: result.found,
@@ -525,7 +577,7 @@
                     historyItem.innerHTML = `
                         <div>
                             <div class="fw-bold">${item.input}</div>
-                            <div class="small text-muted">Extracted: ${item.extracted}</div>
+                            <div class="small text-muted">Range: ${item.sheet} | Extracted: ${item.extracted}</div>
                             <div class="small text-muted">${item.timestamp}</div>
                         </div>
                         <div class="text-end">
@@ -546,7 +598,7 @@
                 resultSection.style.display = 'none';
                 extractedUtrDiv.style.display = 'none';
                 statusDiv.style.display = 'none';
-                lookupBtn.disabled = true;
+                updateLookupButtonState();
                 utrInput.focus();
             }
             
@@ -580,6 +632,15 @@
                     statusDiv.innerHTML = `<span class="loading"></span>${message}`;
                     statusDiv.classList.add('alert-info');
                 }
+                
+                // Auto-hide success messages after 3 seconds
+                if (type === 'success') {
+                    setTimeout(() => {
+                        if (statusDiv.style.display !== 'none') {
+                            statusDiv.style.display = 'none';
+                        }
+                    }, 3000);
+                }
             }
             
             // Hide instructions
@@ -607,7 +668,6 @@
                 }
             }
             
-            fetchLastUpdatedDate();
             // Auto-focus on input
             utrInput.focus();
         });
