@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Search | IT Cell HelpDesk</title>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            min-width: 100%;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding-right: 0px!important;
+            padding-left: 0px!important;
+            
+        }
+        
+        header {
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            color: white;
+            padding: 15px;
+            
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .upload-btn {
+            position: absolute;
+            top: 20%;
+            right: 20px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .upload-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .table-container {
+            padding: 25px;
+            overflow-x: auto;
+        }
+        
+        .search-container {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 300px;
+            position: relative;
+        }
+        
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            font-size: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .search-box input:focus {
+            outline: none;
+            border-color: #4285f4;
+            box-shadow: 0 2px 8px rgba(66, 133, 244, 0.2);
+        }
+        
+        .search-icon {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #5f6368;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th {
+            background-color: #f1f3f4;
+            padding: 15px 20px;
+            text-align: left;
+            font-weight: 600;
+            color: #3c4043;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        td {
+            padding: 15px 20px;
+            border-bottom: 1px solid #e0e0e0;
+            color: #5f6368;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .file-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        .view-btn {
+            background-color: #4285f4;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        
+        .view-btn:hover {
+            background-color: #3367d6;
+        }
+        
+        .format-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .pdf {
+            background-color: #ffebee;
+            color: #c62828;
+        }
+        
+        .doc {
+            background-color: #e8eaf6;
+            color: #303f9f;
+        }
+        
+        .xls {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #5f6368;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 30px;
+            color: #d93025;
+            background-color: #fce8e6;
+            border-radius: 8px;
+            margin: 20px;
+        }
+        
+        .dataTables_wrapper .dataTables_filter {
+            display: none;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 8px 12px;
+            margin-left: 2px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #4285f4;
+            color: white !important;
+            border: 1px solid #4285f4;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: #3367d6;
+            color: white !important;
+            border: 1px solid #3367d6;
+        }
+        
+        .dataTables_info {
+            padding-top: 15px;
+            color: #5f6368;
+        }
+        
+        @media (max-width: 768px) {
+            th, td {
+                padding: 12px 15px;
+            }
+            
+            .container {
+                border-radius: 0;
+            }
+            
+            .search-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                min-width: 100%;
+            }
+            
+            .upload-btn {
+                position: static;
+                margin-top: 15px;
+                align-self: flex-end;
+            }
+        }
+        
+        /* Modal styles for upload */
+        .upload-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .upload-modal iframe {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 600px;
+            height: 500px;
+            background: white;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ea4335;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1001;
+        }
+        
+        /* Date column styling */
+        .date-cell {
+            white-space: nowrap;
+            color: #5f6368;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h3>User Manual/Guides </h3>
+            <!--<p class="subtitle"></p> -->
+            <button class="upload-btn" id="uploadBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                </svg>
+                Upload File
+            </button>
+        </header>
+        
+        <div class="table-container">
+            <div class="search-container">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="Search files by name or type...">
+                    <span class="search-icon">🔍</span>
+                </div>
+                <div class="table-info" id="tableInfo"></div>
+            </div>
+            
+            <div class="loading" id="loadingMessage">
+                Loading files...
+            </div>
+            
+            <div class="error" id="errorMessage" style="display: none;">
+                Error loading files. Please check your connection and try again.
+            </div>
+            
+            <table id="filesTable" class="display" style="display: none; width:100%">
+                <thead>
+                    <tr>
+                        <th>SL.No</th>
+                        <th>Description</th>
+                        <th>Date of upload</th>
+                        <th>Format</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="filesTableBody">
+                    <!-- Files will be populated here by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="upload-modal" id="uploadModal">
+        <button class="close-btn" id="closeModal">×</button>
+        <iframe id="uploadFrame" src=""></iframe>
+    </div>
+
+    <!-- jQuery and DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        // Configuration
+        const FOLDER_ID = '1OcpzN2zN_WCB3g7FlmQW5s56XYTO_oY7';
+        const API_KEY = 'AIzaSyAbjIeVAXnYweF7PLH63ENzcNQKgCVAHDU';
+        // UPDATE THIS URL WITH YOUR APPS SCRIPT DEPLOYMENT URL
+        const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxIkgLX0g9EkT1jmdoeCG7M5bfWz9kuZvEDja8d79mY9ix7KtGvXtJXlwnW44uh9US0/exec';
+        
+        // DOM elements
+        const loadingMessage = document.getElementById('loadingMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const filesTable = document.getElementById('filesTable');
+        const filesTableBody = document.getElementById('filesTableBody');
+        const searchInput = document.getElementById('searchInput');
+        const tableInfo = document.getElementById('tableInfo');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const uploadModal = document.getElementById('uploadModal');
+        const uploadFrame = document.getElementById('uploadFrame');
+        const closeModal = document.getElementById('closeModal');
+        
+        // Fixed File type icons (SVG data URLs)
+        const fileIcons = {
+            pdf: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2MzMDgwMCI+PHBhdGggZD0iTTggMTZIOFY4SDhWMThNMTAgMTZIMTBWOFYxNk0xMiAxNkgxMlY4SDEyVjE2TTE0IDJINkEyIDIgMCAwIDAgNCA0VjIwQTIgMiAwIDAgMCA2IDIySDE4QTIgMiAwIDAgMCAyMCAyMFY4TDE0IDJNMTQgNEgxNFY4SDE4TDE0IDRaIi8+PC9zdmc+',
+            doc: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzFBNTlGRiI+PHBhdGggZD0iTTE0IDJINkEyIDIgMCAwIDAgNCA0VjIwQTIgMiAwIDAgMCA2IDIySDE4QTIgMiAwIDAgMCAyMCAyMFY4TDE0IDJNMTQgNEgxNFY4SDE4TDE0IDRaIi8+PC9zdmc+',
+            xls: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzFBNzA0QyI+PHBhdGggZD0iTTE0IDJINkEyIDIgMCAwIDAgNCA0VjIwQTIgMiAwIDAgMCA2IDIySDE4QTIgMiAwIDAgMCAyMCAyMFY4TDE0IDJNMTQgNEgxNFY4SDE4TDE0IDRaIi8+PC9zdmc+',
+            default: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iIzVGNjM2OCI+PHBhdGggZD0iTTE0IDJINkEyIDIgMCAwIDAgNCA0VjIwQTIgMiAwIDAgMCA2IDIySDE4QTIgMiAwIDAgMCAyMCAyMFY4TDE0IDJNMTQgNEgxNFY4SDE4TDE0IDRaIi8+PC9zdmc+'
+        };
+        
+        // DataTable instance
+        let dataTable;
+        
+        // Function to get file icon based on file type
+        function getFileIcon(mimeType) {
+            if (mimeType.includes('pdf')) return fileIcons.pdf;
+            if (mimeType.includes('document') || mimeType.includes('word')) return fileIcons.doc;
+            if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return fileIcons.xls;
+            return fileIcons.default;
+        }
+        
+        // Function to get file format badge class
+        function getFormatClass(mimeType) {
+            if (mimeType.includes('pdf')) return 'pdf';
+            if (mimeType.includes('document') || mimeType.includes('word')) return 'doc';
+            if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'xls';
+            return '';
+        }
+        
+        // Function to get file format display name
+        function getFormatName(mimeType) {
+            if (mimeType.includes('pdf')) return 'PDF';
+            if (mimeType.includes('document') || mimeType.includes('word')) return 'DOC';
+            if (mimeType.includes('spreadsheet') || mimeType.includes('excel')) return 'XLS';
+            return mimeType.split('/').pop().toUpperCase();
+        }
+        
+        // Function to format date
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+        
+        // Function to fetch files from Google Drive
+        async function fetchFiles() {
+            try {
+                // Build the API URL - now including modifiedTime in the fields
+                const apiUrl = `https://www.googleapis.com/drive/v3/files?q='${FOLDER_ID}'+in+parents&key=${API_KEY}&fields=files(id,name,mimeType,webViewLink,webContentLink,modifiedTime)`;
+                
+                // Make the API request
+                const response = await fetch(apiUrl);
+                
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Hide loading message
+                loadingMessage.style.display = 'none';
+                
+                // Check if we have files
+                if (data.files && data.files.length > 0) {
+                    // Sort files by modified date (newest first)
+                    data.files.sort((a, b) => new Date(b.modifiedTime) - new Date(a.modifiedTime));
+                    
+                    // Populate the table
+                    populateTable(data.files);
+                    filesTable.style.display = 'table';
+                    initializeDataTable();
+                } else {
+                    errorMessage.textContent = 'No files found in the specified folder.';
+                    errorMessage.style.display = 'block';
+                }
+                
+            } catch (error) {
+                console.error('Error fetching files:', error);
+                loadingMessage.style.display = 'none';
+                errorMessage.textContent = `Error loading files: ${error.message}`;
+                errorMessage.style.display = 'block';
+            }
+        }
+        
+        // Function to populate the table with file data
+        function populateTable(files) {
+            filesTableBody.innerHTML = '';
+            
+            files.forEach((file, index) => {
+                const row = document.createElement('tr');
+                
+                // SL.No
+                const slCell = document.createElement('td');
+                slCell.textContent = index + 1;
+                row.appendChild(slCell);
+                
+                // File Name
+                const nameCell = document.createElement('td');
+                const icon = document.createElement('img');
+                icon.src = getFileIcon(file.mimeType);
+                icon.alt = 'File icon';
+                icon.className = 'file-icon';
+                nameCell.appendChild(icon);
+                nameCell.appendChild(document.createTextNode(file.name));
+                row.appendChild(nameCell);
+                
+                // Date Column
+                const dateCell = document.createElement('td');
+                dateCell.className = 'date-cell';
+                dateCell.textContent = formatDate(file.modifiedTime);
+                row.appendChild(dateCell);
+                
+                // File Format
+                const formatCell = document.createElement('td');
+                const formatBadge = document.createElement('span');
+                formatBadge.className = `format-badge ${getFormatClass(file.mimeType)}`;
+                formatBadge.textContent = getFormatName(file.mimeType);
+                formatCell.appendChild(formatBadge);
+                row.appendChild(formatCell);
+                
+                // View Button
+                const actionCell = document.createElement('td');
+                const viewButton = document.createElement('button');
+                viewButton.className = 'view-btn';
+                viewButton.textContent = 'View';
+                viewButton.onclick = () => {
+                    // Open the file in a new tab
+                    window.open(file.webViewLink || `https://drive.google.com/file/d/${file.id}/view`, '_blank');
+                };
+                actionCell.appendChild(viewButton);
+                row.appendChild(actionCell);
+                
+                filesTableBody.appendChild(row);
+            });
+        }
+        
+        // Function to initialize DataTable
+        function initializeDataTable() {
+            dataTable = $('#filesTable').DataTable({
+                "pageLength": 10,
+                "lengthMenu": [5, 10, 25, 50],
+                "dom": '<"top"if>rt<"bottom"lp><"clear">',
+                "language": {
+                    "emptyTable": "No files found",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ files",
+                    "infoEmpty": "Showing 0 to 0 of 0 files",
+                    "infoFiltered": "(filtered from _MAX_ total files)",
+                    "lengthMenu": "Show _MENU_ files",
+                    "loadingRecords": "Loading...",
+                    "processing": "Processing...",
+                    "search": "Search:",
+                    "zeroRecords": "No matching files found",
+                    "paginate": {
+                        "first": "First",
+                        "last": "Last",
+                        "next": "Next",
+                        "previous": "Previous"
+                    }
+                },
+                "columnDefs": [
+                    { "orderable": true, "targets": [0, 1, 2, 3] },
+                    { "orderable": false, "targets": [4] }
+                ],
+                "order": [[2, 'desc']] // Default sort by date (newest first)
+            });
+            
+            // Custom search functionality
+            searchInput.addEventListener('keyup', function() {
+                dataTable.search(this.value).draw();
+            });
+            
+            // Update table info on draw
+            dataTable.on('draw', function() {
+                updateTableInfo();
+            });
+            
+            // Initial table info update
+            updateTableInfo();
+        }
+        
+        // Function to update table information
+        function updateTableInfo() {
+            if (dataTable) {
+                const pageInfo = dataTable.page.info();
+                tableInfo.textContent = `Showing ${pageInfo.recordsDisplay} of ${pageInfo.recordsTotal} files`;
+            }
+        }
+        
+        // Function to open upload modal
+        function openUploadModal() {
+            // Show confirmation dialog first
+            Swal.fire({
+                title: 'File Upload',
+                text: "Are you sure the file name is set to its subject using the format-Section Name-Subject detail?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#4285f4',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'OK',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Load Apps Script upload interface
+                    uploadFrame.src = APP_SCRIPT_URL;
+                    uploadModal.style.display = 'block';
+                }
+            });
+        }
+        
+        // Function to close upload modal
+        function closeUploadModal() {
+            uploadModal.style.display = 'none';
+            uploadFrame.src = '';
+        }
+        
+        // Function to handle upload success
+        function handleUploadSuccess() {
+            closeUploadModal();
+            Swal.fire({
+                title: 'Success!',
+                text: 'File uploaded successfully',
+                icon: 'success',
+                confirmButtonColor: '#4285f4'
+            });
+            
+            // Refresh the file list
+            fetchFiles();
+        }
+        
+        // Listen for messages from the iframe
+        window.addEventListener('message', function(event) {
+            if (event.data === 'uploadSuccess') {
+                handleUploadSuccess();
+            }
+        });
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fetch files on page load
+            fetchFiles();
+            
+            // Set up upload button event listener
+            uploadBtn.addEventListener('click', openUploadModal);
+            
+            // Set up close modal event listener
+            closeModal.addEventListener('click', closeUploadModal);
+            
+            // Close modal when clicking outside
+            uploadModal.addEventListener('click', function(event) {
+                if (event.target === uploadModal) {
+                    closeUploadModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
