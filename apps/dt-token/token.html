@@ -12,7 +12,7 @@
         }
         
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #ffffff;
             color: #333;
             overflow: hidden;
@@ -44,12 +44,15 @@
             color: #ffffff;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
             margin: 0;
+            font-size: 3.5vw;
+            font-weight: 700;
         }
         
         .subheading {
             font-size: 2vw;
             color: #ffffff;
             margin-top: 5px;
+            font-weight: 600;
         }
         
         .content {
@@ -75,7 +78,7 @@
             padding: 20px 15px;
             text-align: center;
             border: 2px solid #bdc3c7;
-            font-size: 2.5vw;
+            font-weight: 600;
         }
         
         th {
@@ -83,7 +86,6 @@
             color: #ffffff;
             position: sticky;
             top: 0;
-            font-size: 3vw;
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
             padding: 25px 15px;
         }
@@ -103,7 +105,6 @@
         .current-token {
             font-weight: bold;
             color: #e74c3c;
-            font-size: 3.5vw;
             text-shadow: 0 0 10px rgba(231, 76, 60, 0.3);
         }
         
@@ -115,7 +116,6 @@
             margin: 5px;
             display: inline-block;
             font-weight: bold;
-            font-size: 2.5vw;
             box-shadow: 0 0 8px rgba(52, 152, 219, 0.3);
         }
         
@@ -138,7 +138,6 @@
         .scroll-reel-content {
             display: inline-block;
             padding-right: 50px;
-            font-size: 2vw;
             color: #ffffff;
             font-weight: bold;
         }
@@ -154,18 +153,11 @@
             text-align: center;
             border-top: 3px solid #e74c3c;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
         }
         
-        .last-updated {
-            font-size: 2vw;
-            color: #ffffff;
-            font-weight: bold;
-        }
-        
         .clock {
-            font-size: 2.5vw;
             color: #ffffff;
             font-weight: bold;
         }
@@ -173,8 +165,8 @@
         .loading {
             text-align: center;
             padding: 40px;
-            font-size: 3vw;
             color: #3498db;
+            font-weight: 600;
         }
         
         /* Animation for current token */
@@ -190,30 +182,20 @@
         
         /* Responsive adjustments */
         @media (max-width: 1200px) {
-            th, td { padding: 15px 10px; font-size: 2.8vw; }
-            th { font-size: 3.2vw; }
-            .current-token { font-size: 3.8vw; }
-            .queued-token { font-size: 2.8vw; padding: 8px 12px; }
-            .scroll-reel-content { font-size: 2.5vw; }
+            th, td { padding: 15px 10px; }
+            .queued-token { padding: 8px 12px; }
         }
         
         @media (max-width: 768px) {
-            th, td { padding: 12px 8px; font-size: 3.2vw; }
-            th { font-size: 3.6vw; padding: 18px 10px; }
-            .current-token { font-size: 4.2vw; }
-            .queued-token { font-size: 3.2vw; padding: 6px 10px; }
+            th, td { padding: 12px 8px; }
+            .queued-token { padding: 6px 10px; }
             h1 { font-size: 4.5vw; }
             .subheading { font-size: 3.5vw; }
-            .last-updated, .clock { font-size: 3vw; }
-            .scroll-reel-content { font-size: 3vw; }
         }
         
         @media (max-height: 800px) {
-            th, td { padding: 12px 10px; font-size: 2.2vw; }
-            th { font-size: 2.6vw; padding: 15px 10px; }
-            .current-token { font-size: 2.8vw; }
-            .queued-token { font-size: 2vw; padding: 5px 8px; }
-            .scroll-reel-content { font-size: 2vw; }
+            th, td { padding: 12px 10px; }
+            .queued-token { padding: 5px 8px; }
         }
     </style>
 </head>
@@ -237,7 +219,6 @@
         </div>
         
         <div class="footer">
-            <div class="last-updated" id="last-updated"></div>
             <div class="clock" id="clock"></div>
         </div>
     </div>
@@ -266,6 +247,10 @@
         // Preload notification bell sound
         const notificationBell = new Audio("http://itcelltreasury.github.io/try/bell.mp3");
         
+        // Dynamic font sizing variables
+        let baseFontSize = 2.5; // Base font size in vw
+        let maxRowsToShow = 8; // Ideal number of rows to show without scrolling
+        
         // Preload all voice files
         function preloadVoiceFiles() {
             console.log('Preloading voice files...');
@@ -279,6 +264,48 @@
                 audio.load();
             });
             console.log('Voice files preloading initiated');
+        }
+        
+        // Calculate dynamic font sizes based on number of counters
+        function calculateDynamicFontSizes(counterCount) {
+            const tableContainer = document.getElementById('token-table');
+            const containerHeight = tableContainer.clientHeight;
+            
+            // Calculate font sizes based on number of rows
+            let fontSize;
+            if (counterCount <= 3) {
+                fontSize = Math.min(3.5, baseFontSize + 1); // Larger fonts for fewer counters
+            } else if (counterCount <= 6) {
+                fontSize = baseFontSize; // Normal size
+            } else if (counterCount <= 10) {
+                fontSize = Math.max(1.8, baseFontSize - 0.7); // Smaller for more counters
+            } else {
+                fontSize = Math.max(1.5, baseFontSize - 1); // Even smaller for many counters
+            }
+            
+            // Apply font sizes
+            const tableElements = document.querySelectorAll('th, td, .current-token, .queued-token');
+            tableElements.forEach(element => {
+                if (element.classList.contains('current-token')) {
+                    element.style.fontSize = (fontSize + 0.5) + 'vw';
+                } else if (element.classList.contains('queued-token')) {
+                    element.style.fontSize = (fontSize - 0.3) + 'vw';
+                } else if (element.tagName === 'TH') {
+                    element.style.fontSize = (fontSize + 0.5) + 'vw';
+                } else {
+                    element.style.fontSize = fontSize + 'vw';
+                }
+            });
+            
+            // Adjust scroll reel font size
+            const scrollReel = document.getElementById('scroll-reel-content');
+            if (scrollReel) {
+                scrollReel.style.fontSize = Math.max(1.8, fontSize - 0.7) + 'vw';
+            }
+            
+            // Adjust header and clock fonts
+            document.querySelector('h1').style.fontSize = Math.min(4, fontSize + 1) + 'vw';
+            document.querySelector('.clock').style.fontSize = Math.max(1.8, fontSize - 0.7) + 'vw';
         }
         
         // Play individual digit voice
@@ -554,10 +581,9 @@
                 checkForChangesAndAnnounce(data);
                 document.getElementById('token-table').innerHTML = generateTable(data);
                 
-                // Update last updated timestamp
-                const now = new Date();
-                document.getElementById('last-updated').textContent = 
-                    `Last updated: ${now.toLocaleTimeString()}`;
+                // Calculate and apply dynamic font sizes based on number of counters
+                const counterCount = Object.keys(data).length;
+                calculateDynamicFontSizes(counterCount);
             }
         }
         
@@ -570,6 +596,10 @@
             if (content && content.trim() !== '') {
                 contentElement.textContent = content;
                 container.style.display = 'block';
+                
+                // Apply dynamic font size to scroll reel
+                const counterCount = Object.keys(previousTokenData).length;
+                calculateDynamicFontSizes(counterCount);
             } else {
                 container.style.display = 'none';
             }
@@ -594,6 +624,14 @@
             setInterval(updateTable, 2000);
             setInterval(updateClock, 1000);
             setInterval(updateScrollReel, 30000);
+            
+            // Recalculate fonts on window resize
+            window.addEventListener('resize', function() {
+                const counterCount = Object.keys(previousTokenData).length;
+                if (counterCount > 0) {
+                    calculateDynamicFontSizes(counterCount);
+                }
+            });
         });
     </script>
 </body>
