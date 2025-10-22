@@ -93,6 +93,12 @@
         .district-treasury {
             font-weight: bold;
             color: #27ae60;
+            text-transform: uppercase;
+        }
+        
+        /* Treasury name uppercase styling */
+        .treasury-name {
+            text-transform: uppercase;
         }
         
         /* Table styling */
@@ -220,6 +226,12 @@
             return `<a href="tel:${cleanPhone}" class="${className}">${phone}</a>`;
         }
 
+        // Function to format treasury name in uppercase
+        function formatTreasuryName(name) {
+            if (!name || name === '-' || name.trim() === '') return '-';
+            return name.toUpperCase();
+        }
+
         // Fetch data from Google Sheets
         async function fetchSheetData() {
             try {
@@ -276,9 +288,17 @@
                         td.innerHTML = createPhoneLink(cell, false);
                     } else if (headerName === 'Mobile') {
                         td.innerHTML = createPhoneLink(cell, true);
-                    } else if (headerName === 'Treasury Name' && cell && cell.toLowerCase().includes('district treasury')) {
-                        td.className = 'district-treasury';
-                        td.textContent = cell || '-';
+                    } else if (headerName === 'Treasury Name') {
+                        // Format all treasury names in uppercase
+                        const formattedName = formatTreasuryName(cell);
+                        td.textContent = formattedName;
+                        
+                        // Add special styling for district treasuries
+                        if (cell && cell.toLowerCase().includes('district treasury')) {
+                            td.className = 'district-treasury';
+                        } else {
+                            td.className = 'treasury-name';
+                        }
                     } else {
                         td.textContent = cell || '-';
                     }
