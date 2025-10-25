@@ -422,6 +422,11 @@
             margin-left: 10px !important;
         }
         
+        /* Treeview auto-close fix */
+        .nav-sidebar .menu-open > .nav-treeview {
+            display: block;
+        }
+        
         /* Responsive design */
         @media (max-width: 768px) {
             .chat-popup {
@@ -951,7 +956,14 @@
                                 const mainMenuLink = $('<a>')
                                     .addClass('nav-link')
                                     .append($('<i>').addClass('nav-icon fas fa-folder'))
-                                    .append('<p>' + mainMenu + '<i class="right fas fa-angle-left"></i></p>');
+                                    .append('<p>' + mainMenu + '<i class="right fas fa-angle-left"></i></p>')
+                                    .click(function(e) {
+                                        e.preventDefault();
+                                        // Close other open menus
+                                        $('.nav-item.has-treeview').not(mainMenuLi).removeClass('menu-open');
+                                        // Toggle current menu
+                                        mainMenuLi.toggleClass('menu-open');
+                                    });
 
                                 mainMenuLi.append(mainMenuLink);
                                 mainMenuLi.append(subMenuUl);
