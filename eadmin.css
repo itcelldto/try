@@ -393,7 +393,9 @@
         .nav-sidebar .menu-open > .nav-treeview {
             display: block;
         }
-        
+        .content-wrapper>.content {
+    padding: 0 !important;
+}
         /* Responsive design */
         @media (max-width: 768px) {
             .chat-popup {
