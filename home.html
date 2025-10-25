@@ -53,8 +53,6 @@
         
         .main-sidebar {
             background-color: #222d32;
-            background: url(./img/bg-sidebar1.jpg) #1d2362;
-            background-size: cover;
         }
         
         .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active,
@@ -411,6 +409,19 @@
             display: none;
         }
         
+        /* Custom treeview styles */
+        .nav-treeview {
+            margin-left: 15px !important;
+        }
+        
+        .nav-treeview .nav-link {
+            padding-left: 15px !important;
+        }
+        
+        .nav-treeview .nav-treeview {
+            margin-left: 10px !important;
+        }
+        
         /* Responsive design */
         @media (max-width: 768px) {
             .chat-popup {
@@ -615,7 +626,15 @@
     <!-- Overlay -->
     <div class="overlay" id="overlay"></div>
 
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap 4 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    
     <script>
+        // Chatbot functionality
         document.addEventListener('DOMContentLoaded', function() {
             const chatIcon = document.getElementById('chatIcon');
             const chatPopup = document.getElementById('chatPopup');
@@ -652,17 +671,7 @@
                 }
             });
         });
-    </script>
-    <!-- chatbot area -->
 
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Bootstrap 4 -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- AdminLTE App -->
-    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-    
-    <script>
         // Set inactivity timeout to 15 minutes (900,000 milliseconds)
         const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
         let inactivityTimer;
@@ -941,9 +950,8 @@
                                 // Add main menu item
                                 const mainMenuLink = $('<a>')
                                     .addClass('nav-link')
-                                    .append($('<i>').addClass('nav-icon fas fa-plus'))
-                                    .append(' ' + mainMenu)
-                                    .append($('<i>').addClass('right fas fa-angle-left'));
+                                    .append($('<i>').addClass('nav-icon fas fa-folder'))
+                                    .append('<p>' + mainMenu + '<i class="right fas fa-angle-left"></i></p>');
 
                                 mainMenuLi.append(mainMenuLink);
                                 mainMenuLi.append(subMenuUl);
@@ -952,7 +960,9 @@
 
                             if (subMenu && subMenuLink) {
                                 const subMenuLi = $('<li>').addClass('nav-item').append(
-                                    $('<a>').addClass('nav-link').attr('href', '#').text(subMenu).click(function(e) {
+                                    $('<a>').addClass('nav-link').attr('href', '#').append(
+                                        $('<i>').addClass('nav-icon far fa-circle')
+                                    ).append('<p>' + subMenu + '</p>').click(function(e) {
                                         e.preventDefault();
                                         loadDynamicContent(dynamicContent);
                                     })
