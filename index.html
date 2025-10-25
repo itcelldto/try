@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>IT Cell HelpDesk</title>
+    <!-- Link the manifest -->
+    <link rel="manifest" href="/try/manifest.json">
+    <!-- Theme color for mobile browsers -->
+    <meta name="theme-color" content="#3367D6">
+    <!-- iOS Safari PWA support -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/try/icons/icon-192x192.png">
+    <!-- Favicons -->
+    <link href="./icons/favicon.png" rel="icon">
+    <link href="./icons/favicon.png" rel="apple-touch-icon">
+    <!-- Tell the browser to be responsive -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    
+    <!-- AdminLTE 3 Dependencies -->
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <!-- Bootstrap 4.6.2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <!-- AdminLTE 3 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    
+       <link rel="stylesheet" href="./eadmin.css">
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/try/sw.js', { scope: '/try/' })
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Registration failed:', err));
+            });
+        }
+    </script>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed" style="background-color: #06002c;">
+    <!-- Login Overlay (shown by default) -->
+    <div class="login-overlay" id="login-overlay">
+        <div class="login-box">
+            <div class="login-logo">
+                <a href="#"><b>IT Cell</b> Help Desk</a>
+            </div>
+            <div class="login-box-body">
+                <h3 style="text-align: center;color: #06002c9c;font-weight: 600;">eAdmin </h3>
+                <p class="login-box-msg">Sign in to start your session</p>
+                <form id="login-form">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" placeholder="User ID" id="userid" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-user"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group mb-3">
+                        <input type="password" class="form-control" placeholder="Password" id="password" required>
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-lock"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary btn-block btn-flat" id="login-button">
+                                <span class="button-text">Sign In</span>
+                                <span class="loading-spinner hidden"><i class="fas fa-spinner fa-spin"></i> Authenticating ...</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="login-error" class="text-center">Invalid User ID or Password</div>
+                </form>
+                <div class="forgot-password">
+                    <a id="forgot-password-link" href="javascript:void(0)" 
+                       onclick="openForgotPasswordPopup()">Forgot Password?</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content (hidden initially) -->
+    <div class="wrapper" id="main-wrapper">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <h4 style="font-size: 25px;color: #343a40;font-weight: bold;text-shadow: 2px 2px #f8f9fa;margin: 0;">eAdmin</h4>
+                </li>
+            </ul>
+
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <!-- Current Date and Time -->
+                <li class="nav-item">
+                    <span id="current-date-time" style="padding: 8px 15px; color: #343a40; font-weight: bold;"></span>
+                </li>
+                
+                <!-- User Menu -->
+                <li class="nav-item dropdown user-menu">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                        <img src="./img/user.png" class="user-image img-circle elevation-2" alt="User Image">
+                        <span class="d-none d-md-inline" id="session-storage-value"></span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right" style="box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);">
+                        <!-- User image -->
+                        <li class="user-header">
+                            <img src="./img/user.png" class="img-circle elevation-2" alt="User Image">
+                            <p id="user-name-display">
+                                <small id="user-name-display"></small>
+                            </p>
+                            <p id="user-role-display">
+                                <small id="user-role-display"></small>
+                            </p>
+                        </li>
+                        <!-- Menu Footer-->
+                        <li class="user-footer">
+                            <a href="#" class="btn btn-default btn-flat">Profile</a>
+                            <a href="#" class="btn btn-default btn-flat float-right" onclick="window.location.reload(); return false;">Sign out</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+        <!-- /.navbar -->
+
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+            <a href="" class="brand-link">
+                <span class="brand-text font-weight-light"><b>IT Cell</b> Help Desk</span>
+            </a>
+
+            <!-- Treasury Name Display -->
+            <div class="treasury-name" id="treasury-name-display"></div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false" id="sidebar-menu">
+                        <!-- Menu items will be dynamically populated here -->
+                    </ul>
+                </nav>
+                <!-- /.sidebar-menu -->
+            </div>
+            <!-- /.sidebar -->
+        </aside>
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Running Text Section 
+            <div class="running-text" style="background: #f4f4f4; border-bottom: 1px solid #ddd;">
+                <marquee id="news-reel" behavior="scroll" direction="left" scrollamount="5"></marquee>
+            </div>
+                 -->
+            <!-- Main Content -->
+            <section class="content">
+                <!-- Loading Spinner -->
+                <div class="loading-container" id="loading-spinner">
+                    <div class="loading-content">
+                        <img src="https://itcelldto.github.io/try/Spinner-3.gif" alt="Loading...">
+                        <p>Loading. Please wait...</p>
+                    </div>
+                </div>
+                
+                <!-- Dynamic Content Area -->
+                <div id="dynamic-content"></div>
+            </section>
+        </div>
+
+        <!-- /.content-wrapper -->
+        <!-- Main Footer -->
+        <footer class="main-footer">
+            <div class="float-right d-none d-sm-block">
+                Version 1 
+            </div>
+            <strong>Copyright &copy; 2025 <a href="#">IT Cell HelpDesk</a>.</strong> All rights reserved.
+        </footer>
+    </div>
+    <!--  chat bot area -->
+     <!-- Chat Icon -->
+    <div class="chat-icon" id="chatIcon">
+        <i class="fas fa-comment"></i>
+    </div>
+
+    <!-- Chat Popup -->
+    <div class="chat-popup" id="chatPopup">
+        <div class="popup-header">
+            <h3>eAdmin Support</h3>
+            <button class="close-btn" id="closePopup">&times;</button>
+        </div>
+        <iframe src="https://itcelltreasury.github.io/try/chat/e-chatplus.html" class="popup-iframe" id="chatIframe"></iframe>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap 4 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <script src="./eadmin.js"></script>
+   
+</body>
+</html>
