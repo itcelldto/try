@@ -291,7 +291,7 @@
                     $('#news-reel').text(runningText);
                 });
 
-                // Fetch and populate the sidebar menu
+                // Fetch and populate the sidebar menu with dynamic icons
                 fetch(menuUrl)
                     .then(response => response.json())
                     .then(data => {
@@ -306,16 +306,18 @@
                             const subMenu = row[1];
                             const subMenuLink = row[2];
                             const dynamicContent = row[3]; // Content from column D
+                            const mainMenuIcon = row[4] || 'fas fa-folder'; // Column E - Main menu icon (default: folder)
+                            const subMenuIcon = row[5] || 'far fa-circle'; // Column F - Submenu icon (default: circle)
 
                             if (mainMenu !== currentMainMenu) {
                                 currentMainMenu = mainMenu;
                                 mainMenuLi = $('<li>').addClass('nav-item has-treeview');
                                 subMenuUl = $('<ul>').addClass('nav nav-treeview');
 
-                                // Add main menu item
+                                // Add main menu item with dynamic icon
                                 const mainMenuLink = $('<a>')
                                     .addClass('nav-link')
-                                    .append($('<i>').addClass('nav-icon fas fa-folder'))
+                                    .append($('<i>').addClass('nav-icon ' + mainMenuIcon))
                                     .append('<p>' + mainMenu + '<i class="right fas fa-angle-left"></i></p>')
                                     .click(function(e) {
                                         e.preventDefault();
@@ -333,7 +335,7 @@
                             if (subMenu && subMenuLink) {
                                 const subMenuLi = $('<li>').addClass('nav-item').append(
                                     $('<a>').addClass('nav-link').attr('href', '#').append(
-                                        $('<i>').addClass('nav-icon far fa-circle')
+                                        $('<i>').addClass('nav-icon ' + subMenuIcon)
                                     ).append('<p>' + subMenu + '</p>').click(function(e) {
                                         e.preventDefault();
                                         loadDynamicContent(dynamicContent);
@@ -383,4 +385,4 @@
                 `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes,toolbar=no,location=no`
             );
         }
-  
+    
