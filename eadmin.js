@@ -318,7 +318,7 @@
                                 const mainMenuLink = $('<a>')
                                     .addClass('nav-link')
                                     .append($('<i>').addClass('nav-icon ' + mainMenuIcon))
-                                    .append('<p>' + mainMenu + '<i class="fas fa-angle-left"></i></p>')
+                                    .append('<p>' + mainMenu + '<i class="right fas fa-angle-left"></i></p>')
                                     .click(function(e) {
                                         e.preventDefault();
                                         // Close other open menus
