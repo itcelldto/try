@@ -291,7 +291,7 @@
                     $('#news-reel').text(runningText);
                 });
 
-                // Fetch and populate the sidebar menu with dynamic icons
+                // Fetch and populate the sidebar menu with Bootstrap Icons
                 fetch(menuUrl)
                     .then(response => response.json())
                     .then(data => {
@@ -306,15 +306,15 @@
                             const subMenu = row[1];
                             const subMenuLink = row[2];
                             const dynamicContent = row[3]; // Content from column D
-                            const mainMenuIcon = row[4] || 'fas fa-folder'; // Column E - Main menu icon (default: folder)
-                            const subMenuIcon = row[5] || 'far fa-circle'; // Column F - Submenu icon (default: circle)
+                            const mainMenuIcon = row[4] || 'bi bi-folder'; // Column E - Main menu icon (default: folder)
+                            const subMenuIcon = row[5] || 'bi bi-circle'; // Column F - Submenu icon (default: circle)
 
                             if (mainMenu !== currentMainMenu) {
                                 currentMainMenu = mainMenu;
                                 mainMenuLi = $('<li>').addClass('nav-item has-treeview');
                                 subMenuUl = $('<ul>').addClass('nav nav-treeview');
 
-                                // Add main menu item with dynamic icon
+                                // Add main menu item with Bootstrap Icon
                                 const mainMenuLink = $('<a>')
                                     .addClass('nav-link')
                                     .append($('<i>').addClass('nav-icon ' + mainMenuIcon))
