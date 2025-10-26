@@ -86,7 +86,12 @@
         .user-footer .btn {
             margin: 0 5px;
         }
-        
+        .user-name-display{
+                color: #eaecef;
+        }
+      .user-role-display{
+                color: #eaecef;
+        }
         /* Treasury name in sidebar */
         .treasury-name {
             padding: 10px;
