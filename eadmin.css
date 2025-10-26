@@ -158,7 +158,7 @@
             -moz-box-shadow: none;
             box-shadow: none;
             border-width: 1px;
-            background-color: #fff;
+            background-color: #2483C5;
         }
   .btn.btn2-flat {
             border-radius: 16px;
@@ -166,7 +166,7 @@
             -moz-box-shadow: none;
             box-shadow: none;
             border-width: 1px;
-            background-color: #2483C5;
+            background-color: #fff;
         }
         
         .login-box-body {
