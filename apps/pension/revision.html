@@ -32,7 +32,7 @@
             border-radius: 15px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             margin: .6rem .6rem 2rem;
-			font-weight: 400;
+            font-weight: 400;
         }
         .fw-bold {
          font-weight: 400 !important;
@@ -215,6 +215,7 @@
         
         .flatpickr-input {
             background-color: white;
+            cursor: text !important;
         }
         
         .loading {
@@ -259,12 +260,12 @@
                 font-size: 0.8rem;
             }
         }
-		.table>:not(caption)>*>* {
-    padding: .2rem .2rem;
-    background-color: var(--bs-table-bg);
-    border-bottom-width: var(--bs-border-width);
-    box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
-}
+        .table>:not(caption)>*>* {
+            padding: .2rem .2rem;
+            background-color: var(--bs-table-bg);
+            border-bottom-width: var(--bs-border-width);
+            box-shadow: inset 0 0 0 9999px var(--bs-table-accent-bg);
+        }
     </style>
 </head>
 <body>
@@ -273,40 +274,12 @@
             <div class="row align-items-center">
                 <div class="col-md-8">
                     <h1 class="display-5 fw-bold"><i class="bi bi-calculator-fill"></i> Pension Revision Calculator</h1>
-                    
                 </div>
-				<!--
-                <div class="col-md-4 text-md-end">
-                    <div class="bg-light text-dark p-3 rounded d-inline-block">
-                        <h6 class="mb-1">Quick Calculation</h6>
-                        <small>Fill form & generate PDF report</small>
-                    </div>
-                </div>-->
             </div>
         </div>
     </div>
 
-    <div class="container no-print"style="min-width: 100%;">
-        <!-- Step Indicator 
-        <div class="step-indicator">
-            <div class="step active">
-                <div class="step-number">1</div>
-                <div class="step-label">Pensioner Details</div>
-            </div>
-            <div class="step">
-                <div class="step-number">2</div>
-                <div class="step-label">Calculation Period</div>
-            </div>
-            <div class="step">
-                <div class="step-number">3</div>
-                <div class="step-label">DR Table</div>
-            </div>
-            <div class="step">
-                <div class="step-number">4</div>
-                <div class="step-label">Generate PDF</div>
-            </div>
-        </div> -->
-
+    <div class="container no-print" style="min-width: 100%;">
         <!-- Calculation Period Card -->
         <div class="card">
             <div class="card-header">
@@ -318,34 +291,34 @@
                 </div>
             </div>
             <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6">
+                <div class="row g-2">
+                    <div class="col-md-2">
                         <label for="fromDate" class="form-label">From</label>
                         <input type="text" class="form-control flatpickr-input" id="fromDate" placeholder="Select From Date">
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-2">
                         <label for="toDate" class="form-label">To</label>
                         <input type="text" class="form-control flatpickr-input" id="toDate" placeholder="Select To Date">
                     </div>
-                </div>
-                
-                <div class="calculation-period mt-4">
-                  <!--  <h6 class="mb-3">Period Breakdown</h6> -->
-                    <div class="row">
-                        <div class="col-md-4">
+					  <div class="col-md-2">
                             <label class="form-label">Years</label>
                             <input type="text" class="form-control" id="years" >
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
                             <label class="form-label">Months</label>
                             <input type="text" class="form-control" id="months" >
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
                             <label class="form-label">Days</label>
                             <input type="text" class="form-control" id="days">
                         </div>
-                    </div>
                 </div>
+                <!--
+                <div class="calculation-period mt-4">
+                    <div class="row">
+                      
+                    </div>
+                </div>  -->
             </div>
         </div>
 
@@ -361,19 +334,19 @@
             </div>
             <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <div class="col-md-2">
                         <label for="treasury" class="form-label">Treasury</label>
                         <select class="form-select" id="treasury">
                             <option value="">Loading treasuries...</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-2">
                         <label for="pensionerType" class="form-label">Pensioner Type</label>
                         <select class="form-select" id="pensionerType">
                             <option value="">Loading pension types...</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-2">
                         <label for="pensionerCode" class="form-label">Pensioner Code</label>
                         <input type="text" class="form-control" id="pensionerCode" placeholder="Enter pensioner code">
                     </div>
@@ -381,15 +354,16 @@
                         <label for="pensionerName" class="form-label">Pensioner Name</label>
                         <input type="text" class="form-control" id="pensionerName" placeholder="Enter pensioner name">
                     </div>
-                    <div class="col-md-4">
+					<div class="row g-3">
+                    <div class="col-md-2">
                         <label for="basicPension" class="form-label">Basic Pension</label>
                         <div class="input-group">
                             <span class="input-group-text">₹</span>
                             <input type="number" class="form-control" id="basicPension" placeholder="Enter basic pension amount" value="">
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <label for="drawnDR" class="form-label">DR% - Actual</label>
+                    <div class="col-md-2">
+                        <label for="drawnDR" class="form-label">DR% - Drawn</label>
                         <div class="input-group">
                             <input type="number" class="form-control" id="drawnDR" placeholder="Enter DR%" value="">
                             <span class="input-group-text">%</span>
@@ -398,7 +372,7 @@
                 </div>
             </div>
         </div>
-
+    </div>
         <!-- DR Table Card -->
         <div class="card">
             <div class="card-header">
@@ -435,7 +409,7 @@
                                 <th>Gross Amount</th>
                             </tr>
                         </thead>
-                        <tbody id="drTableBody"style="font-size: 12px;">
+                        <tbody id="drTableBody" style="font-size: 12px;">
                             <!-- Table rows will be generated dynamically -->
                         </tbody>
                         <tfoot id="drTableFooter">
@@ -511,13 +485,7 @@
             </div>
         </div>
     </div>
-<!--
-    <div class="footer no-print">
-        <div class="container text-center">
-           
-        </div>
-    </div>
--->
+
     <!-- Bootstrap 5 JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Flatpickr JS -->
@@ -714,12 +682,6 @@
                     drDue: parseFloat(row[3]) || 0
                 })).filter(item => item.fromDate && item.toDate);
                 
-                // Set the fromDate input to the first fromDate in DR data
-                if (drData.length > 0) {
-                    const firstFromDate = parseDate(drData[0].fromDate);
-                    document.getElementById('fromDate')._flatpickr.setDate(firstFromDate);
-                }
-                
                 // Filter DR data based on calculation period
                 const fromDate = document.getElementById('fromDate').value;
                 const toDate = document.getElementById('toDate').value;
@@ -836,7 +798,8 @@
                 return;
             }
             
-            // Get user selected to date
+            // Get user selected dates
+            const userFromDate = document.getElementById('fromDate').value;
             const userToDate = document.getElementById('toDate').value;
             
             // Process DR data to create calculation periods
@@ -847,13 +810,9 @@
                 let fromDate, toDate;
                 
                 if (i === 0) {
-                    // First row: use the from date from DR data (convert to DD/MM/YYYY if needed)
-                    fromDate = currentRow.fromDate;
-                    // Ensure it's in DD/MM/YYYY format
-                    if (fromDate.includes('-')) {
-                        const dateObj = parseDate(fromDate);
-                        fromDate = formatDateToDDMMYYYY(dateObj);
-                    }
+                    // First row: use the user selected from date
+                    const userFromDateObj = new Date(userFromDate);
+                    fromDate = formatDateToDDMMYYYY(userFromDateObj);
                 } else {
                     // Subsequent rows: use the day after previous to date
                     const prevToDate = new Date(parseDate(calculationPeriods[i-1].toDate));
@@ -861,17 +820,23 @@
                     fromDate = formatDateToDDMMYYYY(prevToDate);
                 }
                 
-                if (i === drData.length - 1) {
-                    // Last row: use user selected to date (convert to DD/MM/YYYY)
-                    const userToDateObj = new Date(userToDate);
-                    toDate = formatDateToDDMMYYYY(userToDateObj);
+                // For toDate, use the minimum of:
+                // 1. The toDate from current DR data row
+                // 2. The user selected toDate
+                let drToDate = currentRow.toDate;
+                if (drToDate.includes('-')) {
+                    const dateObj = parseDate(drToDate);
+                    drToDate = formatDateToDDMMYYYY(dateObj);
+                }
+                
+                const userToDateObj = new Date(userToDate);
+                const formattedUserToDate = formatDateToDDMMYYYY(userToDateObj);
+                
+                // Use the earlier date between DR toDate and user toDate
+                if (parseDate(drToDate) < parseDate(formattedUserToDate)) {
+                    toDate = drToDate;
                 } else {
-                    // Use the to date from current DR data row (convert to DD/MM/YYYY if needed)
-                    toDate = currentRow.toDate;
-                    if (toDate.includes('-')) {
-                        const dateObj = parseDate(toDate);
-                        toDate = formatDateToDDMMYYYY(dateObj);
-                    }
+                    toDate = formattedUserToDate;
                 }
                 
                 // Ensure from date is not after to date
@@ -885,6 +850,11 @@
                     dueBasicPension: currentRow.dueBasicPension,
                     drDue: currentRow.drDue
                 });
+                
+                // If we've reached the user's toDate, break the loop
+                if (toDate === formattedUserToDate) {
+                    break;
+                }
             }
             
             // Populate table with calculation periods
@@ -900,17 +870,17 @@
                     <td><input type="text" class="editable-input" value="${row.toDate}" data-field="toDate" data-index="${index}"></td>
                     <td><input type="number" class="editable-input" value="${row.dueBasicPension}" data-field="dueBasicPension" data-index="${index}"></td>
                     <td><input type="number" class="editable-input" value="${row.drDue}" data-field="drDue" data-index="${index}"></td>
-                    <td><input type="number" class="editable-input amount-due" value="0" data-field="amountDue" data-index="${index}" ></td>
+                    <td><input type="number" class="editable-input amount-due" value="0" data-field="amountDue" data-index="${index}" readonly></td>
                     
                     <!-- Drawn Details -->
-                    <td><input type="number" class="editable-input drawn-basic-pension" value="5000" data-field="drawnBasicPension" data-index="${index}"></td>
-                    <td><input type="number" class="editable-input drawn-dr" value="1" data-field="drawnDR" data-index="${index}"></td>
-                    <td><input type="number" class="editable-input amount-drawn" value="0" data-field="amountDrawn" data-index="${index}" ></td>
+                    <td><input type="number" class="editable-input drawn-basic-pension" value="0" data-field="drawnBasicPension" data-index="${index}"></td>
+                    <td><input type="number" class="editable-input drawn-dr" value="0" data-field="drawnDR" data-index="${index}"></td>
+                    <td><input type="number" class="editable-input amount-drawn" value="0" data-field="amountDrawn" data-index="${index}" readonly></td>
                     
                     <!-- Difference Details -->
-                    <td><input type="number" class="editable-input difference" value="0" data-field="difference" data-index="${index}" ></td>
-                    <td><input type="number" class="editable-input months" value="${months}" data-field="months" data-index="${index}" ></td>
-                    <td><input type="number" class="editable-input gross-amount" value="0" data-field="grossAmount" data-index="${index}" ></td>
+                    <td><input type="number" class="editable-input difference" value="0" data-field="difference" data-index="${index}" readonly></td>
+                    <td><input type="number" class="editable-input months" value="${months}" data-field="months" data-index="${index}" readonly></td>
+                    <td><input type="number" class="editable-input gross-amount" value="0" data-field="grossAmount" data-index="${index}" readonly></td>
                 `;
                 
                 tableBody.appendChild(tr);
@@ -1012,8 +982,8 @@
             document.getElementById('pensionerType').value = '';
             document.getElementById('pensionerCode').value = '';
             document.getElementById('pensionerName').value = '';
-            document.getElementById('basicPension').value = '5000';
-            document.getElementById('drawnDR').value = '1';
+            document.getElementById('basicPension').value = '0';
+            document.getElementById('drawnDR').value = '0';
             initializeDates();
             clearDRTable();
             document.getElementById('drTableStatus').textContent = 'Please select a pensioner type to load DR data';
