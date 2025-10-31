@@ -13,17 +13,22 @@ const API_KEY = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize flatpickr for date inputs
     flatpickr("#fromDate", {
-        altInput: true,
-        altFormat: "d/m/Y",
-        dateFormat: "Y-m-d",
-        defaultDate: new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1)
+    altInput: true,
+    altFormat: "d/m/Y",
+    dateFormat: "Y-m-d",
+    defaultDate: new Date(new Date().getFullYear() - 1, new Date().getMonth(), 1),
+    allowInput: true, // This allows manual input
+    clickOpens: true // Ensures calendar still opens on click
+
     });
     
     flatpickr("#toDate", {
-        altInput: true,
-        altFormat: "d/m/Y",
-        dateFormat: "Y-m-d",
-        defaultDate: new Date()
+       altInput: true,
+    altFormat: "d/m/Y",
+    dateFormat: "Y-m-d",
+    defaultDate: new Date(),
+    allowInput: true, // This allows manual input
+    clickOpens: true // Ensures calendar still opens on click
     });
     
     // Initialize date inputs and calculate period
