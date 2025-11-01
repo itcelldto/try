@@ -298,9 +298,9 @@ function getDRForPeriod(fromDate, toDate, filteredData) {
     return matchingRecord ? matchingRecord.drDue : 0;
 }
 
-// Round amount to nearest integer (no decimal rounding)
-function roundAmount(amount) {
-    return Math.round(amount);
+// ALWAYS ROUND UP to nearest integer
+function roundUpAmount(amount) {
+    return Math.ceil(amount);
 }
 
 // Remove row from table
@@ -336,9 +336,11 @@ function addNewRow() {
         toDate: newToDate,
         dueBasicPension: basicPensionDue,
         drDue: drDue,
+        drAmountDue: 0,
         amountDue: 0,
         drawnBasicPension: basicPensionDrawn,
         drawnDR: drawnDR,
+        drAmountDrawn: 0,
         amountDrawn: 0,
         difference: 0,
         months: months,
@@ -352,7 +354,7 @@ function addNewRow() {
     recalculateAllRows();
 }
 
-// Render table with current data - ALL FIELDS EDITABLE
+// Render table with current data - ADDED DR AMOUNT COLUMNS
 function renderTable() {
     const tableBody = document.getElementById('drTableBody');
     tableBody.innerHTML = '';
@@ -367,9 +369,10 @@ function renderTable() {
             <td>
                 <div class="dr-due-container">
                     <input type="number" class="editable-input dr-due-input" value="${row.drDue}" data-field="drDue" data-index="${index}">
-                    <span class="revision-label">Rev no.${row.revisionNoDue || 'N/A'}</span>
+                    <span class="revision-label">${row.revisionNoDue || 'N/A'}</span>
                 </div>
             </td>
+            <td><input type="number" class="editable-input dr-amount-due" value="${row.drAmountDue}" data-field="drAmountDue" data-index="${index}" readonly></td>
             <td><input type="number" class="editable-input amount-due" value="${row.amountDue}" data-field="amountDue" data-index="${index}"></td>
             
             <!-- Drawn Details -->
@@ -377,9 +380,10 @@ function renderTable() {
             <td>
                 <div class="dr-due-container">
                     <input type="number" class="editable-input drawn-dr" value="${row.drawnDR}" data-field="drawnDR" data-index="${index}">
-                    <span class="revision-label">Rev no.${row.revisionNoDrawn || 'N/A'}</span>
+                    <span class="revision-label">${row.revisionNoDrawn || 'N/A'}</span>
                 </div>
             </td>
+            <td><input type="number" class="editable-input dr-amount-drawn" value="${row.drAmountDrawn}" data-field="drAmountDrawn" data-index="${index}" readonly></td>
             <td><input type="number" class="editable-input amount-drawn" value="${row.amountDrawn}" data-field="amountDrawn" data-index="${index}"></td>
             
             <!-- Difference Details -->
@@ -404,32 +408,34 @@ function renderTable() {
 // Add event listeners to table elements
 function addEventListenersToTable() {
     document.querySelectorAll('.editable-input').forEach(input => {
-        input.addEventListener('change', function() {
-            const index = parseInt(this.getAttribute('data-index'));
-            const field = this.getAttribute('data-field');
-            const value = this.value;
-            
-            if (field === 'fromDate' || field === 'toDate') {
-                tableRows[index][field] = value;
-                const months = calculateMonthsBetweenDates(
-                    tableRows[index].fromDate, 
-                    tableRows[index].toDate
-                );
-                tableRows[index].months = months;
-                document.querySelector(`.months[data-index="${index}"]`).value = months;
-                recalculateRowAmounts(index);
-            } 
-            else if (field === 'grossAmount') {
-                // User manually edited gross amount - store it directly
-                tableRows[index][field] = parseFloat(value) || 0;
-            }
-            else {
-                tableRows[index][field] = parseFloat(value) || 0;
-                recalculateRowAmounts(index);
-            }
-            
-            updateGrandTotal();
-        });
+        if (!input.readOnly) {
+            input.addEventListener('change', function() {
+                const index = parseInt(this.getAttribute('data-index'));
+                const field = this.getAttribute('data-field');
+                const value = this.value;
+                
+                if (field === 'fromDate' || field === 'toDate') {
+                    tableRows[index][field] = value;
+                    const months = calculateMonthsBetweenDates(
+                        tableRows[index].fromDate, 
+                        tableRows[index].toDate
+                    );
+                    tableRows[index].months = months;
+                    document.querySelector(`.months[data-index="${index}"]`).value = months;
+                    recalculateRowAmounts(index);
+                } 
+                else if (field === 'grossAmount') {
+                    // User manually edited gross amount - store it directly
+                    tableRows[index][field] = parseFloat(value) || 0;
+                }
+                else {
+                    tableRows[index][field] = parseFloat(value) || 0;
+                    recalculateRowAmounts(index);
+                }
+                
+                updateGrandTotal();
+            });
+        }
     });
     
     document.querySelectorAll('.remove-row').forEach(button => {
@@ -440,27 +446,35 @@ function addEventListenersToTable() {
     });
 }
 
-// Recalculate amounts for a specific row - FIXED CALCULATION
+// Recalculate amounts for a specific row - FIXED CALCULATION WITH ROUND UP
 function recalculateRowAmounts(index) {
     const row = tableRows[index];
     
-    // Calculate Amount Due and Amount Drawn
-    const amountDue = row.dueBasicPension + (row.dueBasicPension * row.drDue / 100);
-    const amountDrawn = row.drawnBasicPension + (row.drawnBasicPension * row.drawnDR / 100);
+    // Calculate DR Amounts (ALWAYS ROUND UP)
+    const drAmountDue = (row.dueBasicPension * row.drDue / 100);
+    const drAmountDrawn = (row.drawnBasicPension * row.drawnDR / 100);
     
-    // Calculate Difference as Amount Due - Amount Drawn (EXACT calculation)
+    // Calculate Amount Due and Amount Drawn (ALWAYS ROUND UP)
+    const amountDue = row.dueBasicPension + drAmountDue;
+    const amountDrawn = row.drawnBasicPension + drAmountDrawn;
+    
+    // Calculate Difference as Amount Due - Amount Drawn (ALWAYS ROUND UP)
     const difference = amountDue - amountDrawn;
     
-    // Update row data with exact values (no rounding for intermediate calculations)
-    row.amountDue = roundAmount(amountDue);
-    row.amountDrawn = roundAmount(amountDrawn);
-    row.difference = roundAmount(difference);
+    // Update row data with ROUNDED UP values
+    row.drAmountDue = roundUpAmount(drAmountDue);
+    row.drAmountDrawn = roundUpAmount(drAmountDrawn);
+    row.amountDue = roundUpAmount(amountDue);
+    row.amountDrawn = roundUpAmount(amountDrawn);
+    row.difference = roundUpAmount(difference);
     
-    // Calculate Gross Amount as Difference × Months (EXACT calculation)
+    // Calculate Gross Amount as Difference × Months (ALWAYS ROUND UP)
     const grossAmount = row.difference * row.months;
-    row.grossAmount = roundAmount(grossAmount);
+    row.grossAmount = roundUpAmount(grossAmount);
     
     // Update table cells
+    document.querySelector(`.dr-amount-due[data-index="${index}"]`).value = row.drAmountDue;
+    document.querySelector(`.dr-amount-drawn[data-index="${index}"]`).value = row.drAmountDrawn;
     document.querySelector(`.amount-due[data-index="${index}"]`).value = row.amountDue;
     document.querySelector(`.amount-drawn[data-index="${index}"]`).value = row.amountDrawn;
     document.querySelector(`.difference[data-index="${index}"]`).value = row.difference;
@@ -578,21 +592,27 @@ function calculateRevision() {
         calculationPeriods.forEach((row, index) => {
             const months = calculateMonthsBetweenDates(row.fromDate, row.toDate);
             
-            // Calculate Amount Due and Amount Drawn
-            const amountDue = row.dueBasicPension + (row.dueBasicPension * row.drDue / 100);
-            const amountDrawn = row.drawnBasicPension + (row.drawnBasicPension * row.drawnDR / 100);
+            // Calculate DR Amounts (ALWAYS ROUND UP)
+            const drAmountDue = (row.dueBasicPension * row.drDue / 100);
+            const drAmountDrawn = (row.drawnBasicPension * row.drawnDR / 100);
             
-            // Calculate Difference as Amount Due - Amount Drawn (EXACT calculation)
+            // Calculate Amount Due and Amount Drawn (ALWAYS ROUND UP)
+            const amountDue = row.dueBasicPension + drAmountDue;
+            const amountDrawn = row.drawnBasicPension + drAmountDrawn;
+            
+            // Calculate Difference as Amount Due - Amount Drawn (ALWAYS ROUND UP)
             const difference = amountDue - amountDrawn;
             
-            // Calculate Gross Amount as Difference × Months (EXACT calculation)
+            // Calculate Gross Amount as Difference × Months (ALWAYS ROUND UP)
             const grossAmount = difference * months;
             
-            // Round only the final displayed values
-            const roundedAmountDue = roundAmount(amountDue);
-            const roundedAmountDrawn = roundAmount(amountDrawn);
-            const roundedDifference = roundAmount(difference);
-            const roundedGrossAmount = roundAmount(grossAmount);
+            // Round UP all amounts
+            const roundedDrAmountDue = roundUpAmount(drAmountDue);
+            const roundedDrAmountDrawn = roundUpAmount(drAmountDrawn);
+            const roundedAmountDue = roundUpAmount(amountDue);
+            const roundedAmountDrawn = roundUpAmount(amountDrawn);
+            const roundedDifference = roundUpAmount(difference);
+            const roundedGrossAmount = roundUpAmount(grossAmount);
             
             grandTotal += roundedGrossAmount;
             
@@ -601,9 +621,11 @@ function calculateRevision() {
                 toDate: row.toDate,
                 dueBasicPension: row.dueBasicPension,
                 drDue: row.drDue,
+                drAmountDue: roundedDrAmountDue,
                 amountDue: roundedAmountDue,
                 drawnBasicPension: row.drawnBasicPension,
                 drawnDR: row.drawnDR,
+                drAmountDrawn: roundedDrAmountDrawn,
                 amountDrawn: roundedAmountDrawn,
                 difference: roundedDifference,
                 months: months,
@@ -617,7 +639,7 @@ function calculateRevision() {
         
         tableFooter.innerHTML = `
             <tr class="total-row">
-                <td colspan="11" class="text-end"><strong>Grand Total:</strong></td>
+                <td colspan="13" class="text-end"><strong>Grand Total:</strong></td>
                 <td><strong id="grandTotal">${Math.ceil(grandTotal)}</strong></td>
             </tr>
         `;
@@ -708,9 +730,11 @@ function printCalculation() {
             <td>${row.toDate}</td>
             <td>${row.dueBasicPension}</td>
             <td>${row.drDue}%</td>
+            <td>${row.drAmountDue}</td>
             <td>${row.amountDue}</td>
             <td>${row.drawnBasicPension}</td>
             <td>${row.drawnDR}%</td>
+            <td>${row.drAmountDrawn}</td>
             <td>${row.amountDrawn}</td>
             <td>${row.difference}</td>
             <td>${row.months}</td>
@@ -722,7 +746,7 @@ function printCalculation() {
     const totalRow = document.createElement('tr');
     totalRow.className = 'total-row';
     totalRow.innerHTML = `
-        <td colspan="10" class="text-end"><strong>Grand Total:</strong></td>
+        <td colspan="12" class="text-end"><strong>Grand Total:</strong></td>
         <td><strong>${Math.ceil(grandTotal)}</strong></td>
     `;
     printTableBody.appendChild(totalRow);
