@@ -264,13 +264,13 @@
 		  font-weight: 600;
 		 }
         .revision-label {
-            font-size: 0.8rem;
+           
             color: #6c757d;
             background-color: #f8f9fa;
-            padding: 4px 8px;
+           
             border-radius: 4px;
             border: 1px solid #dee2e6;
-			min-width: 70px;
+			
         }
         
         @media print {
