@@ -34,7 +34,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Set up event listeners
     document.getElementById('fromDate').addEventListener('change', calculatePeriod);
     document.getElementById('toDate').addEventListener('change', calculatePeriod);
-    document.getElementById('calculateBtn').addEventListener('click', calculateRevision);
+    document.getElementById('calculateDRBtn').addEventListener('click', calculateDR);
+    document.getElementById('calculateAmountBtn').addEventListener('click', calculateAmount);
     document.getElementById('resetBtn').addEventListener('click', resetForm);
     document.getElementById('printBtn').addEventListener('click', printCalculation);
     document.getElementById('pensionerType').addEventListener('change', fetchDRData);
@@ -153,7 +154,6 @@ async function fetchDRData() {
     if (!pensionerType) {
         document.getElementById('drTableStatus').textContent = 'Please select a pensioner type to load DR data';
         document.getElementById('drTableStatus').className = 'alert alert-info';
-        document.getElementById('drTable').style.display = 'none';
         return;
     }
     
@@ -167,7 +167,6 @@ async function fetchDRData() {
         if (!drDataResponse.values || drDataResponse.values.length === 0) {
             document.getElementById('drTableStatus').textContent = 'No DR data available for selected pension type';
             document.getElementById('drTableStatus').className = 'alert alert-warning';
-            document.getElementById('drTable').style.display = 'none';
             drData = [];
             return;
         }
@@ -181,14 +180,13 @@ async function fetchDRData() {
         
         populateRevisionNoDropdowns();
         
-        document.getElementById('drTableStatus').textContent = `DR data loaded for ${pensionerType}. Click Calculate to generate table.`;
+        document.getElementById('drTableStatus').textContent = `DR data loaded for ${pensionerType}. Click "Calculate DR" to fetch DR values.`;
         document.getElementById('drTableStatus').className = 'alert alert-success';
         
     } catch (error) {
         console.error('Error fetching DR data:', error);
         document.getElementById('drTableStatus').textContent = 'Error loading DR data. Please try again.';
         document.getElementById('drTableStatus').className = 'alert alert-danger';
-        document.getElementById('drTable').style.display = 'none';
         drData = [];
     }
 }
@@ -328,18 +326,15 @@ function addNewRow() {
     
     const months = calculateMonthsBetweenDates(newFromDate, newToDate);
     
-    const drDue = getDRDueByDateRangeAndRevision(newFromDate, newToDate, revisionNoTo);
-    const drawnDR = getDRDueByDateRangeAndRevision(newFromDate, newToDate, revisionNoFrom);
-    
     const newRow = {
         fromDate: newFromDate,
         toDate: newToDate,
         dueBasicPension: basicPensionDue,
-        drDue: drDue,
+        drDue: 0,
         drAmountDue: 0,
         amountDue: 0,
         drawnBasicPension: basicPensionDrawn,
-        drawnDR: drawnDR,
+        drawnDR: 0,
         drAmountDrawn: 0,
         amountDrawn: 0,
         difference: 0,
@@ -351,7 +346,6 @@ function addNewRow() {
     
     tableRows.push(newRow);
     renderTable();
-    recalculateAllRows();
 }
 
 // Render table with current data - ADDED DR AMOUNT COLUMNS
@@ -387,9 +381,9 @@ function renderTable() {
             <td><input type="number" class="editable-input amount-drawn" value="${row.amountDrawn}" data-field="amountDrawn" data-index="${index}"></td>
             
             <!-- Difference Details -->
-            <td><input type="number" class="editable-input difference" value="${row.difference}" data-field="difference" data-index="${index}"></td>
+            <td><input type="number" class="editable-input difference" value="${row.difference}" data-field="difference" data-index="${index}" readonly></td>
             <td><input type="number" class="editable-input months" value="${row.months}" data-field="months" data-index="${index}"></td>
-            <td><input type="number" class="editable-input gross-amount" value="${row.grossAmount}" data-field="grossAmount" data-index="${index}"></td>
+            <td><input type="number" class="editable-input gross-amount" value="${row.grossAmount}" data-field="grossAmount" data-index="${index}" readonly></td>
             
             <!-- Action Buttons -->
             <td class="action-buttons">
@@ -403,6 +397,10 @@ function renderTable() {
     });
     
     addEventListenersToTable();
+    
+    // Show the table and add row section
+    document.getElementById('drTable').style.display = 'table';
+    document.getElementById('addRowSection').style.display = 'block';
 }
 
 // Add event listeners to table elements
@@ -422,18 +420,10 @@ function addEventListenersToTable() {
                     );
                     tableRows[index].months = months;
                     document.querySelector(`.months[data-index="${index}"]`).value = months;
-                    recalculateRowAmounts(index);
                 } 
-                else if (field === 'grossAmount') {
-                    // User manually edited gross amount - store it directly
-                    tableRows[index][field] = parseFloat(value) || 0;
-                }
                 else {
                     tableRows[index][field] = parseFloat(value) || 0;
-                    recalculateRowAmounts(index);
                 }
-                
-                updateGrandTotal();
             });
         }
     });
@@ -446,55 +436,11 @@ function addEventListenersToTable() {
     });
 }
 
-// Recalculate amounts for a specific row - FIXED CALCULATION WITH ROUND UP
-function recalculateRowAmounts(index) {
-    const row = tableRows[index];
-    
-    // Calculate DR Amounts (ALWAYS ROUND UP)
-    const drAmountDue = (row.dueBasicPension * row.drDue / 100);
-    const drAmountDrawn = (row.drawnBasicPension * row.drawnDR / 100);
-    
-    // Calculate Amount Due and Amount Drawn (ALWAYS ROUND UP)
-    const amountDue = row.dueBasicPension + drAmountDue;
-    const amountDrawn = row.drawnBasicPension + drAmountDrawn;
-    
-    // Calculate Difference as Amount Due - Amount Drawn (ALWAYS ROUND UP)
-    const difference = amountDue - amountDrawn;
-    
-    // Update row data with ROUNDED UP values
-    row.drAmountDue = roundUpAmount(drAmountDue);
-    row.drAmountDrawn = roundUpAmount(drAmountDrawn);
-    row.amountDue = roundUpAmount(amountDue);
-    row.amountDrawn = roundUpAmount(amountDrawn);
-    row.difference = roundUpAmount(difference);
-    
-    // Calculate Gross Amount as Difference × Months (ALWAYS ROUND UP)
-    const grossAmount = row.difference * row.months;
-    row.grossAmount = roundUpAmount(grossAmount);
-    
-    // Update table cells
-    document.querySelector(`.dr-amount-due[data-index="${index}"]`).value = row.drAmountDue;
-    document.querySelector(`.dr-amount-drawn[data-index="${index}"]`).value = row.drAmountDrawn;
-    document.querySelector(`.amount-due[data-index="${index}"]`).value = row.amountDue;
-    document.querySelector(`.amount-drawn[data-index="${index}"]`).value = row.amountDrawn;
-    document.querySelector(`.difference[data-index="${index}"]`).value = row.difference;
-    document.querySelector(`.gross-amount[data-index="${index}"]`).value = row.grossAmount;
-}
-
-// Recalculate all rows
-function recalculateAllRows() {
-    tableRows.forEach((row, index) => {
-        recalculateRowAmounts(index);
-    });
-    updateGrandTotal();
-}
-
-// Calculate revision when Calculate button is clicked
-function calculateRevision() {
+// Step 1: Calculate DR values
+function calculateDR() {
     const pensionerType = document.getElementById('pensionerType').value;
     const fromDate = document.getElementById('fromDate').value;
     const toDate = document.getElementById('toDate').value;
-    const basicPensionDue = parseFloat(document.getElementById('basicPensionDue').value) || 0;
     const revisionNoFrom = document.getElementById('revisionNoFrom').value;
     const revisionNoTo = document.getElementById('revisionNoTo').value;
     
@@ -511,16 +457,14 @@ function calculateRevision() {
     }
     
     try {
-        document.getElementById('drTableStatus').textContent = 'Calculating...';
+        document.getElementById('drTableStatus').textContent = 'Calculating DR values...';
         document.getElementById('drTableStatus').className = 'alert alert-warning';
         
-        clearDRTable();
+        // Clear previous table if needed
+        if (tableRows.length === 0) {
+            clearDRTable();
+        }
         
-        const tableBody = document.getElementById('drTableBody');
-        const tableFooter = document.getElementById('drTableFooter');
-        tableRows = [];
-        
-        const basicPensionDrawn = parseFloat(document.getElementById('basicPensionDrawn').value) || 0;
         const userFromDate = new Date(fromDate);
         const userToDate = new Date(toDate);
         
@@ -547,96 +491,150 @@ function calculateRevision() {
         filteredDRDataDue.sort((a, b) => parseDate(a.fromDate) - parseDate(b.fromDate));
         filteredDRDataDrawn.sort((a, b) => parseDate(a.fromDate) - parseDate(b.fromDate));
         
-        const calculationPeriods = [];
-        
-        for (let i = 0; i < filteredDRDataDue.length; i++) {
-            const currentRow = filteredDRDataDue[i];
-            let periodFromDate, periodToDate;
+        // Clear existing rows if this is the first calculation
+        if (tableRows.length === 0) {
+            tableRows = [];
             
-            if (i === 0) {
-                periodFromDate = formatDateToDDMMYYYY(userFromDate);
-            } else {
-                const prevToDate = new Date(parseDate(calculationPeriods[i-1].toDate));
-                prevToDate.setDate(prevToDate.getDate() + 1);
-                periodFromDate = formatDateToDDMMYYYY(prevToDate);
+            const calculationPeriods = [];
+            
+            for (let i = 0; i < filteredDRDataDue.length; i++) {
+                const currentRow = filteredDRDataDue[i];
+                let periodFromDate, periodToDate;
+                
+                if (i === 0) {
+                    periodFromDate = formatDateToDDMMYYYY(userFromDate);
+                } else {
+                    const prevToDate = new Date(parseDate(calculationPeriods[i-1].toDate));
+                    prevToDate.setDate(prevToDate.getDate() + 1);
+                    periodFromDate = formatDateToDDMMYYYY(prevToDate);
+                }
+                
+                const drToDate = parseDate(currentRow.toDate);
+                const periodToDateObj = drToDate < userToDate ? drToDate : userToDate;
+                periodToDate = formatDateToDDMMYYYY(periodToDateObj);
+                
+                if (parseDate(periodFromDate) > parseDate(periodToDate)) {
+                    periodFromDate = periodToDate;
+                }
+                
+                const drawnDRForPeriod = getDRForPeriod(periodFromDate, periodToDate, filteredDRDataDrawn);
+                
+                calculationPeriods.push({
+                    fromDate: periodFromDate,
+                    toDate: periodToDate,
+                    drDue: currentRow.drDue,
+                    revisionNoDue: currentRow.revisionNo,
+                    drawnDR: drawnDRForPeriod,
+                    revisionNoDrawn: revisionNoFrom
+                });
+                
+                if (periodToDateObj.getTime() === userToDate.getTime()) {
+                    break;
+                }
             }
             
-            const drToDate = parseDate(currentRow.toDate);
-            const periodToDateObj = drToDate < userToDate ? drToDate : userToDate;
-            periodToDate = formatDateToDDMMYYYY(periodToDateObj);
-            
-            if (parseDate(periodFromDate) > parseDate(periodToDate)) {
-                periodFromDate = periodToDate;
-            }
-            
-            const drawnDRForPeriod = getDRForPeriod(periodFromDate, periodToDate, filteredDRDataDrawn);
-            
-            calculationPeriods.push({
-                fromDate: periodFromDate,
-                toDate: periodToDate,
-                dueBasicPension: basicPensionDue,
-                drDue: currentRow.drDue,
-                revisionNoDue: currentRow.revisionNo,
-                drawnBasicPension: basicPensionDrawn,
-                drawnDR: drawnDRForPeriod,
-                revisionNoDrawn: revisionNoFrom
+            // Create table rows with DR values
+            calculationPeriods.forEach((row, index) => {
+                const months = calculateMonthsBetweenDates(row.fromDate, row.toDate);
+                
+                tableRows.push({
+                    fromDate: row.fromDate,
+                    toDate: row.toDate,
+                    dueBasicPension: 0,
+                    drDue: row.drDue,
+                    drAmountDue: 0,
+                    amountDue: 0,
+                    drawnBasicPension: 0,
+                    drawnDR: row.drawnDR,
+                    drAmountDrawn: 0,
+                    amountDrawn: 0,
+                    difference: 0,
+                    months: months,
+                    grossAmount: 0,
+                    revisionNoDue: row.revisionNoDue,
+                    revisionNoDrawn: row.revisionNoDrawn
+                });
             });
-            
-            if (periodToDateObj.getTime() === userToDate.getTime()) {
-                break;
-            }
         }
+        
+        // Update DR values in existing rows
+        tableRows.forEach((row, index) => {
+            const drDue = getDRDueByDateRangeAndRevision(row.fromDate, row.toDate, revisionNoTo);
+            const drawnDR = getDRDueByDateRangeAndRevision(row.fromDate, row.toDate, revisionNoFrom);
+            
+            row.drDue = drDue;
+            row.drawnDR = drawnDR;
+            row.revisionNoDue = revisionNoTo;
+            row.revisionNoDrawn = revisionNoFrom;
+        });
+        
+        renderTable();
+        
+        document.getElementById('drTableStatus').textContent = 'DR values calculated. Now fill Basic Pension values and click "Calculate Amount" to complete calculation.';
+        document.getElementById('drTableStatus').className = 'alert alert-success';
+        
+    } catch (error) {
+        console.error('Error calculating DR:', error);
+        document.getElementById('drTableStatus').textContent = 'Error during DR calculation. Please check your inputs.';
+        document.getElementById('drTableStatus').className = 'alert alert-danger';
+    }
+}
+
+// Step 2: Calculate Amounts
+function calculateAmount() {
+    if (tableRows.length === 0) {
+        document.getElementById('drTableStatus').textContent = 'Please calculate DR values first.';
+        document.getElementById('drTableStatus').className = 'alert alert-warning';
+        return;
+    }
+    
+    try {
+        document.getElementById('drTableStatus').textContent = 'Calculating amounts...';
+        document.getElementById('drTableStatus').className = 'alert alert-warning';
         
         let grandTotal = 0;
         
-        calculationPeriods.forEach((row, index) => {
-            const months = calculateMonthsBetweenDates(row.fromDate, row.toDate);
+        tableRows.forEach((row, index) => {
+            // Get current input values
+            const dueBasicPension = parseFloat(document.querySelector(`.editable-input[data-field="dueBasicPension"][data-index="${index}"]`).value) || 0;
+            const drawnBasicPension = parseFloat(document.querySelector(`.editable-input[data-field="drawnBasicPension"][data-index="${index}"]`).value) || 0;
+            const amountDue = parseFloat(document.querySelector(`.editable-input[data-field="amountDue"][data-index="${index}"]`).value) || 0;
+            const amountDrawn = parseFloat(document.querySelector(`.editable-input[data-field="amountDrawn"][data-index="${index}"]`).value) || 0;
+            const months = parseFloat(document.querySelector(`.editable-input[data-field="months"][data-index="${index}"]`).value) || 0;
+            
+            // Update row data
+            row.dueBasicPension = dueBasicPension;
+            row.drawnBasicPension = drawnBasicPension;
+            row.amountDue = amountDue;
+            row.amountDrawn = amountDrawn;
+            row.months = months;
             
             // Calculate DR Amounts (ALWAYS ROUND UP)
             const drAmountDue = (row.dueBasicPension * row.drDue / 100);
             const drAmountDrawn = (row.drawnBasicPension * row.drawnDR / 100);
             
-            // Calculate Amount Due and Amount Drawn (ALWAYS ROUND UP)
-            const amountDue = row.dueBasicPension + drAmountDue;
-            const amountDrawn = row.drawnBasicPension + drAmountDrawn;
+            row.drAmountDue = roundUpAmount(drAmountDue);
+            row.drAmountDrawn = roundUpAmount(drAmountDrawn);
             
-            // Calculate Difference as Amount Due - Amount Drawn (ALWAYS ROUND UP)
-            const difference = amountDue - amountDrawn;
+            // Calculate Difference = Amount Due - Amount Drawn
+            const difference = row.amountDue - row.amountDrawn;
+            row.difference = difference;
             
-            // Calculate Gross Amount as Difference × Months (ALWAYS ROUND UP)
-            const grossAmount = difference * months;
+            // Calculate Gross Amount = Difference × Months
+            const grossAmount = row.difference * row.months;
+            row.grossAmount = roundUpAmount(grossAmount);
             
-            // Round UP all amounts
-            const roundedDrAmountDue = roundUpAmount(drAmountDue);
-            const roundedDrAmountDrawn = roundUpAmount(drAmountDrawn);
-            const roundedAmountDue = roundUpAmount(amountDue);
-            const roundedAmountDrawn = roundUpAmount(amountDrawn);
-            const roundedDifference = roundUpAmount(difference);
-            const roundedGrossAmount = roundUpAmount(grossAmount);
+            grandTotal += row.grossAmount;
             
-            grandTotal += roundedGrossAmount;
-            
-            tableRows.push({
-                fromDate: row.fromDate,
-                toDate: row.toDate,
-                dueBasicPension: row.dueBasicPension,
-                drDue: row.drDue,
-                drAmountDue: roundedDrAmountDue,
-                amountDue: roundedAmountDue,
-                drawnBasicPension: row.drawnBasicPension,
-                drawnDR: row.drawnDR,
-                drAmountDrawn: roundedDrAmountDrawn,
-                amountDrawn: roundedAmountDrawn,
-                difference: roundedDifference,
-                months: months,
-                grossAmount: roundedGrossAmount,
-                revisionNoDue: row.revisionNoDue,
-                revisionNoDrawn: row.revisionNoDrawn
-            });
+            // Update table cells
+            document.querySelector(`.dr-amount-due[data-index="${index}"]`).value = row.drAmountDue;
+            document.querySelector(`.dr-amount-drawn[data-index="${index}"]`).value = row.drAmountDrawn;
+            document.querySelector(`.difference[data-index="${index}"]`).value = row.difference;
+            document.querySelector(`.gross-amount[data-index="${index}"]`).value = row.grossAmount;
         });
         
-        renderTable();
-        
+        // Update footer with grand total
+        const tableFooter = document.getElementById('drTableFooter');
         tableFooter.innerHTML = `
             <tr class="total-row">
                 <td colspan="13" class="text-end"><strong>Grand Total:</strong></td>
@@ -644,14 +642,12 @@ function calculateRevision() {
             </tr>
         `;
         
-        document.getElementById('drTable').style.display = 'table';
-        document.getElementById('addRowSection').style.display = 'block';
-        document.getElementById('drTableStatus').textContent = `Calculation completed. ${calculationPeriods.length} period(s) calculated.`;
+        document.getElementById('drTableStatus').textContent = `Amount calculation completed. Grand Total: ${Math.ceil(grandTotal)}`;
         document.getElementById('drTableStatus').className = 'alert alert-success';
         
     } catch (error) {
-        console.error('Error calculating revision:', error);
-        document.getElementById('drTableStatus').textContent = 'Error during calculation. Please check your inputs.';
+        console.error('Error calculating amounts:', error);
+        document.getElementById('drTableStatus').textContent = 'Error during amount calculation. Please check your inputs.';
         document.getElementById('drTableStatus').className = 'alert alert-danger';
     }
 }
@@ -678,7 +674,7 @@ function resetForm() {
     document.getElementById('revisionNoTo').value = '';
     initializeDates();
     clearDRTable();
-    document.getElementById('drTableStatus').textContent = 'Please fill all details and click Calculate to generate the table.';
+    document.getElementById('drTableStatus').textContent = 'Please fill all details and click "Calculate DR" to start calculation.';
     document.getElementById('drTableStatus').className = 'alert alert-info';
     document.getElementById('drTable').style.display = 'none';
 }
