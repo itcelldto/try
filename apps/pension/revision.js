@@ -354,10 +354,10 @@ function addNewRow() {
     
     tableRows.push(newRow);
     renderTable();
-    recalculateAllRows(); // Recalculate all amounts after adding new row
+    recalculateAllRows();
 }
 
-// Render table with current data - MAKE ALL FIELDS EDITABLE
+// Render table with current data - ALL FIELDS EDITABLE
 function renderTable() {
     const tableBody = document.getElementById('drTableBody');
     tableBody.innerHTML = '';
@@ -365,7 +365,6 @@ function renderTable() {
     tableRows.forEach((row, index) => {
         const tr = document.createElement('tr');
         
-        // MAKE ALL FIELDS EDITABLE - removed readonly attributes
         tr.innerHTML = `
             <td><input type="text" class="editable-input" value="${row.fromDate}" data-field="fromDate" data-index="${index}"></td>
             <td><input type="text" class="editable-input" value="${row.toDate}" data-field="toDate" data-index="${index}"></td>
@@ -409,7 +408,6 @@ function renderTable() {
 
 // Add event listeners to table elements
 function addEventListenersToTable() {
-    // ALL FIELDS ARE NOW EDITABLE - removed readonly check
     document.querySelectorAll('.editable-input').forEach(input => {
         input.addEventListener('change', function() {
             const index = parseInt(this.getAttribute('data-index'));
@@ -418,24 +416,33 @@ function addEventListenersToTable() {
             
             if (field === 'fromDate' || field === 'toDate') {
                 tableRows[index][field] = value;
-                // Recalculate months when dates change
                 const months = calculateMonthsBetweenDates(
                     tableRows[index].fromDate, 
                     tableRows[index].toDate
                 );
                 tableRows[index].months = months;
                 document.querySelector(`.months[data-index="${index}"]`).value = months;
-            } else {
+                recalculateRowAmounts(index);
+            } 
+            else if (field === 'grossAmount') {
+                // User manually edited gross amount - store it directly
                 tableRows[index][field] = parseFloat(value) || 0;
             }
+            else {
+                tableRows[index][field] = parseFloat(value) || 0;
+                
+                // If difference or months are manually edited, recalculate gross amount
+                if (field === 'difference' || field === 'months') {
+                    recalculateGrossAmountFromInputs(index);
+                } else {
+                    recalculateRowAmounts(index);
+                }
+            }
             
-            // Recalculate ALL amounts when ANY field changes
-            recalculateRowAmounts(index);
             updateGrandTotal();
         });
     });
     
-    // Remove buttons
     document.querySelectorAll('.remove-row').forEach(button => {
         button.addEventListener('click', function() {
             const index = parseInt(this.getAttribute('data-index'));
@@ -444,7 +451,7 @@ function addEventListenersToTable() {
     });
 }
 
-// Recalculate amounts for a specific row - FIXED CALCULATION
+// Recalculate amounts for a specific row
 function recalculateRowAmounts(index) {
     const row = tableRows[index];
     
@@ -453,19 +460,36 @@ function recalculateRowAmounts(index) {
     const amountDrawn = row.drawnBasicPension + (row.drawnBasicPension * row.drawnDR / 100);
     const difference = amountDue - amountDrawn;
     
-    // CORRECTED: Gross Amount = Difference * No. of Months
-    const grossAmount = difference * row.months;
-    
     // Update row data with rounded values
     row.amountDue = roundAmount(amountDue);
     row.amountDrawn = roundAmount(amountDrawn);
     row.difference = roundAmount(difference);
-    row.grossAmount = roundAmount(grossAmount); // This is now Difference * Months
+    
+    // Calculate gross amount as Difference * Months
+    row.grossAmount = roundAmount(row.difference * row.months);
     
     // Update table cells
     document.querySelector(`.amount-due[data-index="${index}"]`).value = row.amountDue;
     document.querySelector(`.amount-drawn[data-index="${index}"]`).value = row.amountDrawn;
     document.querySelector(`.difference[data-index="${index}"]`).value = row.difference;
+    document.querySelector(`.gross-amount[data-index="${index}"]`).value = row.grossAmount;
+}
+
+// Recalculate gross amount from input values (when difference or months are manually edited)
+function recalculateGrossAmountFromInputs(index) {
+    const row = tableRows[index];
+    
+    // Get current values from input fields
+    const differenceInput = document.querySelector(`.difference[data-index="${index}"]`);
+    const monthsInput = document.querySelector(`.months[data-index="${index}"]`);
+    
+    const currentDifference = parseFloat(differenceInput.value) || 0;
+    const currentMonths = parseFloat(monthsInput.value) || 0;
+    
+    // Calculate gross amount as Difference * Months
+    row.grossAmount = roundAmount(currentDifference * currentMonths);
+    
+    // Update gross amount field
     document.querySelector(`.gross-amount[data-index="${index}"]`).value = row.grossAmount;
 }
 
