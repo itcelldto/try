@@ -298,14 +298,9 @@ function getDRForPeriod(fromDate, toDate, filteredData) {
     return matchingRecord ? matchingRecord.drDue : 0;
 }
 
-// Round amount based on decimal value
+// Round amount to nearest integer (no decimal rounding)
 function roundAmount(amount) {
-    const decimal = amount - Math.floor(amount);
-    if (decimal >= 0.5) {
-        return Math.ceil(amount);
-    } else {
-        return Math.floor(amount);
-    }
+    return Math.round(amount);
 }
 
 // Remove row from table
@@ -430,13 +425,7 @@ function addEventListenersToTable() {
             }
             else {
                 tableRows[index][field] = parseFloat(value) || 0;
-                
-                // If difference or months are manually edited, recalculate gross amount
-                if (field === 'difference' || field === 'months') {
-                    recalculateGrossAmountFromInputs(index);
-                } else {
-                    recalculateRowAmounts(index);
-                }
+                recalculateRowAmounts(index);
             }
             
             updateGrandTotal();
@@ -451,45 +440,30 @@ function addEventListenersToTable() {
     });
 }
 
-// Recalculate amounts for a specific row
+// Recalculate amounts for a specific row - FIXED CALCULATION
 function recalculateRowAmounts(index) {
     const row = tableRows[index];
     
-    // Calculate amounts with proper rounding
+    // Calculate Amount Due and Amount Drawn
     const amountDue = row.dueBasicPension + (row.dueBasicPension * row.drDue / 100);
     const amountDrawn = row.drawnBasicPension + (row.drawnBasicPension * row.drawnDR / 100);
+    
+    // Calculate Difference as Amount Due - Amount Drawn (EXACT calculation)
     const difference = amountDue - amountDrawn;
     
-    // Update row data with rounded values
+    // Update row data with exact values (no rounding for intermediate calculations)
     row.amountDue = roundAmount(amountDue);
     row.amountDrawn = roundAmount(amountDrawn);
     row.difference = roundAmount(difference);
     
-    // Calculate gross amount as Difference * Months
-    row.grossAmount = roundAmount(row.difference * row.months);
+    // Calculate Gross Amount as Difference × Months (EXACT calculation)
+    const grossAmount = row.difference * row.months;
+    row.grossAmount = roundAmount(grossAmount);
     
     // Update table cells
     document.querySelector(`.amount-due[data-index="${index}"]`).value = row.amountDue;
     document.querySelector(`.amount-drawn[data-index="${index}"]`).value = row.amountDrawn;
     document.querySelector(`.difference[data-index="${index}"]`).value = row.difference;
-    document.querySelector(`.gross-amount[data-index="${index}"]`).value = row.grossAmount;
-}
-
-// Recalculate gross amount from input values (when difference or months are manually edited)
-function recalculateGrossAmountFromInputs(index) {
-    const row = tableRows[index];
-    
-    // Get current values from input fields
-    const differenceInput = document.querySelector(`.difference[data-index="${index}"]`);
-    const monthsInput = document.querySelector(`.months[data-index="${index}"]`);
-    
-    const currentDifference = parseFloat(differenceInput.value) || 0;
-    const currentMonths = parseFloat(monthsInput.value) || 0;
-    
-    // Calculate gross amount as Difference * Months
-    row.grossAmount = roundAmount(currentDifference * currentMonths);
-    
-    // Update gross amount field
     document.querySelector(`.gross-amount[data-index="${index}"]`).value = row.grossAmount;
 }
 
@@ -604,13 +578,17 @@ function calculateRevision() {
         calculationPeriods.forEach((row, index) => {
             const months = calculateMonthsBetweenDates(row.fromDate, row.toDate);
             
+            // Calculate Amount Due and Amount Drawn
             const amountDue = row.dueBasicPension + (row.dueBasicPension * row.drDue / 100);
             const amountDrawn = row.drawnBasicPension + (row.drawnBasicPension * row.drawnDR / 100);
+            
+            // Calculate Difference as Amount Due - Amount Drawn (EXACT calculation)
             const difference = amountDue - amountDrawn;
             
-            // CORRECTED: Gross Amount = Difference * No. of Months
+            // Calculate Gross Amount as Difference × Months (EXACT calculation)
             const grossAmount = difference * months;
             
+            // Round only the final displayed values
             const roundedAmountDue = roundAmount(amountDue);
             const roundedAmountDrawn = roundAmount(amountDrawn);
             const roundedDifference = roundAmount(difference);
