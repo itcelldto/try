@@ -594,6 +594,7 @@ function calculateAmount() {
             const amountDrawnInput = document.querySelector(`.editable-input[data-field="amountDrawn"][data-index="${index}"]`);
             const monthsInput = document.querySelector(`.editable-input[data-field="months"][data-index="${index}"]`);
             
+            // Get values from inputs
             const dueBasicPension = parseFloat(dueBasicPensionInput.value) || 0;
             const drawnBasicPension = parseFloat(drawnBasicPensionInput.value) || 0;
             const amountDue = parseFloat(amountDueInput.value) || 0;
@@ -603,35 +604,51 @@ function calculateAmount() {
             // Update row data with current values
             row.dueBasicPension = dueBasicPension;
             row.drawnBasicPension = drawnBasicPension;
-            row.amountDue = amountDue;
-            row.amountDrawn = amountDrawn;
             row.months = months;
             
-            // Recalculate DR Amounts based on current Basic Pension values (ALWAYS ROUND UP)
+            // Calculate DR Amounts based on current Basic Pension values (ALWAYS ROUND UP)
             const drAmountDue = (row.dueBasicPension * row.drDue / 100);
             const drAmountDrawn = (row.drawnBasicPension * row.drawnDR / 100);
             
             row.drAmountDue = roundUpAmount(drAmountDue);
             row.drAmountDrawn = roundUpAmount(drAmountDrawn);
             
-            // Recalculate Amount Due and Amount Drawn based on current values (ALWAYS ROUND UP)
-            const recalculatedAmountDue = row.dueBasicPension + row.drAmountDue;
-            const recalculatedAmountDrawn = row.drawnBasicPension + row.drAmountDrawn;
+            // Calculate Amount Due and Amount Drawn based on current values (ALWAYS ROUND UP)
+            // If user manually entered values, use them, otherwise calculate
+            let finalAmountDue, finalAmountDrawn;
             
-            row.amountDue = roundUpAmount(recalculatedAmountDue);
-            row.amountDrawn = roundUpAmount(recalculatedAmountDrawn);
+            if (amountDue > 0 && amountDue !== row.amountDue) {
+                // User manually entered Amount Due, use it
+                finalAmountDue = amountDue;
+            } else {
+                // Calculate Amount Due = Basic Pension Due + DR Amount Due
+                finalAmountDue = row.dueBasicPension + row.drAmountDue;
+                finalAmountDue = roundUpAmount(finalAmountDue);
+            }
             
-            // Update the input fields with recalculated values
+            if (amountDrawn > 0 && amountDrawn !== row.amountDrawn) {
+                // User manually entered Amount Drawn, use it
+                finalAmountDrawn = amountDrawn;
+            } else {
+                // Calculate Amount Drawn = Basic Pension Drawn + DR Amount Drawn
+                finalAmountDrawn = row.drawnBasicPension + row.drAmountDrawn;
+                finalAmountDrawn = roundUpAmount(finalAmountDrawn);
+            }
+            
+            row.amountDue = finalAmountDue;
+            row.amountDrawn = finalAmountDrawn;
+            
+            // Update the input fields with final values
             amountDueInput.value = row.amountDue;
             amountDrawnInput.value = row.amountDrawn;
             
-            // Calculate Difference = Amount Due - Amount Drawn
+            // Calculate Difference = Amount Due - Amount Drawn (EXACT calculation, no rounding)
             const difference = row.amountDue - row.amountDrawn;
             row.difference = difference;
             
-            // Calculate Gross Amount = Difference × Months
+            // Calculate Gross Amount = Difference × Months (EXACT calculation, no rounding)
             const grossAmount = row.difference * row.months;
-            row.grossAmount = roundUpAmount(grossAmount);
+            row.grossAmount = grossAmount;
             
             grandTotal += row.grossAmount;
             
@@ -646,7 +663,7 @@ function calculateAmount() {
         const tableFooter = document.getElementById('drTableFooter');
         tableFooter.innerHTML = `
             <tr class="total-row">
-                <td colspan="13" class="text-end"><strong>Grand Total:</strong></td>
+                <td colspan="11" class="text-end"><strong>Grand Total:</strong></td>
                 <td><strong id="grandTotal">${Math.ceil(grandTotal)}</strong></td>
             </tr>
         `;
@@ -734,11 +751,9 @@ function printCalculation() {
             <td>${row.toDate}</td>
             <td>${row.dueBasicPension}</td>
             <td>${row.drDue}%</td>
-            <td>${row.drAmountDue}</td>
             <td>${row.amountDue}</td>
             <td>${row.drawnBasicPension}</td>
             <td>${row.drawnDR}%</td>
-            <td>${row.drAmountDrawn}</td>
             <td>${row.amountDrawn}</td>
             <td>${row.difference}</td>
             <td>${row.months}</td>
@@ -747,13 +762,8 @@ function printCalculation() {
         printTableBody.appendChild(tr);
     });
     
-    const totalRow = document.createElement('tr');
-    totalRow.className = 'total-row';
-    totalRow.innerHTML = `
-        <td colspan="12" class="text-end"><strong>Grand Total:</strong></td>
-        <td><strong>${Math.ceil(grandTotal)}</strong></td>
-    `;
-    printTableBody.appendChild(totalRow);
+    // Update grand total in print footer
+    document.getElementById('printGrandTotal').textContent = Math.ceil(grandTotal);
     
     document.getElementById('printSection').style.display = 'block';
     window.print();
