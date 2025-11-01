@@ -441,6 +441,8 @@ function calculateDR() {
     const pensionerType = document.getElementById('pensionerType').value;
     const fromDate = document.getElementById('fromDate').value;
     const toDate = document.getElementById('toDate').value;
+    const basicPensionDue = parseFloat(document.getElementById('basicPensionDue').value) || 0;
+    const basicPensionDrawn = parseFloat(document.getElementById('basicPensionDrawn').value) || 0;
     const revisionNoFrom = document.getElementById('revisionNoFrom').value;
     const revisionNoTo = document.getElementById('revisionNoTo').value;
     
@@ -459,11 +461,6 @@ function calculateDR() {
     try {
         document.getElementById('drTableStatus').textContent = 'Calculating DR values...';
         document.getElementById('drTableStatus').className = 'alert alert-warning';
-        
-        // Clear previous table if needed
-        if (tableRows.length === 0) {
-            clearDRTable();
-        }
         
         const userFromDate = new Date(fromDate);
         const userToDate = new Date(toDate);
@@ -491,86 +488,81 @@ function calculateDR() {
         filteredDRDataDue.sort((a, b) => parseDate(a.fromDate) - parseDate(b.fromDate));
         filteredDRDataDrawn.sort((a, b) => parseDate(a.fromDate) - parseDate(b.fromDate));
         
-        // Clear existing rows if this is the first calculation
-        if (tableRows.length === 0) {
-            tableRows = [];
+        // Clear existing rows and create new ones with Basic Pension values
+        tableRows = [];
+        
+        const calculationPeriods = [];
+        
+        for (let i = 0; i < filteredDRDataDue.length; i++) {
+            const currentRow = filteredDRDataDue[i];
+            let periodFromDate, periodToDate;
             
-            const calculationPeriods = [];
-            
-            for (let i = 0; i < filteredDRDataDue.length; i++) {
-                const currentRow = filteredDRDataDue[i];
-                let periodFromDate, periodToDate;
-                
-                if (i === 0) {
-                    periodFromDate = formatDateToDDMMYYYY(userFromDate);
-                } else {
-                    const prevToDate = new Date(parseDate(calculationPeriods[i-1].toDate));
-                    prevToDate.setDate(prevToDate.getDate() + 1);
-                    periodFromDate = formatDateToDDMMYYYY(prevToDate);
-                }
-                
-                const drToDate = parseDate(currentRow.toDate);
-                const periodToDateObj = drToDate < userToDate ? drToDate : userToDate;
-                periodToDate = formatDateToDDMMYYYY(periodToDateObj);
-                
-                if (parseDate(periodFromDate) > parseDate(periodToDate)) {
-                    periodFromDate = periodToDate;
-                }
-                
-                const drawnDRForPeriod = getDRForPeriod(periodFromDate, periodToDate, filteredDRDataDrawn);
-                
-                calculationPeriods.push({
-                    fromDate: periodFromDate,
-                    toDate: periodToDate,
-                    drDue: currentRow.drDue,
-                    revisionNoDue: currentRow.revisionNo,
-                    drawnDR: drawnDRForPeriod,
-                    revisionNoDrawn: revisionNoFrom
-                });
-                
-                if (periodToDateObj.getTime() === userToDate.getTime()) {
-                    break;
-                }
+            if (i === 0) {
+                periodFromDate = formatDateToDDMMYYYY(userFromDate);
+            } else {
+                const prevToDate = new Date(parseDate(calculationPeriods[i-1].toDate));
+                prevToDate.setDate(prevToDate.getDate() + 1);
+                periodFromDate = formatDateToDDMMYYYY(prevToDate);
             }
             
-            // Create table rows with DR values
-            calculationPeriods.forEach((row, index) => {
-                const months = calculateMonthsBetweenDates(row.fromDate, row.toDate);
-                
-                tableRows.push({
-                    fromDate: row.fromDate,
-                    toDate: row.toDate,
-                    dueBasicPension: 0,
-                    drDue: row.drDue,
-                    drAmountDue: 0,
-                    amountDue: 0,
-                    drawnBasicPension: 0,
-                    drawnDR: row.drawnDR,
-                    drAmountDrawn: 0,
-                    amountDrawn: 0,
-                    difference: 0,
-                    months: months,
-                    grossAmount: 0,
-                    revisionNoDue: row.revisionNoDue,
-                    revisionNoDrawn: row.revisionNoDrawn
-                });
+            const drToDate = parseDate(currentRow.toDate);
+            const periodToDateObj = drToDate < userToDate ? drToDate : userToDate;
+            periodToDate = formatDateToDDMMYYYY(periodToDateObj);
+            
+            if (parseDate(periodFromDate) > parseDate(periodToDate)) {
+                periodFromDate = periodToDate;
+            }
+            
+            const drawnDRForPeriod = getDRForPeriod(periodFromDate, periodToDate, filteredDRDataDrawn);
+            
+            calculationPeriods.push({
+                fromDate: periodFromDate,
+                toDate: periodToDate,
+                drDue: currentRow.drDue,
+                revisionNoDue: currentRow.revisionNo,
+                drawnDR: drawnDRForPeriod,
+                revisionNoDrawn: revisionNoFrom
             });
+            
+            if (periodToDateObj.getTime() === userToDate.getTime()) {
+                break;
+            }
         }
         
-        // Update DR values in existing rows
-        tableRows.forEach((row, index) => {
-            const drDue = getDRDueByDateRangeAndRevision(row.fromDate, row.toDate, revisionNoTo);
-            const drawnDR = getDRDueByDateRangeAndRevision(row.fromDate, row.toDate, revisionNoFrom);
+        // Create table rows with Basic Pension values from form
+        calculationPeriods.forEach((row, index) => {
+            const months = calculateMonthsBetweenDates(row.fromDate, row.toDate);
             
-            row.drDue = drDue;
-            row.drawnDR = drawnDR;
-            row.revisionNoDue = revisionNoTo;
-            row.revisionNoDrawn = revisionNoFrom;
+            // Calculate DR Amounts (ALWAYS ROUND UP)
+            const drAmountDue = (basicPensionDue * row.drDue / 100);
+            const drAmountDrawn = (basicPensionDrawn * row.drawnDR / 100);
+            
+            // Calculate Amount Due and Amount Drawn (ALWAYS ROUND UP)
+            const amountDue = basicPensionDue + drAmountDue;
+            const amountDrawn = basicPensionDrawn + drAmountDrawn;
+            
+            tableRows.push({
+                fromDate: row.fromDate,
+                toDate: row.toDate,
+                dueBasicPension: basicPensionDue,
+                drDue: row.drDue,
+                drAmountDue: roundUpAmount(drAmountDue),
+                amountDue: roundUpAmount(amountDue),
+                drawnBasicPension: basicPensionDrawn,
+                drawnDR: row.drawnDR,
+                drAmountDrawn: roundUpAmount(drAmountDrawn),
+                amountDrawn: roundUpAmount(amountDrawn),
+                difference: 0,
+                months: months,
+                grossAmount: 0,
+                revisionNoDue: row.revisionNoDue,
+                revisionNoDrawn: row.revisionNoDrawn
+            });
         });
         
         renderTable();
         
-        document.getElementById('drTableStatus').textContent = 'DR values calculated. Now fill Basic Pension values and click "Calculate Amount" to complete calculation.';
+        document.getElementById('drTableStatus').textContent = 'DR values calculated. Basic Pension values have been auto-filled. Click "Calculate Amount" to complete calculation.';
         document.getElementById('drTableStatus').className = 'alert alert-success';
         
     } catch (error) {
@@ -595,26 +587,43 @@ function calculateAmount() {
         let grandTotal = 0;
         
         tableRows.forEach((row, index) => {
-            // Get current input values
-            const dueBasicPension = parseFloat(document.querySelector(`.editable-input[data-field="dueBasicPension"][data-index="${index}"]`).value) || 0;
-            const drawnBasicPension = parseFloat(document.querySelector(`.editable-input[data-field="drawnBasicPension"][data-index="${index}"]`).value) || 0;
-            const amountDue = parseFloat(document.querySelector(`.editable-input[data-field="amountDue"][data-index="${index}"]`).value) || 0;
-            const amountDrawn = parseFloat(document.querySelector(`.editable-input[data-field="amountDrawn"][data-index="${index}"]`).value) || 0;
-            const months = parseFloat(document.querySelector(`.editable-input[data-field="months"][data-index="${index}"]`).value) || 0;
+            // Get current input values (in case user modified them)
+            const dueBasicPensionInput = document.querySelector(`.editable-input[data-field="dueBasicPension"][data-index="${index}"]`);
+            const drawnBasicPensionInput = document.querySelector(`.editable-input[data-field="drawnBasicPension"][data-index="${index}"]`);
+            const amountDueInput = document.querySelector(`.editable-input[data-field="amountDue"][data-index="${index}"]`);
+            const amountDrawnInput = document.querySelector(`.editable-input[data-field="amountDrawn"][data-index="${index}"]`);
+            const monthsInput = document.querySelector(`.editable-input[data-field="months"][data-index="${index}"]`);
             
-            // Update row data
+            const dueBasicPension = parseFloat(dueBasicPensionInput.value) || 0;
+            const drawnBasicPension = parseFloat(drawnBasicPensionInput.value) || 0;
+            const amountDue = parseFloat(amountDueInput.value) || 0;
+            const amountDrawn = parseFloat(amountDrawnInput.value) || 0;
+            const months = parseFloat(monthsInput.value) || 0;
+            
+            // Update row data with current values
             row.dueBasicPension = dueBasicPension;
             row.drawnBasicPension = drawnBasicPension;
             row.amountDue = amountDue;
             row.amountDrawn = amountDrawn;
             row.months = months;
             
-            // Calculate DR Amounts (ALWAYS ROUND UP)
+            // Recalculate DR Amounts based on current Basic Pension values (ALWAYS ROUND UP)
             const drAmountDue = (row.dueBasicPension * row.drDue / 100);
             const drAmountDrawn = (row.drawnBasicPension * row.drawnDR / 100);
             
             row.drAmountDue = roundUpAmount(drAmountDue);
             row.drAmountDrawn = roundUpAmount(drAmountDrawn);
+            
+            // Recalculate Amount Due and Amount Drawn based on current values (ALWAYS ROUND UP)
+            const recalculatedAmountDue = row.dueBasicPension + row.drAmountDue;
+            const recalculatedAmountDrawn = row.drawnBasicPension + row.drAmountDrawn;
+            
+            row.amountDue = roundUpAmount(recalculatedAmountDue);
+            row.amountDrawn = roundUpAmount(recalculatedAmountDrawn);
+            
+            // Update the input fields with recalculated values
+            amountDueInput.value = row.amountDue;
+            amountDrawnInput.value = row.amountDrawn;
             
             // Calculate Difference = Amount Due - Amount Drawn
             const difference = row.amountDue - row.amountDrawn;
@@ -651,7 +660,6 @@ function calculateAmount() {
         document.getElementById('drTableStatus').className = 'alert alert-danger';
     }
 }
-
 // Update grand total when values change
 function updateGrandTotal() {
     let grandTotal = 0;
