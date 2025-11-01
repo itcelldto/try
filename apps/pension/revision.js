@@ -1,4 +1,4 @@
-  // Global variables
+    // Global variables
         let drData = [];
         let tableRows = [];
         let settingsData = {
@@ -706,67 +706,72 @@
         }
 
         // Print calculation
-        function printCalculation() {
-            if (tableRows.length === 0) {
-                alert('Please calculate first before printing.');
-                return;
-            }
-            
-            document.getElementById('printPensionerName').textContent = 
-                document.getElementById('pensionerName').value.toUpperCase() || 'NOT PROVIDED';
-            
-            const treasury = document.getElementById('treasury').value;
-            const pensionerType = document.getElementById('pensionerType').value;
-            const pensionerCode = document.getElementById('pensionerCode').value;
-            const fullPensionerCode = `${treasury} - ${pensionerType} / ${pensionerCode}`;
-            document.getElementById('printPensionerCode').textContent = fullPensionerCode || 'NOT PROVIDED';
-            
-            const fromDate = document.getElementById('fromDate').value;
-            const toDate = document.getElementById('toDate').value;
-            
-            if (fromDate) {
-                const fromDateObj = new Date(fromDate);
-                document.getElementById('printFromDate').textContent = formatDateToDDMMYYYY(fromDateObj);
-            } else {
-                document.getElementById('printFromDate').textContent = 'NOT PROVIDED';
-            }
-            
-            if (toDate) {
-                const toDateObj = new Date(toDate);
-                document.getElementById('printToDate').textContent = formatDateToDDMMYYYY(toDateObj);
-            } else {
-                document.getElementById('printToDate').textContent = 'NOT PROVIDED';
-            }
-            
-            const printTableBody = document.getElementById('printTableBody');
-            printTableBody.innerHTML = '';
-            
-            let grandTotal = 0;
-            
-            tableRows.forEach((row, index) => {
-                grandTotal += row.grossAmount;
-                
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${row.fromDate}</td>
-                    <td>${row.toDate}</td>
-                    <td>${row.dueBasicPension}</td>
-                    <td>${row.drDue}%</td>
-                    <td>${row.amountDue}</td>
-                    <td>${row.drawnBasicPension}</td>
-                    <td>${row.drawnDR}%</td>
-                    <td>${row.amountDrawn}</td>
-                    <td>${row.difference}</td>
-                    <td>${row.months}</td>
-                    <td>${row.grossAmount}</td>
-                `;
-                printTableBody.appendChild(tr);
-            });
-            
-            // Update grand total in print footer
-            document.getElementById('printGrandTotal').textContent = Math.ceil(grandTotal);
-            
-            document.getElementById('printSection').style.display = 'block';
-            window.print();
-            document.getElementById('printSection').style.display = 'none';
-        }
+function printCalculation() {
+    if (tableRows.length === 0) {
+        alert('Please calculate first before printing.');
+        return;
+    }
+    
+    document.getElementById('printPensionerName').textContent = 
+        document.getElementById('pensionerName').value.toUpperCase() || 'NOT PROVIDED';
+    
+    const treasury = document.getElementById('treasury').value;
+    const pensionerType = document.getElementById('pensionerType').value;
+    const pensionerCode = document.getElementById('pensionerCode').value;
+    const fullPensionerCode = `${treasury} - ${pensionerType} / ${pensionerCode}`;
+    document.getElementById('printPensionerCode').textContent = fullPensionerCode || 'NOT PROVIDED';
+    
+    const fromDate = document.getElementById('fromDate').value;
+    const toDate = document.getElementById('toDate').value;
+    
+    if (fromDate) {
+        const fromDateObj = new Date(fromDate);
+        document.getElementById('printFromDate').textContent = formatDateToDDMMYYYY(fromDateObj);
+    } else {
+        document.getElementById('printFromDate').textContent = 'NOT PROVIDED';
+    }
+    
+    if (toDate) {
+        const toDateObj = new Date(toDate);
+        document.getElementById('printToDate').textContent = formatDateToDDMMYYYY(toDateObj);
+    } else {
+        document.getElementById('printToDate').textContent = 'NOT PROVIDED';
+    }
+    
+    // Update remarks in print
+    document.getElementById('printRemarks').textContent = document.getElementById('remarks').value || '';
+    
+    const printTableBody = document.getElementById('printTableBody');
+    printTableBody.innerHTML = '';
+    
+    let grandTotal = 0;
+    
+    tableRows.forEach((row, index) => {
+        grandTotal += row.grossAmount;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${row.fromDate}</td>
+            <td>${row.toDate}</td>
+            <td>${row.dueBasicPension}</td>
+            <td>${row.drDue}%</td>
+            <td>${row.drAmountDue}</td>
+            <td>${row.amountDue}</td>
+            <td>${row.drawnBasicPension}</td>
+            <td>${row.drawnDR}%</td>
+            <td>${row.drAmountDrawn}</td>
+            <td>${row.amountDrawn}</td>
+            <td>${row.difference}</td>
+            <td>${row.months}</td>
+            <td>${row.grossAmount}</td>
+        `;
+        printTableBody.appendChild(tr);
+    });
+    
+    // Update grand total in print footer
+    document.getElementById('printGrandTotal').textContent = Math.ceil(grandTotal);
+    
+    document.getElementById('printSection').style.display = 'block';
+    window.print();
+    document.getElementById('printSection').style.display = 'none';
+}
