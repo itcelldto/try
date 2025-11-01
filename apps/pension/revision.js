@@ -663,7 +663,7 @@
                 const tableFooter = document.getElementById('drTableFooter');
                 tableFooter.innerHTML = `
                     <tr class="total-row">
-                        <td colspan="11" class="text-end"><strong>Grand Total:</strong></td>
+                        <td colspan="12" class="text-end"><strong>Grand Total:</strong></td>
                         <td><strong id="grandTotal">${Math.ceil(grandTotal)}</strong></td>
                     </tr>
                 `;
