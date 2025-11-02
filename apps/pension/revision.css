@@ -236,7 +236,7 @@ body {
 
 .action-buttons .btn {
     padding: 3px 6px;
-    /*font-size: 10px*/
+   /* font-size: 10px;*/
 }
 
 /* Footer styling */
@@ -457,7 +457,7 @@ body {
     
     .action-buttons .btn {
         padding: 2px 4px;
-        font-size: 9px;
+       /* font-size: 9px;*/
     }
     
     /* Adjust column widths for mobile */
@@ -506,8 +506,9 @@ body {
     }
 }
 
+
 @media print {
-    body * {
+	body * {
         visibility: hidden;
     }
     .print-section, .print-section * {
@@ -532,37 +533,80 @@ body {
         border: 1px solid #000;
     }
     
-    /* Print table adjustments */
-    /* Ensure table fits print page */
-    #drTable {
+    /* Print page setup */
+    @page {
+        size: auto;
+        margin: 0.5cm;
+    }
+    
+    /* Remove all scrollbars and ensure proper sizing */
+    .table-responsive {
+        overflow-x: visible !important;
+        overflow-y: visible !important;
         width: 100% !important;
         max-width: 100% !important;
-        min-width: auto !important;
-        table-layout: auto !important;
-        font-size: 9px !important;
+        border: 1px solid #000 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
     }
     
-    /* Adjust column widths for print */
+    /* Table print optimization */
+    #drTable {
+        width: 100% !important;
+        min-width: auto !important;
+        max-width: 100% !important;
+        table-layout: auto !important;
+        font-size: 8px !important;
+        border-collapse: collapse !important;
+    }
+    
+    /* Table cell print optimization */
     #drTable th,
     #drTable td {
-        padding: 3px 2px !important;
-        font-size: 9px !important;
+        padding: 2px 3px !important;
+        font-size: 8px !important;
         min-width: auto !important;
+        max-width: none !important;
+        border: 1px solid #000 !important;
+        line-height: 1.2 !important;
     }
     
-    /* Reduce input sizes for print */
+    /* Input fields in print */
     .editable-input {
         font-size: 8px !important;
-        padding: 2px 3px !important;
+        padding: 1px 2px !important;
+        border: 1px solid #ccc !important;
+        background: transparent !important;
+        width: 100% !important;
         max-width: none !important;
+        box-shadow: none !important;
     }
     
-    /* Hide the scroll indicator */
-    .table-responsive::after {
+    /* Hide unnecessary elements in print */
+    .table-responsive::after,
+    .action-buttons,
+    .btn,
+    .no-print {
         display: none !important;
     }
+    
+    /* Ensure print section takes full width */
+    .print-section {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Adjust column widths for better fit */
+    #drTable col.date-column { width: 12% !important; }
+    #drTable col.basic-column { width: 10% !important; }
+    #drTable col.dr-percent-column { width: 12% !important; }
+    #drTable col.dr-amount-column { width: 10% !important; }
+    #drTable col.amount-column { width: 11% !important; }
+    #drTable col.difference-column { width: 9% !important; }
+    #drTable col.months-column { width: 8% !important; }
+    #drTable col.gross-column { width: 11% !important; }
+    #drTable col.action-column { width: 0% !important; display: none !important; }
 }
-
 .table>:not(caption)>*>* {
     padding: .2rem .2rem;
     background-color: var(--bs-table-bg);
