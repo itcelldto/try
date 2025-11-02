@@ -143,13 +143,30 @@
              
                 
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover" id="drTable" style="display: none;">
-                        <thead>
+                   <table class="table table-striped table-hover" id="drTable" style="display: none;">
+    <colgroup>
+        <col class="date-column">
+        <col class="date-column">
+        <col class="basic-column">
+        <col class="dr-percent-column">
+        <col class="dr-amount-column">
+        <col class="amount-column">
+        <col class="basic-column">
+        <col class="dr-percent-column">
+        <col class="dr-amount-column">
+        <col class="amount-column">
+        <col class="difference-column">
+        <col class="months-column">
+        <col class="gross-column">
+        <col class="action-column">
+    </colgroup>
+    <thead>
                             <tr>
-                                <th colspan="6" class="text-center">Due Details</th>
-                                <th colspan="6" class="text-center">Drawn Details</th>
-                                <th colspan="6" class="text-center">Difference </th>
-                               <!--  <th rowspan="2">Actions</th> -->
+							    <th colspan="2" class="text-center">Period</th>
+                                <th colspan="4" class="text-center">Due Details</th>
+                                <th colspan="4" class="text-center">Drawn Details</th>
+                                <th colspan="4" class="text-center">Difference </th>
+                               
                             </tr>
                             <tr>
                                 <!-- Due Details -->
@@ -167,9 +184,11 @@
                                 <th>Amount Drawn</th>
                                 
                                 <!-- Difference Details -->
-                                <th>Difference Details</th>
+                                <th>Difference</th>
                                 <th>No. of Months</th>
                                 <th>Gross Amount</th>
+								<!-- Action button -->
+								<th>Action</th>
                             </tr>
                         </thead>
                         <tbody id="drTableBody" style="font-size: 12px;">
@@ -303,7 +322,7 @@
              </div>
               </div>
             </div>
-        </div>
+        </div><br><br>
 		  <p><strong>Disclaimer:</strong> <span >The information provided by this application is for general informational purposes only. Calculations are based solely on the data you provided. </span></p>
 		
     </div>
