@@ -153,7 +153,7 @@ body {
 
 /* Group header row */
 #drTable thead tr:first-child th {
-    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+    background: linear-gradient(to right, var(--secondary-color), var(--secondary-color));
     font-size: 13px;
     padding: 10px 4px;
 }
