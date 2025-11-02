@@ -319,3 +319,164 @@
         .step-buttons .btn {
             flex: 1;
         }
+/* DR Table Responsive Styles */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+#drTable {
+    min-width: 1200px; /* Ensure table has minimum width for all columns */
+    width: 100%;
+}
+
+/* Responsive table cell adjustments */
+#drTable th,
+#drTable td {
+    white-space: nowrap;
+    min-width: 80px;
+    vertical-align: middle;
+}
+
+/* Column-specific widths for better mobile display */
+#drTable th:nth-child(1), /* From Date */
+#drTable td:nth-child(1) {
+    min-width: 100px;
+}
+
+#drTable th:nth-child(2), /* To Date */
+#drTable td:nth-child(2) {
+    min-width: 100px;
+}
+
+#drTable th:nth-child(3), /* Basic(Due) */
+#drTable td:nth-child(3),
+#drTable th:nth-child(7), /* Basic(Drawn) */
+#drTable td:nth-child(7) {
+    min-width: 90px;
+}
+
+#drTable th:nth-child(4), /* DR% - Due */
+#drTable td:nth-child(4),
+#drTable th:nth-child(8), /* DR% Drawn */
+#drTable td:nth-child(8) {
+    min-width: 100px;
+}
+
+#drTable th:nth-child(5), /* DR Amount Due */
+#drTable td:nth-child(5),
+#drTable th:nth-child(9), /* DR Amount Drawn */
+#drTable td:nth-child(9) {
+    min-width: 90px;
+}
+
+#drTable th:nth-child(6), /* Amount Due */
+#drTable td:nth-child(6),
+#drTable th:nth-child(10), /* Amount Drawn */
+#drTable td:nth-child(10) {
+    min-width: 100px;
+}
+
+#drTable th:nth-child(11), /* Difference */
+#drTable td:nth-child(11) {
+    min-width: 80px;
+}
+
+#drTable th:nth-child(12), /* No. of Months */
+#drTable td:nth-child(12) {
+    min-width: 70px;
+}
+
+#drTable th:nth-child(13), /* Gross Amount */
+#drTable td:nth-child(13) {
+    min-width: 100px;
+}
+
+#drTable th:nth-child(14), /* Actions */
+#drTable td:nth-child(14) {
+    min-width: 70px;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+    #drTable {
+        font-size: 11px;
+    }
+    
+    .editable-input {
+        font-size: 11px;
+        padding: 2px 4px;
+        max-width: 5rem;
+    }
+    
+    .dr-due-input,
+    .drawn-dr {
+        max-width: 50px;
+    }
+    
+    .revision-label {
+        font-size: 9px;
+        padding: 2px 4px;
+    }
+    
+    .btn-sm {
+        padding: 0.2rem 0.4rem;
+        font-size: 0.75rem;
+    }
+    
+    /* Make table headers more compact */
+    #drTable thead th {
+        padding: 0.3rem 0.2rem;
+    }
+    
+    /* Adjust column grouping headers */
+    #drTable thead tr:first-child th {
+        font-size: 10px;
+        padding: 0.2rem;
+    }
+}
+
+/* Small mobile devices */
+@media (max-width: 576px) {
+    #drTable {
+        font-size: 10px;
+        min-width: 1100px;
+    }
+    
+    .editable-input {
+        font-size: 10px;
+        max-width: 4.5rem;
+    }
+    
+    .table-responsive {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+    }
+    
+    /* Add visual indicator for horizontal scrolling */
+    .table-responsive::after {
+        content: "← Scroll →";
+        display: block;
+        text-align: center;
+        padding: 5px;
+        font-size: 12px;
+        color: #6c757d;
+        background-color: #f8f9fa;
+        border-top: 1px solid #dee2e6;
+    }
+}
+
+/* Print styles adjustment */
+@media print {
+    #drTable {
+        min-width: auto;
+        width: 100%;
+    }
+    
+    #drTable th,
+    #drTable td {
+        min-width: auto;
+        font-size: 10px;
+        padding: 4px 2px;
+    }
+}
