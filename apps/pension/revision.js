@@ -664,7 +664,7 @@
                 tableFooter.innerHTML = `
                     <tr class="total-row">
                         <td colspan="12" class="text-end"><strong>Grand Total:</strong></td>
-                        <td><strong id="grandTotal">${Math.ceil(grandTotal)}</strong></td>
+                        <td><strong id="grandTotal">${Math.ceil(grandTotal)}</strong></td><td></td>
                     </tr>
                 `;
                 
