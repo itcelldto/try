@@ -13,7 +13,7 @@ body {
 }
 
 .header {
-    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    background: linear-gradient(135deg, var(--secondary-color), var(--secondary-color));
     color: white;
     padding: .2rem 0;
     border-radius: 15px;
@@ -39,7 +39,7 @@ body {
 }
 
 .card-header {
-    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+    background: linear-gradient(to right, var(--secondary-color), var(--secondary-color));
     color: white;
     border-radius: 15px 15px 0 0 !important;
     padding: 1rem 1.5rem;
