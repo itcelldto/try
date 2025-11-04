@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Repository | IT Cell HelpDesk</title>
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+	 <!-- IT Cell CSS -->
+    <link rel="stylesheet" href="https://itcellhelpdesk.github.io/home/resources/file-repo.css">
+	   
+    <style>
+   
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Document Repository</h1>
+            <p class="subtitle">IT Cell HelpDesk</p>
+            <button class="upload-btn" id="uploadBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                    <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                </svg>
+                Upload File
+            </button>
+        </header>
+        
+        <div class="tabs-container">
+            <ul class="tabs">
+                <li class="tab active" data-tab="manuals">User Manuals & Guides</li>
+                <li class="tab" data-tab="orders">Orders & Circulars</li>
+                <li class="tab" data-tab="forms">Forms & Proforma</li>
+            </ul>
+        </div>
+        
+        <!-- User Manuals & Guides Tab -->
+        <div class="tab-content active" id="manuals">
+            <div class="table-container">
+                <div class="search-container">
+                    <div class="search-box">
+                        <input type="text" id="searchInputManuals" placeholder="Search manuals by name or type...">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                    <div class="table-info" id="tableInfoManuals"></div>
+                </div>
+                
+                <div class="loading" id="loadingMessageManuals">
+                    Loading manuals...
+                </div>
+                
+                <div class="error" id="errorMessageManuals" style="display: none;">
+                    Error loading manuals. Please check your connection and try again.
+                </div>
+                
+                <table id="filesTableManuals" class="display" style="display: none; width:100%">
+                    <thead>
+                        <tr>
+                            <th>SL.No</th>
+                            <th>Description</th>
+                            <th>Date of upload</th>
+                            <th>Format</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="filesTableBodyManuals">
+                        <!-- Files will be populated here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Orders & Circulars Tab -->
+        <div class="tab-content" id="orders">
+            <div class="table-container">
+                <div class="search-container">
+                    <div class="search-box">
+                        <input type="text" id="searchInputOrders" placeholder="Search orders by name or type...">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                    <div class="table-info" id="tableInfoOrders"></div>
+                </div>
+                
+                <div class="loading" id="loadingMessageOrders">
+                    Loading orders...
+                </div>
+                
+                <div class="error" id="errorMessageOrders" style="display: none;">
+                    Error loading orders. Please check your connection and try again.
+                </div>
+                
+                <table id="filesTableOrders" class="display" style="display: none; width:100%">
+                    <thead>
+                        <tr>
+                            <th>SL.No</th>
+                            <th>Subject/Description</th>
+                            <th>Date of Upload</th>
+                            <th>Format</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="filesTableBodyOrders">
+                        <!-- Files will be populated here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Forms & Proforma Tab -->
+        <div class="tab-content" id="forms">
+            <div class="table-container">
+                <div class="search-container">
+                    <div class="search-box">
+                        <input type="text" id="searchInputForms" placeholder="Search forms by name or type...">
+                        <span class="search-icon">🔍</span>
+                    </div>
+                    <div class="table-info" id="tableInfoForms"></div>
+                </div>
+                
+                <div class="loading" id="loadingMessageForms">
+                    Loading forms...
+                </div>
+                
+                <div class="error" id="errorMessageForms" style="display: none;">
+                    Error loading forms. Please check your connection and try again.
+                </div>
+                
+                <table id="filesTableForms" class="display" style="display: none; width:100%">
+                    <thead>
+                        <tr>
+                            <th>SL.No</th>
+                            <th>Form/Proforma Description</th>
+                            <th>Date of upload</th>
+                            <th>File Format</th>
+                            <th>View</th>
+                        </tr>
+                    </thead>
+                    <tbody id="filesTableBodyForms">
+                        <!-- Files will be populated here by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="upload-modal" id="uploadModal">
+        <button class="close-btn" id="closeModal">×</button>
+        <iframe id="uploadFrame" src=""></iframe>
+    </div>
+
+    <!-- jQuery and DataTables JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+	 <!-- IT Cell JS -->
+    <script src="https://itcellhelpdesk.github.io/home/resources/file-repo.js"></script>
+
+</body>
+</html>
