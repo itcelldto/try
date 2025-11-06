@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasury Difference Settlement Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.4/css/jquery.dataTables.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            min-width: 100%;
+        }
+        .header {
+            background: linear-gradient(135deg, #1a6bb3 0%, #0d4d8c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 10px;
+        }
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .settled {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .not-settled {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .filter-section {
+            background-color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .table-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #1a6bb3 0%, #0d4d8c 100%);
+            border: none;
+            padding: 10px 25px;
+            font-weight: 600;
+            height: 38px; /* Match form control height */
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #0d4d8c 0%, #1a6bb3 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        .negative-diff {
+            color: #dc3545;
+            font-weight: 600;
+        }
+        .positive-diff {
+            color: #198754;
+            font-weight: 600;
+        }
+        .select2-container--default .select2-selection--single,
+        .select2-container--default .select2-selection--multiple,
+        .form-control {
+            height: 38px;
+            border-radius: 0.375rem;
+        }
+        .select2-container--default .select2-selection--multiple {
+            min-height: 38px;
+        }
+        .select2-container--default .select2-selection--multiple .select2-selection__rendered {
+            padding-top: 3px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 36px;
+        }
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 36px;
+        }
+        .info-box {
+            background-color: #e7f3ff;
+            border-left: 4px solid #1a6bb3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .filter-row {
+            align-items: end;
+        }
+        .filter-control {
+            margin-bottom: 0;
+        }
+        @media (max-width: 768px) {
+            .filter-row {
+                align-items: stretch;
+            }
+            .filter-control {
+                margin-bottom: 15px;
+            }
+        }
+        
+        /* New styles for double column table */
+        .double-column-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .double-column-table th, 
+        .double-column-table td {
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+        }
+        .double-column-table thead th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            text-align: center;
+        }
+        .double-column-table tbody tr:hover {
+            background-color: #f5f5f5;
+        }
+        .debit-column {
+            background-color: #fff5f5;
+            text-align: right;
+            color: #dc3545;
+            font-weight: 600;
+        }
+        .credit-column {
+            background-color: #f0fff4;
+            text-align: right;
+            color: #198754;
+            font-weight: 600;
+        }
+        .table-footer {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+        .table-footer td {
+            text-align: right;
+            padding: 12px;
+        }
+        .outstanding-amount {
+            background-color: #fff3cd;
+            color: #856404;
+            font-weight: bold;
+            text-align: center;
+        }
+        .table-section-header {
+            background-color: #e9ecef;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="filter-section card">
+            <h3 class="mb-3">RBD Discrepancy Settlement Report</h3><hr>
+            <div class="info-box">
+                <strong>Note: </strong> Choose specific treasuries to see their discrepancy details, or leave empty to include all treasuries.
+            </div>
+            <div class="card-body">
+                <form id="filterForm">
+                    <div class="row filter-row g-3">
+                        <div class="col-xl-2 col-md-4 col-sm-6 filter-control">
+                            <label for="fromMonth" class="form-label">From Month</label>
+                            <select id="fromMonth" class="form-select select2">
+                                <option value="">Select Month</option>
+                            </select>
+                        </div>
+                        <div class="col-xl-2 col-md-4 col-sm-6 filter-control">
+                            <label for="fromYear" class="form-label">From Year</label>
+                            <input type="number" id="fromYear" class="form-control" placeholder="Year">
+                        </div>
+                        <div class="col-xl-2 col-md-4 col-sm-6 filter-control">
+                            <label for="toMonth" class="form-label">To Month</label>
+                            <select id="toMonth" class="form-select select2">
+                                <option value="">Select Month</option>
+                            </select>
+                        </div>
+                        <div class="col-xl-2 col-md-4 col-sm-6 filter-control">
+                            <label for="toYear" class="form-label">To Year</label>
+                            <input type="number" id="toYear" class="form-control" placeholder="Year">
+                        </div>
+                        <div class="col-xl-3 col-md-6 col-sm-12 filter-control">
+                            <label for="treasury" class="form-label">Treasury</label>
+                            <select id="treasury" class="form-select select2" multiple="multiple">
+                                <option value="">Select Treasury</option>
+                            </select>
+                        </div>
+                        <div class="col-xl-1 col-md-6 col-sm-12 filter-control d-flex align-items-end">
+                            <button type="button" id="viewReport" class="btn btn-primary w-100">View</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="loading" id="loadingIndicator">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Loading details ...</p>
+        </div>
+
+        <div class="table-container card">
+            <div class="card-body">
+                <table id="doubleColumnTable" class="double-column-table">
+                    <thead>
+                        <tr>
+                            <th colspan="3">Debit (Negative Difference)</th>
+                            <th colspan="3">Credit (Positive Difference)</th>
+                        </tr>
+                        <tr>
+                            <th>Treasury Name</th>
+                            <th>Month/Year</th>
+                            <th>Amount</th>
+                            <th>Treasury Name</th>
+                            <th>Month/Year</th>
+                            <th>Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                    <tfoot>
+                        <tr class="table-footer">
+                            <td colspan="2">Total Debit</td>
+                            <td id="totalDebit">0.00</td>
+                            <td colspan="2">Total Credit</td>
+                            <td id="totalCredit">0.00</td>
+                        </tr>
+                        <tr class="outstanding-amount">
+                            <td colspan="6" id="outstandingAmount">Outstanding Amount: 0.00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Google Sheets API configuration
+        const SHEET_ID = "1Nfv3GvplDB0v6lI8PQ4fTks8KVClH6C8_0lddbfaesc";
+        const API_KEY = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+        const SHEET_NAME = "DB";
+        const RANGE = "C:M";
+
+        // Global variables
+        let allData = [];
+        let table;
+
+        // Month order for sorting
+        const monthOrder = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        // Initialize the page
+        $(document).ready(function() {
+            // Initialize Select2
+            $('.select2').select2({
+                placeholder: "Select Treasury",
+                allowClear: true
+            });
+
+            // Load data from Google Sheets
+            loadDataFromGoogleSheets();
+
+            // View Report button click handler
+            $('#viewReport').click(function() {
+                generateReport();
+            });
+
+            // Set current year as default
+            const currentYear = new Date().getFullYear();
+            $('#fromYear').val(currentYear);
+            $('#toYear').val(currentYear);
+        });
+
+        // Function to load data from Google Sheets
+        function loadDataFromGoogleSheets() {
+            $('#loadingIndicator').show();
+            
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${SHEET_NAME}!${RANGE}?key=${API_KEY}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    $('#loadingIndicator').hide();
+                    
+                    if (data.values && data.values.length > 0) {
+                        // Process the data
+                        processSheetData(data.values);
+                    } else {
+                        alert('No data found.');
+                    }
+                })
+                .catch(error => {
+                    $('#loadingIndicator').hide();
+                    console.error('Error fetching data:', error);
+                    alert('Error fetching data. Please check the console for details.');
+                });
+        }
+
+        // Process the data from Google Sheets
+        function processSheetData(values) {
+            // Skip the header row
+            const headers = values[0];
+            const dataRows = values.slice(1);
+            
+            // Map headers to indices
+            const headerMap = {};
+            headers.forEach((header, index) => {
+                headerMap[header.trim()] = index;
+            });
+            
+            // Process each row and track the latest entry for each treasury-month-year combination
+            const dataMap = new Map();
+            
+            dataRows.forEach((row, rowIndex) => {
+                const month = row[headerMap["RBD Month"]] || '';
+                const year = row[headerMap["Year"]] || '';
+                const treasury = row[headerMap["Treasury Name"]] || '';
+                
+                // Skip if essential data is missing
+                if (!month || !year || !treasury) return;
+                
+                const key = `${treasury}-${month}-${year}`;
+                
+                // Create data object
+                const item = {
+                    month: month,
+                    year: year,
+                    treasury: treasury,
+                    difference: parseFloat(row[headerMap["Difference"]]) || 0,
+                    remarks: row[headerMap["Remark"]] || '',
+                    rowIndex: rowIndex, // Track original row order
+                    // Add a combined date field for sorting
+                    dateValue: getDateValue(year, month)
+                };
+                
+                // Always use the latest entry (highest row index) for each treasury-month-year
+                dataMap.set(key, item);
+            });
+            
+            // Convert map values to array
+            allData = Array.from(dataMap.values());
+            
+            // Sort data by date
+            allData.sort((a, b) => a.dateValue - b.dateValue);
+            
+            // Populate month dropdowns
+            populateMonthDropdowns();
+            
+            // Populate treasury dropdown
+            populateTreasuryDropdown();
+            
+            console.log(`Processed ${allData.length} unique treasury-month entries`);
+        }
+
+        // Get date value for sorting
+        function getDateValue(year, month) {
+            const monthIndex = monthOrder.indexOf(month);
+            return new Date(year, monthIndex).getTime();
+        }
+
+        // Populate month dropdowns with unique months from data in calendar order
+        function populateMonthDropdowns() {
+            const months = [...new Set(allData.map(item => item.month))];
+            
+            // Sort months in calendar order
+            months.sort((a, b) => monthOrder.indexOf(a) - monthOrder.indexOf(b));
+            
+            months.forEach(month => {
+                $('#fromMonth').append(`<option value="${month}">${month}</option>`);
+                $('#toMonth').append(`<option value="${month}">${month}</option>`);
+            });
+            
+            // Set default values (first and last month)
+            if (months.length > 0) {
+                $('#fromMonth').val(months[0]).trigger('change');
+                $('#toMonth').val(months[months.length - 1]).trigger('change');
+            }
+        }
+
+        // Populate treasury dropdown with unique treasuries from data
+        function populateTreasuryDropdown() {
+            const treasuries = [...new Set(allData.map(item => item.treasury))].sort();
+            
+            treasuries.forEach(treasury => {
+                $('#treasury').append(`<option value="${treasury}">${treasury}</option>`);
+            });
+        }
+
+        // Generate the report based on filters
+        function generateReport() {
+            const fromMonth = $('#fromMonth').val();
+            const fromYear = $('#fromYear').val();
+            const toMonth = $('#toMonth').val();
+            const toYear = $('#toYear').val();
+            const selectedTreasuries = $('#treasury').val();
+            
+            // Validate inputs
+            if (!fromMonth || !fromYear || !toMonth || !toYear) {
+                alert('Please select From Month, From Year, To Month, and To Year.');
+                return;
+            }
+            
+            // Convert filter dates to comparable values
+            const fromDateValue = getDateValue(fromYear, fromMonth);
+            const toDateValue = getDateValue(toYear, toMonth);
+            
+            if (fromDateValue > toDateValue) {
+                alert('From date cannot be after To date.');
+                return;
+            }
+            
+            // Filter data based on inputs
+            let filteredData = allData.filter(item => {
+                // Filter by date range
+                if (item.dateValue < fromDateValue || item.dateValue > toDateValue) return false;
+                
+                // Filter by treasury if selected
+                if (selectedTreasuries && selectedTreasuries.length > 0 && !selectedTreasuries.includes(item.treasury)) {
+                    return false;
+                }
+                
+                // Only include records with non-zero difference
+                return item.difference !== 0;
+            });
+            
+            // Display the data in the double column table
+            displayDoubleColumnTable(filteredData);
+        }
+
+        // Display the report in the double column table
+        function displayDoubleColumnTable(data) {
+            // Clear the table body
+            $('#doubleColumnTable tbody').empty();
+            
+            // Separate data into debit (negative) and credit (positive)
+            const debitData = data.filter(item => item.difference < 0);
+            const creditData = data.filter(item => item.difference > 0);
+            
+            // Sort both arrays by treasury and date
+            debitData.sort((a, b) => {
+                if (a.treasury !== b.treasury) {
+                    return a.treasury.localeCompare(b.treasury);
+                }
+                return a.dateValue - b.dateValue;
+            });
+            
+            creditData.sort((a, b) => {
+                if (a.treasury !== b.treasury) {
+                    return a.treasury.localeCompare(b.treasury);
+                }
+                return a.dateValue - b.dateValue;
+            });
+            
+            // Calculate totals
+            const totalDebit = Math.abs(debitData.reduce((sum, item) => sum + item.difference, 0));
+            const totalCredit = creditData.reduce((sum, item) => sum + item.difference, 0);
+            
+            // Determine the maximum number of rows needed
+            const maxRows = Math.max(debitData.length, creditData.length);
+            
+            // Populate the table
+            for (let i = 0; i < maxRows; i++) {
+                const row = $('<tr></tr>');
+                
+                // Debit column data
+                if (i < debitData.length) {
+                    const debitItem = debitData[i];
+                    row.append(`<td>${debitItem.treasury}</td>`);
+                    row.append(`<td>${debitItem.month}/${debitItem.year}</td>`);
+                    row.append(`<td class="debit-column">${Math.abs(debitItem.difference).toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}</td>`);
+                } else {
+                    row.append('<td></td><td></td><td></td>');
+                }
+                
+                // Credit column data
+                if (i < creditData.length) {
+                    const creditItem = creditData[i];
+                    row.append(`<td>${creditItem.treasury}</td>`);
+                    row.append(`<td>${creditItem.month}/${creditItem.year}</td>`);
+                    row.append(`<td class="credit-column">${creditItem.difference.toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}</td>`);
+                } else {
+                    row.append('<td></td><td></td><td></td>');
+                }
+                
+                $('#doubleColumnTable tbody').append(row);
+            }
+            
+            // Update totals and outstanding amount
+            $('#totalDebit').text(totalDebit.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }));
+            
+            $('#totalCredit').text(totalCredit.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }));
+            
+            // Calculate outstanding amount (difference between higher total and lower total)
+            const higherTotal = Math.max(totalDebit, totalCredit);
+            const lowerTotal = Math.min(totalDebit, totalCredit);
+            const outstandingAmount = higherTotal - lowerTotal;
+            
+            $('#outstandingAmount').text(`Outstanding Amount: ${outstandingAmount.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })}`);
+        }
+    </script>
+</body>
+</html>
