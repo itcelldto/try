@@ -32,7 +32,7 @@
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     
-       <link rel="stylesheet" href="./eadmin.css">
+    <link rel="stylesheet" href="./eadmin.css">
 
     <script>
         if ('serviceWorker' in navigator) {
@@ -71,6 +71,25 @@
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- CAPTCHA Section -->
+                    <div class="captcha-section mb-3">
+                        <div class="captcha-container">
+                            <div class="captcha-row">
+                                <div class="captcha-display">
+                                    <span id="captcha-text" class="captcha-text"></span>
+                                    <button type="button" id="refresh-captcha" class="btn btn-sm btn-link p-0 ml-2">
+                                        <i class="fas fa-redo-alt"></i>
+                                    </button>
+                                </div>
+                                <input type="text" class="form-control captcha-input" placeholder="Enter CAPTCHA" id="captcha-input" required maxlength="6">
+                            </div>
+                            <div class="captcha-error text-danger small mt-1" id="captcha-error" style="display: none;">
+                                Incorrect CAPTCHA. Please try again.
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="row">
                         <div class="col-12">
                             <button type="submit" class="btn btn-primary btn-block btn-flat" id="login-button">
@@ -164,11 +183,6 @@
 
         <!-- Content Wrapper. Contains page content -->
         <div class="content-wrapper">
-            <!-- Running Text Section 
-            <div class="running-text" style="background: #f4f4f4; border-bottom: 1px solid #ddd;">
-                <marquee id="news-reel" behavior="scroll" direction="left" scrollamount="5"></marquee>
-            </div>
-                 -->
             <!-- Main Content -->
             <section class="content">
                 <!-- Loading Spinner -->
