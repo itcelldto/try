@@ -1,4 +1,4 @@
-        /* Custom AdminLTE 3 Theme Overrides */
+/* Custom AdminLTE 3 Theme Overrides */
         :root {
             --primary: #0e56d1;
             --secondary: #6c757d;
@@ -297,6 +297,111 @@
         .wrapper {
             display: none;
         }
+        
+        /* CAPTCHA Styles */
+        .captcha-section {
+            
+            border-radius: 8px;
+           
+        }
+
+        .captcha-container {
+    text-align: center;
+}
+
+.captcha-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.captcha-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(45deg, #2c3e50, #34495e);
+    padding: 3px;
+    border-radius: 6px;
+    border: 2px solid #3498db;
+    min-width: 140px;
+    flex-shrink: 0;
+}
+
+.captcha-text {
+    font-family: 'Courier New', monospace;
+    font-size: 20px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #ecf0f1;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    user-select: none;
+    text-transform: uppercase;
+}
+
+#refresh-captcha {
+    color: #ecf0f1;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+#refresh-captcha:hover {
+    transform: rotate(90deg);
+    color: #3498db;
+}
+
+.captcha-input {
+    text-align: center;
+    font-weight: bold;
+    letter-spacing: 2px;
+    flex: 1;
+    min-width: 120px;
+    text-transform: uppercase; /* Force uppercase display */
+}
+
+.captcha-input::placeholder {
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: normal;
+}
+
+.captcha-error {
+    font-weight: bold;
+}
+
+/* Make CAPTCHA responsive */
+@media (max-width: 480px) {
+    .captcha-row {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .captcha-display {
+        min-width: 120px;
+        padding: 6px 10px;
+    }
+    
+    .captcha-text {
+        font-size: 18px;
+        letter-spacing: 1px;
+    }
+    
+    .captcha-input {
+        min-width: 100%;
+    }
+}
+
+@media (max-width: 360px) {
+    .captcha-text {
+        font-size: 16px;
+    }
+    
+    .captcha-display {
+        min-width: 110px;
+    }
+}
         
         /* Chatbot Css */
         .chat-icon {
