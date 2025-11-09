@@ -6,7 +6,8 @@
     <title>IT Cell HelpDesk - Mobile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
-     <!-- Link the manifest -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Link the manifest -->
     <link rel="manifest" href="/try/app-manifest.json">
     <style>
         :root {
@@ -269,7 +270,7 @@
         /* Apps Grid */
         .apps-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 15px;
         }
         
@@ -292,7 +293,7 @@
         .app-tile {
             background: white;
             border-radius: 15px;
-            padding: 20px 15px;
+            padding: 15px 10px; /* Reduced padding */
             text-align: center;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
@@ -329,23 +330,7 @@
             color: #333;
         }
         
-        .app-desc {
-            font-size: 0.75rem;
-            color: #666;
-        }
-        
-        .app-arrow {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            color: #999;
-            font-size: 0.8rem;
-            transition: transform 0.3s ease;
-        }
-        
-        .app-tile:hover .app-arrow {
-            transform: translateY(2px);
-        }
+        /* Removed app-desc and app-arrow styles */
         
         /* Submenu Popup */
         .submenu-popup {
@@ -450,7 +435,6 @@
             color: white;
             padding: 15px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
@@ -458,6 +442,7 @@
         .content-title {
             font-size: 1.2rem;
             font-weight: 600;
+            margin-left: 10px;
         }
         
         .content-close {
@@ -493,7 +478,7 @@
             width: 40px;
             height: 40px;
             border: 4px solid rgba(0, 0, 0, 0.1);
-            border-left-color: var(--primary);
+            border-left-color: #fafafa;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -685,7 +670,7 @@
             overflow: hidden;
         }
     </style>
-      <script>
+    <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/try/app-sw.js', { scope: '/try/' })
@@ -756,7 +741,7 @@
 
         <!-- Footer -->
         <footer class="app-footer">
-            <strong>IT Cell HelpDesk</strong> &copy; 2025 - Version 1.0
+           &copy; <strong>IT Cell HelpDesk</strong> 
         </footer>
     </div>
 
@@ -778,10 +763,10 @@
     <!-- Content Page -->
     <div class="content-page" id="content-page">
         <header class="content-header">
-            <div class="content-title" id="content-title">Content</div>
             <button class="content-close" id="content-close">
-                <i class="fas fa-times"></i>
+                <i class="fas fa-arrow-left"></i>
             </button>
+            <div class="content-title" id="content-title">Content</div>
         </header>
         <div class="content-area" id="content-area">
             <!-- Dynamic content will be loaded here -->
@@ -811,8 +796,10 @@
         
         // App State
         let currentApp = null;
+        let currentSubmenu = null;
         let menuData = [];
         let treasurySettings = [];
+        let appState = 'main'; // 'main', 'submenu', 'content'
         
         // DOM Elements
         const loginContainer = document.getElementById('login-container');
@@ -837,93 +824,198 @@
         const closePopup = document.getElementById('close-popup');
         const newsReel = document.getElementById('news-reel');
         
-        // Login Functionality
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const userId = document.getElementById('userid').value.trim();
-            const password = document.getElementById('password').value.trim();
-            
-            // Show loading state
-            loginButton.classList.add('loading');
-            loginButton.disabled = true;
-            const spinner = loginButton.querySelector('.loading-spinner');
-            spinner.style.display = 'inline-block';
-            loginError.style.display = 'none';
-            
-            // Fetch credentials from Google Sheets
-            const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
-            
-            fetch(settingsUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    treasurySettings = data.values || [];
-                    let loginSuccessful = false;
-                    let treasuryName = '';
-                    let userNameValue = '';
-                    let userRole = '';
-                    let menuSheetName = 'nav-links';
-                    
-                    // Check each row for matching credentials
-                    for (let i = 0; i < treasurySettings.length; i++) {
-                        const row = treasurySettings[i];
-                        if (row && row.length >= 3 && row[1] === userId && row[2] === password) {
-                            loginSuccessful = true;
-                            treasuryName = row[0] || 'Treasury'; // Treasury name
-                            userNameValue = row[1] || userId; // User Name
-                            userRole = row[3] || 'User'; // User Role
-                            menuSheetName = row[5] || 'nav-links'; // Menu sheet name
-                            break;
-                        }
-                    }
-                    
-                    if (loginSuccessful) {
-                        // Successful login
-                        loginContainer.style.display = 'none';
-                        appContainer.style.display = 'flex';
-                        
-                        // Update user info
-                        userName.textContent = userNameValue;
-                        
-                        // Store user information
-                        sessionStorage.setItem('treasuryName', treasuryName);
-                        sessionStorage.setItem('userName', userNameValue);
-                        sessionStorage.setItem('userRole', userRole);
-                        
-                        // Load apps and news
-                        loadApps(menuSheetName);
-                        loadNewsReel();
-                    } else {
-                        // Failed login
-                        loginError.style.display = 'block';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    // For demo purposes, allow login with any credentials
-                    if (userId && password) {
-                        loginContainer.style.display = 'none';
-                        appContainer.style.display = 'flex';
-                        userName.textContent = userId;
-                        loadApps('nav-links');
-                        loadNewsReel();
-                    } else {
-                        loginError.textContent = 'Error connecting to server. Please try again later.';
-                        loginError.style.display = 'block';
-                    }
-                })
-                .finally(() => {
-                    // Reset button state
-                    loginButton.classList.remove('loading');
-                    loginButton.disabled = false;
-                    spinner.style.display = 'none';
+        // Initialize the app
+        function initApp() {
+            // Check if we're returning to a content page
+            const state = history.state;
+            if (state && state.page === 'content') {
+                // We need to restore the content page
+                loginContainer.style.display = 'none';
+                appContainer.style.display = 'flex';
+                
+                // Load the apps first
+                loadApps(state.menuSheet || 'nav-links', function() {
+                    // Then restore the content
+                    restoreContentPage(state);
                 });
-        });
+            } else {
+                // Normal initialization
+                setupEventListeners();
+            }
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Login Functionality
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const userId = document.getElementById('userid').value.trim();
+                const password = document.getElementById('password').value.trim();
+                
+                // Show loading state
+                loginButton.classList.add('loading');
+                loginButton.disabled = true;
+                const spinner = loginButton.querySelector('.loading-spinner');
+                spinner.style.display = 'inline-block';
+                loginError.style.display = 'none';
+                
+                // Fetch credentials from Google Sheets
+                const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
+                
+                fetch(settingsUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        treasurySettings = data.values || [];
+                        let loginSuccessful = false;
+                        let treasuryName = '';
+                        let userNameValue = '';
+                        let userRole = '';
+                        let menuSheetName = 'nav-links';
+                        
+                        // Check each row for matching credentials
+                        for (let i = 0; i < treasurySettings.length; i++) {
+                            const row = treasurySettings[i];
+                            if (row && row.length >= 3 && row[1] === userId && row[2] === password) {
+                                loginSuccessful = true;
+                                treasuryName = row[0] || 'Treasury'; // Treasury name
+                                userNameValue = row[1] || userId; // User Name
+                                userRole = row[3] || 'User'; // User Role
+                                menuSheetName = row[5] || 'nav-links'; // Menu sheet name
+                                break;
+                            }
+                        }
+                        
+                        if (loginSuccessful) {
+                            // Successful login
+                            loginContainer.style.display = 'none';
+                            appContainer.style.display = 'flex';
+                            
+                            // Update user info
+                            userName.textContent = userNameValue;
+                            
+                            // Store user information
+                            sessionStorage.setItem('treasuryName', treasuryName);
+                            sessionStorage.setItem('userName', userNameValue);
+                            sessionStorage.setItem('userRole', userRole);
+                            
+                            // Add initial state to history
+                            history.replaceState({
+                                page: 'main',
+                                menuSheet: menuSheetName
+                            }, '', window.location.href);
+                            
+                            // Load apps and news
+                            loadApps(menuSheetName);
+                            loadNewsReel();
+                        } else {
+                            // Failed login
+                            loginError.style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // For demo purposes, allow login with any credentials
+                        if (userId && password) {
+                            loginContainer.style.display = 'none';
+                            appContainer.style.display = 'flex';
+                            userName.textContent = userId;
+                            
+                            // Add initial state to history
+                            history.replaceState({
+                                page: 'main',
+                                menuSheet: 'nav-links'
+                            }, '', window.location.href);
+                            
+                            loadApps('nav-links');
+                            loadNewsReel();
+                        } else {
+                            loginError.textContent = 'Error connecting to server. Please try again later.';
+                            loginError.style.display = 'block';
+                        }
+                    })
+                    .finally(() => {
+                        // Reset button state
+                        loginButton.classList.remove('loading');
+                        loginButton.disabled = false;
+                        spinner.style.display = 'none';
+                    });
+            });
+            
+            // Close Submenu
+            closeSubmenu.addEventListener('click', () => {
+                submenuPopup.style.display = 'none';
+                appState = 'main';
+                
+                // Update history
+                history.pushState({
+                    page: 'main'
+                }, '', window.location.href);
+            });
+            
+            // Close Content Page
+            contentClose.addEventListener('click', () => {
+                goBack();
+            });
+            
+            // Back Button
+            backBtn.addEventListener('click', () => {
+                goBack();
+            });
+            
+            // Handle browser back button
+            window.addEventListener('popstate', function(event) {
+                if (event.state) {
+                    if (event.state.page === 'main') {
+                        // Go back to main screen
+                        contentPage.classList.remove('active');
+                        submenuPopup.style.display = 'none';
+                        backBtn.style.display = 'none';
+                        appTitle.textContent = 'eAdmin';
+                        appState = 'main';
+                    } else if (event.state.page === 'submenu') {
+                        // Go back to submenu
+                        contentPage.classList.remove('active');
+                        submenuPopup.style.display = 'flex';
+                        backBtn.style.display = 'block';
+                        appTitle.textContent = event.state.menuName;
+                        appState = 'submenu';
+                        
+                        // Restore submenu
+                        if (event.state.menuName) {
+                            const menu = findMenuByName(event.state.menuName);
+                            if (menu) {
+                                openSubmenu(menu, false);
+                            }
+                        }
+                    } else if (event.state.page === 'content') {
+                        // Go back to content
+                        restoreContentPage(event.state);
+                    }
+                } else {
+                    // No state, go to main
+                    contentPage.classList.remove('active');
+                    submenuPopup.style.display = 'none';
+                    backBtn.style.display = 'none';
+                    appTitle.textContent = 'eAdmin';
+                    appState = 'main';
+                }
+            });
+            
+            // Chatbot Functionality
+            chatIcon.addEventListener('click', () => {
+                chatPopup.style.display = 'flex';
+            });
+            
+            closePopup.addEventListener('click', () => {
+                chatPopup.style.display = 'none';
+            });
+        }
         
         // Load News Reel
         function loadNewsReel() {
@@ -957,7 +1049,7 @@
         }
         
         // Load Apps from Google Sheets
-        function loadApps(menuSheetName) {
+        function loadApps(menuSheetName, callback) {
             const menuUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${menuSheetName}?key=${apiKey}`;
             
             fetch(menuUrl)
@@ -965,19 +1057,21 @@
                 .then(data => {
                     menuData = data.values || [];
                     renderApps();
+                    if (callback) callback();
                 })
                 .catch(error => {
                     console.error('Error loading menu:', error);
                     // Use demo data if API fails
                     menuData = [
-                        ['Main Menu', 'Sub Menu', 'Link', 'Content'],
-                        ['Dashboard', 'Overview', '/overview', '<div class="demo-content"><h3>Dashboard Overview</h3><p>Welcome to your IT HelpDesk dashboard.</p></div>'],
-                        ['Tickets', 'Create Ticket', '/create', '<div class="demo-content"><h3>Create New Ticket</h3><p>Submit a new support ticket here.</p></div>'],
-                        ['Tickets', 'View Tickets', '/view', '<div class="demo-content"><h3>My Tickets</h3><p>View and manage your support tickets.</p></div>'],
-                        ['Resources', 'Knowledge Base', '/kb', '<div class="demo-content"><h3>Knowledge Base</h3><p>Browse solutions to common problems.</p></div>'],
-                        ['Admin', 'User Management', '/users', '<div class="demo-content"><h3>User Management</h3><p>Manage user accounts and permissions.</p></div>']
+                        ['Main Menu', 'Sub Menu', 'Link', 'Content', 'Icon'],
+                        ['Dashboard', 'Overview', '/overview', '<div class="demo-content"><h3>Dashboard Overview</h3><p>Welcome to your IT HelpDesk dashboard.</p></div>', 'bi bi-speedometer2'],
+                        ['Tickets', 'Create Ticket', '/create', '<div class="demo-content"><h3>Create New Ticket</h3><p>Submit a new support ticket here.</p></div>', 'bi bi-ticket-perforated'],
+                        ['Tickets', 'View Tickets', '/view', '<div class="demo-content"><h3>My Tickets</h3><p>View and manage your support tickets.</p></div>', 'bi bi-ticket-perforated'],
+                        ['Resources', 'Knowledge Base', '/kb', '<div class="demo-content"><h3>Knowledge Base</h3><p>Browse solutions to common problems.</p></div>', 'bi bi-journal-bookmark'],
+                        ['Admin', 'User Management', '/users', '<div class="demo-content"><h3>User Management</h3><p>Manage user accounts and permissions.</p></div>', 'bi bi-people']
                     ];
                     renderApps();
+                    if (callback) callback();
                 });
         }
         
@@ -999,10 +1093,12 @@
                     const subMenu = row[1];
                     const subMenuLink = row[2];
                     const dynamicContent = row[3];
+                    const iconClass = row[4] || 'bi bi-folder'; // Default icon if none provided
                     
                     if (!mainMenus[mainMenu]) {
                         mainMenus[mainMenu] = {
                             name: mainMenu,
+                            icon: iconClass,
                             submenus: []
                         };
                     }
@@ -1023,22 +1119,14 @@
                 appTile.className = 'app-tile';
                 appTile.setAttribute('data-menu', menu.name);
                 
-                // Use different icons based on menu name
-                let iconClass = 'fas fa-folder';
-                if (menu.name.toLowerCase().includes('dashboard')) iconClass = 'fas fa-tachometer-alt';
-                else if (menu.name.toLowerCase().includes('ticket')) iconClass = 'fas fa-ticket-alt';
-                else if (menu.name.toLowerCase().includes('resource')) iconClass = 'fas fa-book';
-                else if (menu.name.toLowerCase().includes('admin')) iconClass = 'fas fa-cog';
-                else if (menu.name.toLowerCase().includes('help')) iconClass = 'fas fa-question-circle';
-                else if (menu.name.toLowerCase().includes('report')) iconClass = 'fas fa-chart-bar';
+                // Use the icon from the spreadsheet or fallback to default
+                const iconClass = menu.icon || 'bi bi-folder';
                 
                 appTile.innerHTML = `
                     <div class="app-icon">
                         <i class="${iconClass}"></i>
                     </div>
                     <div class="app-name">${menu.name}</div>
-                    <div class="app-desc">${menu.submenus.length} items</div>
-                    ${menu.submenus.length > 0 ? '<div class="app-arrow"><i class="fas fa-chevron-down"></i></div>' : ''}
                 `;
                 
                 appTile.addEventListener('click', () => {
@@ -1051,6 +1139,15 @@
                         contentPage.classList.add('active');
                         backBtn.style.display = 'block';
                         appTitle.textContent = menu.name;
+                        appState = 'content';
+                        
+                        // Add to history
+                        history.pushState({
+                            page: 'content',
+                            menuName: menu.name,
+                            submenuName: null,
+                            content: null
+                        }, '', window.location.href);
                         
                         // Simulate loading content
                         setTimeout(() => {
@@ -1074,8 +1171,42 @@
             }
         }
         
+        // Find menu by name
+        function findMenuByName(name) {
+            const mainMenus = {};
+            
+            // Group by main menu
+            menuData.slice(1).forEach(row => {
+                if (row && row.length >= 4) {
+                    const mainMenu = row[0];
+                    const subMenu = row[1];
+                    const subMenuLink = row[2];
+                    const dynamicContent = row[3];
+                    const iconClass = row[4] || 'bi bi-folder';
+                    
+                    if (!mainMenus[mainMenu]) {
+                        mainMenus[mainMenu] = {
+                            name: mainMenu,
+                            icon: iconClass,
+                            submenus: []
+                        };
+                    }
+                    
+                    if (subMenu && subMenuLink) {
+                        mainMenus[mainMenu].submenus.push({
+                            name: subMenu,
+                            link: subMenuLink,
+                            content: dynamicContent
+                        });
+                    }
+                }
+            });
+            
+            return mainMenus[name] || null;
+        }
+        
         // Open Submenu
-        function openSubmenu(menu) {
+        function openSubmenu(menu, addToHistory = true) {
             currentApp = menu;
             submenuTitle.textContent = menu.name;
             submenuItems.innerHTML = '';
@@ -1092,15 +1223,35 @@
             });
             
             submenuPopup.style.display = 'flex';
+            appState = 'submenu';
+            
+            if (addToHistory) {
+                // Add to history
+                history.pushState({
+                    page: 'submenu',
+                    menuName: menu.name
+                }, '', window.location.href);
+            }
         }
         
         // Load Content
         function loadContent(submenu) {
-            contentTitle.textContent = submenu.name;
+            currentSubmenu = submenu;
+            contentTitle.textContent = `${currentApp.name} / ${submenu.name}`;
             contentArea.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div></div>';
             contentPage.classList.add('active');
             backBtn.style.display = 'block';
-            appTitle.textContent = submenu.name;
+            appTitle.textContent = `${currentApp.name} / ${submenu.name}`;
+            appState = 'content';
+            
+            // Add to history
+            history.pushState({
+                page: 'content',
+                menuName: currentApp.name,
+                submenuName: submenu.name,
+                content: submenu.content,
+                link: submenu.link
+            }, '', window.location.href);
             
             // Simulate loading content
             setTimeout(() => {
@@ -1135,35 +1286,70 @@
             }, 1000);
         }
         
-        // Close Submenu
-        closeSubmenu.addEventListener('click', () => {
-            submenuPopup.style.display = 'none';
-        });
+        // Restore content page from history state
+        function restoreContentPage(state) {
+            currentApp = findMenuByName(state.menuName);
+            
+            if (currentApp && state.submenuName) {
+                // Find the submenu
+                const submenu = currentApp.submenus.find(s => s.name === state.submenuName);
+                if (submenu) {
+                    currentSubmenu = submenu;
+                    contentTitle.textContent = `${currentApp.name} / ${submenu.name}`;
+                    contentArea.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div></div>';
+                    contentPage.classList.add('active');
+                    backBtn.style.display = 'block';
+                    appTitle.textContent = `${currentApp.name} / ${submenu.name}`;
+                    appState = 'content';
+                    
+                    // Load content
+                    setTimeout(() => {
+                        if (submenu.content && submenu.content.startsWith('http')) {
+                            let srcUrl = submenu.content;
+                            const treasuryName = sessionStorage.getItem('treasuryName');
+                            if (treasuryName) {
+                                const urlObj = new URL(srcUrl, window.location.href);
+                                if (!urlObj.searchParams.has('treasury')) {
+                                    urlObj.searchParams.append('treasury', treasuryName);
+                                    srcUrl = urlObj.toString();
+                                }
+                            }
+                            
+                            contentArea.innerHTML = `
+                                <iframe src="${srcUrl}" style="width: 100%; height: 100%; border: none;"></iframe>
+                            `;
+                        } else if (submenu.content) {
+                            contentArea.innerHTML = submenu.content;
+                        } else {
+                            contentArea.innerHTML = `
+                                <div class="demo-content">
+                                    <h3>${submenu.name}</h3>
+                                    <p>This is the content for ${submenu.name}.</p>
+                                    <p>Content would be loaded from: ${submenu.link}</p>
+                                </div>
+                            `;
+                        }
+                    }, 500);
+                }
+            }
+        }
         
-        // Close Content Page
-        contentClose.addEventListener('click', () => {
-            contentPage.classList.remove('active');
-            backBtn.style.display = 'none';
-            appTitle.textContent = 'eAdmin';
-        });
-        
-        // Back Button
-        backBtn.addEventListener('click', () => {
-            if (contentPage.classList.contains('active')) {
-                contentPage.classList.remove('active');
+        // Go back function
+        function goBack() {
+            if (appState === 'content') {
+                // Go back to submenu or main
+                history.back();
+            } else if (appState === 'submenu') {
+                // Go back to main
+                submenuPopup.style.display = 'none';
                 backBtn.style.display = 'none';
                 appTitle.textContent = 'eAdmin';
+                appState = 'main';
+                
+                // Update history
+                history.back();
             }
-        });
-        
-        // Chatbot Functionality
-        chatIcon.addEventListener('click', () => {
-            chatPopup.style.display = 'flex';
-        });
-        
-        closePopup.addEventListener('click', () => {
-            chatPopup.style.display = 'none';
-        });
+        }
         
         // Forgot Password
         function openForgotPasswordPopup() {
@@ -1203,7 +1389,12 @@
             resetInactivityTimer();
         }
         
-        window.addEventListener('load', initInactivityTimer);
+        // Initialize the app when the page loads
+        window.addEventListener('load', function() {
+            initApp();
+            initInactivityTimer();
+        });
+        
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) {
                 resetInactivityTimer();
