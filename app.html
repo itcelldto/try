@@ -293,7 +293,7 @@
         .app-tile {
             background: white;
             border-radius: 15px;
-            padding: 20px 15px;
+            padding: 15px 10px; /* Reduced padding */
             text-align: center;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             transition: all 0.3s ease;
@@ -330,23 +330,7 @@
             color: #333;
         }
         
-        .app-desc {
-            font-size: 0.75rem;
-            color: #666;
-        }
-        
-        .app-arrow {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            color: #999;
-            font-size: 0.8rem;
-            transition: transform 0.3s ease;
-        }
-        
-        .app-tile:hover .app-arrow {
-            transform: translateY(2px);
-        }
+        /* Removed app-desc and app-arrow styles */
         
         /* Submenu Popup */
         .submenu-popup {
@@ -451,7 +435,6 @@
             color: white;
             padding: 15px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
@@ -459,6 +442,7 @@
         .content-title {
             font-size: 1.2rem;
             font-weight: 600;
+            margin-left: 10px;
         }
         
         .content-close {
@@ -779,10 +763,10 @@
     <!-- Content Page -->
     <div class="content-page" id="content-page">
         <header class="content-header">
-            <div class="content-title" id="content-title">Content</div>
             <button class="content-close" id="content-close">
-                <i class="fas fa-times"></i>
+                <i class="fas fa-arrow-left"></i>
             </button>
+            <div class="content-title" id="content-title">Content</div>
         </header>
         <div class="content-area" id="content-area">
             <!-- Dynamic content will be loaded here -->
@@ -812,8 +796,10 @@
         
         // App State
         let currentApp = null;
+        let currentSubmenu = null;
         let menuData = [];
         let treasurySettings = [];
+        let contentHistory = [];
         
         // DOM Elements
         const loginContainer = document.getElementById('login-container');
@@ -1034,8 +1020,6 @@
                         <i class="${iconClass}"></i>
                     </div>
                     <div class="app-name">${menu.name}</div>
-                    <div class="app-desc">${menu.submenus.length} items</div>
-                    ${menu.submenus.length > 0 ? '<div class="app-arrow"><i class="fas fa-chevron-down"></i></div>' : ''}
                 `;
                 
                 appTile.addEventListener('click', () => {
@@ -1048,6 +1032,12 @@
                         contentPage.classList.add('active');
                         backBtn.style.display = 'block';
                         appTitle.textContent = menu.name;
+                        
+                        // Add to history
+                        contentHistory.push({
+                            type: 'main',
+                            menu: menu
+                        });
                         
                         // Simulate loading content
                         setTimeout(() => {
@@ -1093,11 +1083,19 @@
         
         // Load Content
         function loadContent(submenu) {
-            contentTitle.textContent = submenu.name;
+            currentSubmenu = submenu;
+            contentTitle.textContent = `${currentApp.name} / ${submenu.name}`;
             contentArea.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div></div>';
             contentPage.classList.add('active');
             backBtn.style.display = 'block';
-            appTitle.textContent = submenu.name;
+            appTitle.textContent = `${currentApp.name} / ${submenu.name}`;
+            
+            // Add to history
+            contentHistory.push({
+                type: 'content',
+                menu: currentApp,
+                submenu: submenu
+            });
             
             // Simulate loading content
             setTimeout(() => {
@@ -1139,19 +1137,77 @@
         
         // Close Content Page
         contentClose.addEventListener('click', () => {
-            contentPage.classList.remove('active');
-            backBtn.style.display = 'none';
-            appTitle.textContent = 'eAdmin';
+            goBack();
         });
         
         // Back Button
         backBtn.addEventListener('click', () => {
-            if (contentPage.classList.contains('active')) {
-                contentPage.classList.remove('active');
-                backBtn.style.display = 'none';
-                appTitle.textContent = 'eAdmin';
-            }
+            goBack();
         });
+        
+        // Handle browser back button
+        window.addEventListener('popstate', function(event) {
+            goBack();
+        });
+        
+        // Go back function
+        function goBack() {
+            if (contentPage.classList.contains('active')) {
+                if (contentHistory.length > 1) {
+                    // Remove current state
+                    contentHistory.pop();
+                    
+                    // Get previous state
+                    const prevState = contentHistory[contentHistory.length - 1];
+                    
+                    if (prevState.type === 'main') {
+                        // Go back to main menu
+                        contentPage.classList.remove('active');
+                        backBtn.style.display = 'none';
+                        appTitle.textContent = 'eAdmin';
+                    } else if (prevState.type === 'content') {
+                        // Go back to previous content
+                        currentApp = prevState.menu;
+                        currentSubmenu = prevState.submenu;
+                        contentTitle.textContent = `${currentApp.name} / ${currentSubmenu.name}`;
+                        appTitle.textContent = `${currentApp.name} / ${currentSubmenu.name}`;
+                        
+                        // Reload content
+                        if (currentSubmenu.content && currentSubmenu.content.startsWith('http')) {
+                            let srcUrl = currentSubmenu.content;
+                            const treasuryName = sessionStorage.getItem('treasuryName');
+                            if (treasuryName) {
+                                const urlObj = new URL(srcUrl, window.location.href);
+                                if (!urlObj.searchParams.has('treasury')) {
+                                    urlObj.searchParams.append('treasury', treasuryName);
+                                    srcUrl = urlObj.toString();
+                                }
+                            }
+                            
+                            contentArea.innerHTML = `
+                                <iframe src="${srcUrl}" style="width: 100%; height: 100%; border: none;"></iframe>
+                            `;
+                        } else if (currentSubmenu.content) {
+                            contentArea.innerHTML = currentSubmenu.content;
+                        } else {
+                            contentArea.innerHTML = `
+                                <div class="demo-content">
+                                    <h3>${currentSubmenu.name}</h3>
+                                    <p>This is the content for ${currentSubmenu.name}.</p>
+                                    <p>Content would be loaded from: ${currentSubmenu.link}</p>
+                                </div>
+                            `;
+                        }
+                    }
+                } else {
+                    // No history, just close content page
+                    contentPage.classList.remove('active');
+                    backBtn.style.display = 'none';
+                    appTitle.textContent = 'eAdmin';
+                    contentHistory = [];
+                }
+            }
+        }
         
         // Chatbot Functionality
         chatIcon.addEventListener('click', () => {
