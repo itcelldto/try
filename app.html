@@ -741,7 +741,7 @@
 
         <!-- Footer -->
         <footer class="app-footer">
-           &copy;  <strong>IT Cell HelpDesk</strong>  
+           &copy; <strong>IT Cell HelpDesk</strong> 
         </footer>
     </div>
 
@@ -799,7 +799,7 @@
         let currentSubmenu = null;
         let menuData = [];
         let treasurySettings = [];
-        let contentHistory = [];
+        let appState = 'main'; // 'main', 'submenu', 'content'
         
         // DOM Elements
         const loginContainer = document.getElementById('login-container');
@@ -824,93 +824,198 @@
         const closePopup = document.getElementById('close-popup');
         const newsReel = document.getElementById('news-reel');
         
-        // Login Functionality
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const userId = document.getElementById('userid').value.trim();
-            const password = document.getElementById('password').value.trim();
-            
-            // Show loading state
-            loginButton.classList.add('loading');
-            loginButton.disabled = true;
-            const spinner = loginButton.querySelector('.loading-spinner');
-            spinner.style.display = 'inline-block';
-            loginError.style.display = 'none';
-            
-            // Fetch credentials from Google Sheets
-            const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
-            
-            fetch(settingsUrl)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    treasurySettings = data.values || [];
-                    let loginSuccessful = false;
-                    let treasuryName = '';
-                    let userNameValue = '';
-                    let userRole = '';
-                    let menuSheetName = 'nav-links';
-                    
-                    // Check each row for matching credentials
-                    for (let i = 0; i < treasurySettings.length; i++) {
-                        const row = treasurySettings[i];
-                        if (row && row.length >= 3 && row[1] === userId && row[2] === password) {
-                            loginSuccessful = true;
-                            treasuryName = row[0] || 'Treasury'; // Treasury name
-                            userNameValue = row[1] || userId; // User Name
-                            userRole = row[3] || 'User'; // User Role
-                            menuSheetName = row[5] || 'nav-links'; // Menu sheet name
-                            break;
-                        }
-                    }
-                    
-                    if (loginSuccessful) {
-                        // Successful login
-                        loginContainer.style.display = 'none';
-                        appContainer.style.display = 'flex';
-                        
-                        // Update user info
-                        userName.textContent = userNameValue;
-                        
-                        // Store user information
-                        sessionStorage.setItem('treasuryName', treasuryName);
-                        sessionStorage.setItem('userName', userNameValue);
-                        sessionStorage.setItem('userRole', userRole);
-                        
-                        // Load apps and news
-                        loadApps(menuSheetName);
-                        loadNewsReel();
-                    } else {
-                        // Failed login
-                        loginError.style.display = 'block';
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    // For demo purposes, allow login with any credentials
-                    if (userId && password) {
-                        loginContainer.style.display = 'none';
-                        appContainer.style.display = 'flex';
-                        userName.textContent = userId;
-                        loadApps('nav-links');
-                        loadNewsReel();
-                    } else {
-                        loginError.textContent = 'Error connecting to server. Please try again later.';
-                        loginError.style.display = 'block';
-                    }
-                })
-                .finally(() => {
-                    // Reset button state
-                    loginButton.classList.remove('loading');
-                    loginButton.disabled = false;
-                    spinner.style.display = 'none';
+        // Initialize the app
+        function initApp() {
+            // Check if we're returning to a content page
+            const state = history.state;
+            if (state && state.page === 'content') {
+                // We need to restore the content page
+                loginContainer.style.display = 'none';
+                appContainer.style.display = 'flex';
+                
+                // Load the apps first
+                loadApps(state.menuSheet || 'nav-links', function() {
+                    // Then restore the content
+                    restoreContentPage(state);
                 });
-        });
+            } else {
+                // Normal initialization
+                setupEventListeners();
+            }
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Login Functionality
+            loginForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const userId = document.getElementById('userid').value.trim();
+                const password = document.getElementById('password').value.trim();
+                
+                // Show loading state
+                loginButton.classList.add('loading');
+                loginButton.disabled = true;
+                const spinner = loginButton.querySelector('.loading-spinner');
+                spinner.style.display = 'inline-block';
+                loginError.style.display = 'none';
+                
+                // Fetch credentials from Google Sheets
+                const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
+                
+                fetch(settingsUrl)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        treasurySettings = data.values || [];
+                        let loginSuccessful = false;
+                        let treasuryName = '';
+                        let userNameValue = '';
+                        let userRole = '';
+                        let menuSheetName = 'nav-links';
+                        
+                        // Check each row for matching credentials
+                        for (let i = 0; i < treasurySettings.length; i++) {
+                            const row = treasurySettings[i];
+                            if (row && row.length >= 3 && row[1] === userId && row[2] === password) {
+                                loginSuccessful = true;
+                                treasuryName = row[0] || 'Treasury'; // Treasury name
+                                userNameValue = row[1] || userId; // User Name
+                                userRole = row[3] || 'User'; // User Role
+                                menuSheetName = row[5] || 'nav-links'; // Menu sheet name
+                                break;
+                            }
+                        }
+                        
+                        if (loginSuccessful) {
+                            // Successful login
+                            loginContainer.style.display = 'none';
+                            appContainer.style.display = 'flex';
+                            
+                            // Update user info
+                            userName.textContent = userNameValue;
+                            
+                            // Store user information
+                            sessionStorage.setItem('treasuryName', treasuryName);
+                            sessionStorage.setItem('userName', userNameValue);
+                            sessionStorage.setItem('userRole', userRole);
+                            
+                            // Add initial state to history
+                            history.replaceState({
+                                page: 'main',
+                                menuSheet: menuSheetName
+                            }, '', window.location.href);
+                            
+                            // Load apps and news
+                            loadApps(menuSheetName);
+                            loadNewsReel();
+                        } else {
+                            // Failed login
+                            loginError.style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        // For demo purposes, allow login with any credentials
+                        if (userId && password) {
+                            loginContainer.style.display = 'none';
+                            appContainer.style.display = 'flex';
+                            userName.textContent = userId;
+                            
+                            // Add initial state to history
+                            history.replaceState({
+                                page: 'main',
+                                menuSheet: 'nav-links'
+                            }, '', window.location.href);
+                            
+                            loadApps('nav-links');
+                            loadNewsReel();
+                        } else {
+                            loginError.textContent = 'Error connecting to server. Please try again later.';
+                            loginError.style.display = 'block';
+                        }
+                    })
+                    .finally(() => {
+                        // Reset button state
+                        loginButton.classList.remove('loading');
+                        loginButton.disabled = false;
+                        spinner.style.display = 'none';
+                    });
+            });
+            
+            // Close Submenu
+            closeSubmenu.addEventListener('click', () => {
+                submenuPopup.style.display = 'none';
+                appState = 'main';
+                
+                // Update history
+                history.pushState({
+                    page: 'main'
+                }, '', window.location.href);
+            });
+            
+            // Close Content Page
+            contentClose.addEventListener('click', () => {
+                goBack();
+            });
+            
+            // Back Button
+            backBtn.addEventListener('click', () => {
+                goBack();
+            });
+            
+            // Handle browser back button
+            window.addEventListener('popstate', function(event) {
+                if (event.state) {
+                    if (event.state.page === 'main') {
+                        // Go back to main screen
+                        contentPage.classList.remove('active');
+                        submenuPopup.style.display = 'none';
+                        backBtn.style.display = 'none';
+                        appTitle.textContent = 'eAdmin';
+                        appState = 'main';
+                    } else if (event.state.page === 'submenu') {
+                        // Go back to submenu
+                        contentPage.classList.remove('active');
+                        submenuPopup.style.display = 'flex';
+                        backBtn.style.display = 'block';
+                        appTitle.textContent = event.state.menuName;
+                        appState = 'submenu';
+                        
+                        // Restore submenu
+                        if (event.state.menuName) {
+                            const menu = findMenuByName(event.state.menuName);
+                            if (menu) {
+                                openSubmenu(menu, false);
+                            }
+                        }
+                    } else if (event.state.page === 'content') {
+                        // Go back to content
+                        restoreContentPage(event.state);
+                    }
+                } else {
+                    // No state, go to main
+                    contentPage.classList.remove('active');
+                    submenuPopup.style.display = 'none';
+                    backBtn.style.display = 'none';
+                    appTitle.textContent = 'eAdmin';
+                    appState = 'main';
+                }
+            });
+            
+            // Chatbot Functionality
+            chatIcon.addEventListener('click', () => {
+                chatPopup.style.display = 'flex';
+            });
+            
+            closePopup.addEventListener('click', () => {
+                chatPopup.style.display = 'none';
+            });
+        }
         
         // Load News Reel
         function loadNewsReel() {
@@ -944,7 +1049,7 @@
         }
         
         // Load Apps from Google Sheets
-        function loadApps(menuSheetName) {
+        function loadApps(menuSheetName, callback) {
             const menuUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${menuSheetName}?key=${apiKey}`;
             
             fetch(menuUrl)
@@ -952,6 +1057,7 @@
                 .then(data => {
                     menuData = data.values || [];
                     renderApps();
+                    if (callback) callback();
                 })
                 .catch(error => {
                     console.error('Error loading menu:', error);
@@ -965,6 +1071,7 @@
                         ['Admin', 'User Management', '/users', '<div class="demo-content"><h3>User Management</h3><p>Manage user accounts and permissions.</p></div>', 'bi bi-people']
                     ];
                     renderApps();
+                    if (callback) callback();
                 });
         }
         
@@ -1032,12 +1139,15 @@
                         contentPage.classList.add('active');
                         backBtn.style.display = 'block';
                         appTitle.textContent = menu.name;
+                        appState = 'content';
                         
                         // Add to history
-                        contentHistory.push({
-                            type: 'main',
-                            menu: menu
-                        });
+                        history.pushState({
+                            page: 'content',
+                            menuName: menu.name,
+                            submenuName: null,
+                            content: null
+                        }, '', window.location.href);
                         
                         // Simulate loading content
                         setTimeout(() => {
@@ -1061,8 +1171,42 @@
             }
         }
         
+        // Find menu by name
+        function findMenuByName(name) {
+            const mainMenus = {};
+            
+            // Group by main menu
+            menuData.slice(1).forEach(row => {
+                if (row && row.length >= 4) {
+                    const mainMenu = row[0];
+                    const subMenu = row[1];
+                    const subMenuLink = row[2];
+                    const dynamicContent = row[3];
+                    const iconClass = row[4] || 'bi bi-folder';
+                    
+                    if (!mainMenus[mainMenu]) {
+                        mainMenus[mainMenu] = {
+                            name: mainMenu,
+                            icon: iconClass,
+                            submenus: []
+                        };
+                    }
+                    
+                    if (subMenu && subMenuLink) {
+                        mainMenus[mainMenu].submenus.push({
+                            name: subMenu,
+                            link: subMenuLink,
+                            content: dynamicContent
+                        });
+                    }
+                }
+            });
+            
+            return mainMenus[name] || null;
+        }
+        
         // Open Submenu
-        function openSubmenu(menu) {
+        function openSubmenu(menu, addToHistory = true) {
             currentApp = menu;
             submenuTitle.textContent = menu.name;
             submenuItems.innerHTML = '';
@@ -1079,6 +1223,15 @@
             });
             
             submenuPopup.style.display = 'flex';
+            appState = 'submenu';
+            
+            if (addToHistory) {
+                // Add to history
+                history.pushState({
+                    page: 'submenu',
+                    menuName: menu.name
+                }, '', window.location.href);
+            }
         }
         
         // Load Content
@@ -1089,13 +1242,16 @@
             contentPage.classList.add('active');
             backBtn.style.display = 'block';
             appTitle.textContent = `${currentApp.name} / ${submenu.name}`;
+            appState = 'content';
             
             // Add to history
-            contentHistory.push({
-                type: 'content',
-                menu: currentApp,
-                submenu: submenu
-            });
+            history.pushState({
+                page: 'content',
+                menuName: currentApp.name,
+                submenuName: submenu.name,
+                content: submenu.content,
+                link: submenu.link
+            }, '', window.location.href);
             
             // Simulate loading content
             setTimeout(() => {
@@ -1130,51 +1286,26 @@
             }, 1000);
         }
         
-        // Close Submenu
-        closeSubmenu.addEventListener('click', () => {
-            submenuPopup.style.display = 'none';
-        });
-        
-        // Close Content Page
-        contentClose.addEventListener('click', () => {
-            goBack();
-        });
-        
-        // Back Button
-        backBtn.addEventListener('click', () => {
-            goBack();
-        });
-        
-        // Handle browser back button
-        window.addEventListener('popstate', function(event) {
-            goBack();
-        });
-        
-        // Go back function
-        function goBack() {
-            if (contentPage.classList.contains('active')) {
-                if (contentHistory.length > 1) {
-                    // Remove current state
-                    contentHistory.pop();
+        // Restore content page from history state
+        function restoreContentPage(state) {
+            currentApp = findMenuByName(state.menuName);
+            
+            if (currentApp && state.submenuName) {
+                // Find the submenu
+                const submenu = currentApp.submenus.find(s => s.name === state.submenuName);
+                if (submenu) {
+                    currentSubmenu = submenu;
+                    contentTitle.textContent = `${currentApp.name} / ${submenu.name}`;
+                    contentArea.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div></div>';
+                    contentPage.classList.add('active');
+                    backBtn.style.display = 'block';
+                    appTitle.textContent = `${currentApp.name} / ${submenu.name}`;
+                    appState = 'content';
                     
-                    // Get previous state
-                    const prevState = contentHistory[contentHistory.length - 1];
-                    
-                    if (prevState.type === 'main') {
-                        // Go back to main menu
-                        contentPage.classList.remove('active');
-                        backBtn.style.display = 'none';
-                        appTitle.textContent = 'eAdmin';
-                    } else if (prevState.type === 'content') {
-                        // Go back to previous content
-                        currentApp = prevState.menu;
-                        currentSubmenu = prevState.submenu;
-                        contentTitle.textContent = `${currentApp.name} / ${currentSubmenu.name}`;
-                        appTitle.textContent = `${currentApp.name} / ${currentSubmenu.name}`;
-                        
-                        // Reload content
-                        if (currentSubmenu.content && currentSubmenu.content.startsWith('http')) {
-                            let srcUrl = currentSubmenu.content;
+                    // Load content
+                    setTimeout(() => {
+                        if (submenu.content && submenu.content.startsWith('http')) {
+                            let srcUrl = submenu.content;
                             const treasuryName = sessionStorage.getItem('treasuryName');
                             if (treasuryName) {
                                 const urlObj = new URL(srcUrl, window.location.href);
@@ -1187,36 +1318,38 @@
                             contentArea.innerHTML = `
                                 <iframe src="${srcUrl}" style="width: 100%; height: 100%; border: none;"></iframe>
                             `;
-                        } else if (currentSubmenu.content) {
-                            contentArea.innerHTML = currentSubmenu.content;
+                        } else if (submenu.content) {
+                            contentArea.innerHTML = submenu.content;
                         } else {
                             contentArea.innerHTML = `
                                 <div class="demo-content">
-                                    <h3>${currentSubmenu.name}</h3>
-                                    <p>This is the content for ${currentSubmenu.name}.</p>
-                                    <p>Content would be loaded from: ${currentSubmenu.link}</p>
+                                    <h3>${submenu.name}</h3>
+                                    <p>This is the content for ${submenu.name}.</p>
+                                    <p>Content would be loaded from: ${submenu.link}</p>
                                 </div>
                             `;
                         }
-                    }
-                } else {
-                    // No history, just close content page
-                    contentPage.classList.remove('active');
-                    backBtn.style.display = 'none';
-                    appTitle.textContent = 'eAdmin';
-                    contentHistory = [];
+                    }, 500);
                 }
             }
         }
         
-        // Chatbot Functionality
-        chatIcon.addEventListener('click', () => {
-            chatPopup.style.display = 'flex';
-        });
-        
-        closePopup.addEventListener('click', () => {
-            chatPopup.style.display = 'none';
-        });
+        // Go back function
+        function goBack() {
+            if (appState === 'content') {
+                // Go back to submenu or main
+                history.back();
+            } else if (appState === 'submenu') {
+                // Go back to main
+                submenuPopup.style.display = 'none';
+                backBtn.style.display = 'none';
+                appTitle.textContent = 'eAdmin';
+                appState = 'main';
+                
+                // Update history
+                history.back();
+            }
+        }
         
         // Forgot Password
         function openForgotPasswordPopup() {
@@ -1256,7 +1389,12 @@
             resetInactivityTimer();
         }
         
-        window.addEventListener('load', initInactivityTimer);
+        // Initialize the app when the page loads
+        window.addEventListener('load', function() {
+            initApp();
+            initInactivityTimer();
+        });
+        
         document.addEventListener('visibilitychange', function() {
             if (!document.hidden) {
                 resetInactivityTimer();
