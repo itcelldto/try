@@ -6,6 +6,8 @@
     <title>IT Cell HelpDesk - Mobile</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+     <!-- Link the manifest -->
+    <link rel="manifest" href="/try/app-manifest.json">
     <style>
         :root {
             --primary: #0e56d1;
@@ -683,6 +685,15 @@
             overflow: hidden;
         }
     </style>
+      <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/try/app-sw.js', { scope: '/try/' })
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Registration failed:', err));
+            });
+        }
+    </script>
 </head>
 <body>
     <!-- Login Page -->
