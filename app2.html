@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Cell HelpDesk - Mobile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Link the manifest -->
+    <link rel="manifest" href="/try/app-manifest.json">
+    <style>
+        :root {
+            --primary: #0e56d1;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --info: #17a2b8;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            background-color: #06002c;
+            background-image: linear-gradient(135deg, #06002c 0%, #1a237e 100%);
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+        
+        /* Login Page Styles */
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            z-index: 0;
+        }
+        
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--glass-shadow);
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            color: white;
+            position: relative;
+            z-index: 1;
+            transition: transform 0.3s ease;
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .app-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .app-logo h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: white;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        .app-logo h2 {
+            font-size: 1.2rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .login-form .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-with-icon {
+            position: relative;
+        }
+        
+        .input-with-icon i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .input-with-icon input {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .input-with-icon input:focus {
+            outline: none;
+            border-color: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+        }
+        
+        .input-with-icon input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(14, 86, 209, 0.3);
+        }
+        
+        .login-btn:hover {
+            background: #0a46b0;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(14, 86, 209, 0.4);
+        }
+        
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        
+        .login-btn.loading {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+        
+        .forgot-password {
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .forgot-password a {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+        
+        .forgot-password a:hover {
+            color: white;
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            color: #ff6b6b;
+            text-align: center;
+            margin-top: 15px;
+            display: none;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            border-left: 3px solid #ff6b6b;
+        }
+        
+        /* Main App Styles */
+        .app-container {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #f5f5f5;
+        }
+        
+        /* Header Styles */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #1a73e8 100%);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .app-header .back-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+        
+        .app-header .back-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .app-header .app-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .app-header .user-menu {
+            display: flex;
+            align-items: center;
+        }
+        
+        .app-header .user-menu img {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            margin-right: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Main Content Area */
+        .main-content {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        /* Apps Grid */
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        @media (min-width: 480px) {
+            .apps-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (min-width: 768px) {
+            .apps-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 20px;
+                padding: 20px;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+        }
+        
+        .app-tile {
+            background: white;
+            border-radius: 15px;
+            padding: 20px 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .app-tile::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary) 0%, #1a73e8 100%);
+        }
+        
+        .app-tile:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .app-icon {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .app-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .app-desc {
+            font-size: 0.75rem;
+            color: #666;
+        }
+        
+        .app-arrow {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            color: #999;
+            font-size: 0.8rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .app-tile:hover .app-arrow {
+            transform: translateY(2px);
+        }
+        
+        /* Submenu Popup */
+        .submenu-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .submenu-content {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            animation: slideUp 0.3s ease;
+        }
+        
+        .submenu-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .submenu-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .close-submenu {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #999;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+        
+        .close-submenu:hover {
+            background: #f5f5f5;
+        }
+        
+        .submenu-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .submenu-item {
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .submenu-item:hover {
+            background: #e9ecef;
+            border-left: 3px solid var(--primary);
+            transform: translateX(5px);
+        }
+        
+        /* Content Page */
+        .content-page {
+            position: fixed;
+            top: 0;
+            left: 100%;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 200;
+            transition: left 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .content-page.active {
+            left: 0;
+        }
+        
+        .content-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #1a73e8 100%);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .content-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .content-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+        
+        .content-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            
+        }
+        
+        /* Loading Spinner */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Footer */
+        .app-footer {
+            background: #f8f9fa;
+            padding: 15px;
+            text-align: center;
+            border-top: 1px solid #dee2e6;
+            font-size: 0.8rem;
+            color: #6c757d;
+        }
+        
+        /* Chatbot */
+        .chat-icon {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+        
+        .chat-icon:hover {
+            background: #0a46b0;
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .chat-popup {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 300px;
+            height: 400px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideUp 0.3s ease;
+        }
+        
+        .popup-header {
+            background: var(--primary);
+            color: white;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .popup-header h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .close-btn:hover {
+            transform: rotate(90deg);
+        }
+        
+        .popup-iframe {
+            flex: 1;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 350px) {
+            .apps-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .glass-card {
+                padding: 20px;
+            }
+        }
+        
+        /* Demo Content Styles */
+        .demo-content {
+            padding: 20px;
+        }
+        
+        .demo-content h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        .demo-content p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .demo-content ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .demo-content li {
+            margin-bottom: 8px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        /* Running Text */
+        .running-text {
+            background: #f8f9fa;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+        
+        #news-reel {
+            font-weight: normal;
+            color: #333;
+            white-space: nowrap;
+            display: block;
+            width: 100%;
+            overflow: hidden;
+        }
+    </style>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/try/app-sw.js', { scope: '/try/' })
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Registration failed:', err));
+            });
+        }
+    </script>
+</head>
+<body>
+    <!-- Login Page -->
+    <div class="login-container" id="login-container">
+        <div class="glass-card">
+            <div class="app-logo">
+                <h1>IT Cell HelpDesk</h1>
+                <h2>eAdmin</h2>
+            </div>
+            <form class="login-form" id="login-form">
+                <div class="form-group">
+                    <div class="input-with-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" placeholder="User ID" id="userid" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="input-with-icon">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" placeholder="Password" id="password" required>
+                    </div>
+                </div>
+                <button type="submit" class="login-btn" id="login-button">
+                    <span class="button-text">Sign In</span>
+                    <span class="loading-spinner" style="display: none; margin-left: 10px;"></span>
+                </button>
+                <div class="error-message" id="login-error">Invalid User ID or Password</div>
+            </form>
+            <div class="forgot-password">
+                <a href="javascript:void(0)" onclick="openForgotPasswordPopup()">Forgot Password?</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app-container" id="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <button class="back-btn" id="back-btn">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <div class="app-title" id="app-title">eAdmin</div>
+            <div class="user-menu">
+                <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2ZmZiI+PHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgM2MzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA2LTZ6bTAgMTdjLTIuNjcgMC04IDEuMzQtOCA0aDE2YzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==" alt="User">
+                <span id="user-name">User</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content" id="main-content">
+            <!-- Running Text Section -->
+            <div class="running-text">
+                <marquee id="news-reel" behavior="scroll" direction="left" scrollamount="3">Loading news...</marquee>
+            </div>
+
+            <div class="apps-grid" id="apps-grid">
+                <!-- Apps will be dynamically populated here -->
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <strong>IT Cell HelpDesk</strong> &copy; 2025 - Version 1.0
+        </footer>
+    </div>
+
+    <!-- Submenu Popup -->
+    <div class="submenu-popup" id="submenu-popup">
+        <div class="submenu-content">
+            <div class="submenu-header">
+                <div class="submenu-title" id="submenu-title">Menu</div>
+                <button class="close-submenu" id="close-submenu">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="submenu-items" id="submenu-items">
+                <!-- Submenu items will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Page -->
+    <div class="content-page" id="content-page">
+        <header class="content-header">
+            <div class="content-title" id="content-title">Content</div>
+            <button class="content-close" id="content-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </header>
+        <div class="content-area" id="content-area">
+            <!-- Dynamic content will be loaded here -->
+        </div>
+    </div>
+
+    <!-- Chatbot -->
+    <div class="chat-icon" id="chat-icon">
+        <i class="fas fa-comment"></i>
+    </div>
+
+    <div class="chat-popup" id="chat-popup">
+        <div class="popup-header">
+            <h3>eAdmin Support</h3>
+            <button class="close-btn" id="close-popup">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <iframe src="https://itcelltreasury.github.io/try/chat/e-chatplus.html" class="popup-iframe" id="chat-iframe"></iframe>
+    </div>
+
+    <script>
+        // API Configuration
+        const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+        const sheetId = '11wvVQ2G41ke3g6RdfYX8AJAl0w-fnf2NQ_Agufz0wXY';
+        const settingsSheetName = 'settings';
+        
+        // App State
+        let currentApp = null;
+        let menuData = [];
+        let treasurySettings = [];
+        
+        // DOM Elements
+        const loginContainer = document.getElementById('login-container');
+        const appContainer = document.getElementById('app-container');
+        const loginForm = document.getElementById('login-form');
+        const loginButton = document.getElementById('login-button');
+        const loginError = document.getElementById('login-error');
+        const appsGrid = document.getElementById('apps-grid');
+        const submenuPopup = document.getElementById('submenu-popup');
+        const submenuItems = document.getElementById('submenu-items');
+        const submenuTitle = document.getElementById('submenu-title');
+        const closeSubmenu = document.getElementById('close-submenu');
+        const contentPage = document.getElementById('content-page');
+        const contentArea = document.getElementById('content-area');
+        const contentTitle = document.getElementById('content-title');
+        const contentClose = document.getElementById('content-close');
+        const backBtn = document.getElementById('back-btn');
+        const appTitle = document.getElementById('app-title');
+        const userName = document.getElementById('user-name');
+        const chatIcon = document.getElementById('chat-icon');
+        const chatPopup = document.getElementById('chat-popup');
+        const closePopup = document.getElementById('close-popup');
+        const newsReel = document.getElementById('news-reel');
+        
+        // Login Functionality
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userId = document.getElementById('userid').value.trim();
+            const password = document.getElementById('password').value.trim();
+            
+            // Show loading state
+            loginButton.classList.add('loading');
+            loginButton.disabled = true;
+            const spinner = loginButton.querySelector('.loading-spinner');
+            spinner.style.display = 'inline-block';
+            loginError.style.display = 'none';
+            
+            // Fetch credentials from Google Sheets
+            const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
+            
+            fetch(settingsUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    treasurySettings = data.values || [];
+                    let loginSuccessful = false;
+                    let treasuryName = '';
+                    let userNameValue = '';
+                    let userRole = '';
+                    let menuSheetName = 'nav-links';
+                    
+                    // Check each row for matching credentials
+                    for (let i = 0; i < treasurySettings.length; i++) {
+                        const row = treasurySettings[i];
+                        if (row && row.length >= 3 && row[1] === userId && row[2] === password) {
+                            loginSuccessful = true;
+                            treasuryName = row[0] || 'Treasury'; // Treasury name
+                            userNameValue = row[1] || userId; // User Name
+                            userRole = row[3] || 'User'; // User Role
+                            menuSheetName = row[5] || 'nav-links'; // Menu sheet name
+                            break;
+                        }
+                    }
+                    
+                    if (loginSuccessful) {
+                        // Successful login
+                        loginContainer.style.display = 'none';
+                        appContainer.style.display = 'flex';
+                        
+                        // Update user info
+                        userName.textContent = userNameValue;
+                        
+                        // Store user information
+                        sessionStorage.setItem('treasuryName', treasuryName);
+                        sessionStorage.setItem('userName', userNameValue);
+                        sessionStorage.setItem('userRole', userRole);
+                        
+                        // Load apps and news
+                        loadApps(menuSheetName);
+                        loadNewsReel();
+                    } else {
+                        // Failed login
+                        loginError.style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    // For demo purposes, allow login with any credentials
+                    if (userId && password) {
+                        loginContainer.style.display = 'none';
+                        appContainer.style.display = 'flex';
+                        userName.textContent = userId;
+                        loadApps('nav-links');
+                        loadNewsReel();
+                    } else {
+                        loginError.textContent = 'Error connecting to server. Please try again later.';
+                        loginError.style.display = 'block';
+                    }
+                })
+                .finally(() => {
+                    // Reset button state
+                    loginButton.classList.remove('loading');
+                    loginButton.disabled = false;
+                    spinner.style.display = 'none';
+                });
+        });
+        
+        // Load News Reel
+        function loadNewsReel() {
+            const reelSheetName = 'Scroll-reel';
+            const reelUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${reelSheetName}?key=${apiKey}`;
+            
+            fetch(reelUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const rows = data.values;
+                    let runningText = '';
+
+                    if (rows && rows.length > 1) {
+                        // Combine all text from column A2:A into a single string
+                        rows.slice(1).forEach(row => {
+                            if (row[0]) {
+                                runningText += row[0] + ' • '; // Add a separator between items
+                            }
+                        });
+                    } else {
+                        runningText = 'Welcome to IT Cell HelpDesk - Your one-stop solution for IT support';
+                    }
+
+                    // Set the running text content
+                    newsReel.textContent = runningText;
+                })
+                .catch(error => {
+                    console.error('Error loading news:', error);
+                    newsReel.textContent = 'Welcome to IT Cell HelpDesk - Stay connected with latest updates';
+                });
+        }
+        
+        // Load Apps from Google Sheets
+        function loadApps(menuSheetName) {
+            const menuUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${menuSheetName}?key=${apiKey}`;
+            
+            fetch(menuUrl)
+                .then(response => response.json())
+                .then(data => {
+                    menuData = data.values || [];
+                    renderApps();
+                })
+                .catch(error => {
+                    console.error('Error loading menu:', error);
+                    // Use demo data if API fails
+                    menuData = [
+                        ['Main Menu', 'Sub Menu', 'Link', 'Content', 'Icon'],
+                        ['Dashboard', 'Overview', '/overview', '<div class="demo-content"><h3>Dashboard Overview</h3><p>Welcome to your IT HelpDesk dashboard.</p></div>', 'bi bi-speedometer2'],
+                        ['Tickets', 'Create Ticket', '/create', '<div class="demo-content"><h3>Create New Ticket</h3><p>Submit a new support ticket here.</p></div>', 'bi bi-ticket-perforated'],
+                        ['Tickets', 'View Tickets', '/view', '<div class="demo-content"><h3>My Tickets</h3><p>View and manage your support tickets.</p></div>', 'bi bi-ticket-perforated'],
+                        ['Resources', 'Knowledge Base', '/kb', '<div class="demo-content"><h3>Knowledge Base</h3><p>Browse solutions to common problems.</p></div>', 'bi bi-journal-bookmark'],
+                        ['Admin', 'User Management', '/users', '<div class="demo-content"><h3>User Management</h3><p>Manage user accounts and permissions.</p></div>', 'bi bi-people']
+                    ];
+                    renderApps();
+                });
+        }
+        
+        // Render Apps as Tiles
+        function renderApps() {
+            appsGrid.innerHTML = '';
+            
+            if (!menuData || menuData.length < 2) {
+                appsGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px;">No apps available.</div>';
+                return;
+            }
+            
+            const mainMenus = {};
+            
+            // Group by main menu
+            menuData.slice(1).forEach(row => {
+                if (row && row.length >= 4) {
+                    const mainMenu = row[0];
+                    const subMenu = row[1];
+                    const subMenuLink = row[2];
+                    const dynamicContent = row[3];
+                    const iconClass = row[4] || 'bi bi-folder'; // Default icon if none provided
+                    
+                    if (!mainMenus[mainMenu]) {
+                        mainMenus[mainMenu] = {
+                            name: mainMenu,
+                            icon: iconClass,
+                            submenus: []
+                        };
+                    }
+                    
+                    if (subMenu && subMenuLink) {
+                        mainMenus[mainMenu].submenus.push({
+                            name: subMenu,
+                            link: subMenuLink,
+                            content: dynamicContent
+                        });
+                    }
+                }
+            });
+            
+            // Create app tiles
+            Object.values(mainMenus).forEach(menu => {
+                const appTile = document.createElement('div');
+                appTile.className = 'app-tile';
+                appTile.setAttribute('data-menu', menu.name);
+                
+                // Use the icon from the spreadsheet or fallback to default
+                const iconClass = menu.icon || 'bi bi-folder';
+                
+                appTile.innerHTML = `
+                    <div class="app-icon">
+                        <i class="${iconClass}"></i>
+                    </div>
+                    <div class="app-name">${menu.name}</div>
+                    <div class="app-desc">${menu.submenus.length} items</div>
+                    ${menu.submenus.length > 0 ? '<div class="app-arrow"><i class="fas fa-chevron-down"></i></div>' : ''}
+                `;
+                
+                appTile.addEventListener('click', () => {
+                    if (menu.submenus.length > 0) {
+                        openSubmenu(menu);
+                    } else {
+                        // If no submenus, show a message
+                        contentTitle.textContent = menu.name;
+                        contentArea.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div></div>';
+                        contentPage.classList.add('active');
+                        backBtn.style.display = 'block';
+                        appTitle.textContent = menu.name;
+                        
+                        // Simulate loading content
+                        setTimeout(() => {
+                            contentArea.innerHTML = `
+                                <div style="text-align: center; padding: 40px 20px;">
+                                    <i class="fas fa-info-circle" style="font-size: 3rem; color: #6c757d; margin-bottom: 20px;"></i>
+                                    <h3>No Content Available</h3>
+                                    <p>This app doesn't have any content yet.</p>
+                                </div>
+                            `;
+                        }, 1000);
+                    }
+                });
+                
+                appsGrid.appendChild(appTile);
+            });
+            
+            // If no apps were created, show a message
+            if (Object.keys(mainMenus).length === 0) {
+                appsGrid.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px;">No menu items found in the spreadsheet.</div>';
+            }
+        }
+        
+        // Open Submenu
+        function openSubmenu(menu) {
+            currentApp = menu;
+            submenuTitle.textContent = menu.name;
+            submenuItems.innerHTML = '';
+            
+            menu.submenus.forEach(submenu => {
+                const item = document.createElement('div');
+                item.className = 'submenu-item';
+                item.textContent = submenu.name;
+                item.addEventListener('click', () => {
+                    loadContent(submenu);
+                    submenuPopup.style.display = 'none';
+                });
+                submenuItems.appendChild(item);
+            });
+            
+            submenuPopup.style.display = 'flex';
+        }
+        
+        // Load Content
+        function loadContent(submenu) {
+            contentTitle.textContent = submenu.name;
+            contentArea.innerHTML = '<div class="loading-container"><div class="loading-spinner"></div></div>';
+            contentPage.classList.add('active');
+            backBtn.style.display = 'block';
+            appTitle.textContent = submenu.name;
+            
+            // Simulate loading content
+            setTimeout(() => {
+                if (submenu.content && submenu.content.startsWith('http')) {
+                    // If content is a URL, create an iframe
+                    let srcUrl = submenu.content;
+                    
+                    // Append treasury name as query parameter if it's not already there
+                    const treasuryName = sessionStorage.getItem('treasuryName');
+                    if (treasuryName) {
+                        const urlObj = new URL(srcUrl, window.location.href);
+                        if (!urlObj.searchParams.has('treasury')) {
+                            urlObj.searchParams.append('treasury', treasuryName);
+                            srcUrl = urlObj.toString();
+                        }
+                    }
+                    
+                    contentArea.innerHTML = `
+                        <iframe src="${srcUrl}" style="width: 100%; height: 100%; border: none;"></iframe>
+                    `;
+                } else if (submenu.content) {
+                    contentArea.innerHTML = submenu.content;
+                } else {
+                    contentArea.innerHTML = `
+                        <div class="demo-content">
+                            <h3>${submenu.name}</h3>
+                            <p>This is the content for ${submenu.name}.</p>
+                            <p>Content would be loaded from: ${submenu.link}</p>
+                        </div>
+                    `;
+                }
+            }, 1000);
+        }
+        
+        // Close Submenu
+        closeSubmenu.addEventListener('click', () => {
+            submenuPopup.style.display = 'none';
+        });
+        
+        // Close Content Page
+        contentClose.addEventListener('click', () => {
+            contentPage.classList.remove('active');
+            backBtn.style.display = 'none';
+            appTitle.textContent = 'eAdmin';
+        });
+        
+        // Back Button
+        backBtn.addEventListener('click', () => {
+            if (contentPage.classList.contains('active')) {
+                contentPage.classList.remove('active');
+                backBtn.style.display = 'none';
+                appTitle.textContent = 'eAdmin';
+            }
+        });
+        
+        // Chatbot Functionality
+        chatIcon.addEventListener('click', () => {
+            chatPopup.style.display = 'flex';
+        });
+        
+        closePopup.addEventListener('click', () => {
+            chatPopup.style.display = 'none';
+        });
+        
+        // Forgot Password
+        function openForgotPasswordPopup() {
+            const width = 600;
+            const height = 500;
+            const left = (screen.width - width) / 2;
+            const top = (screen.height - height) / 2;
+            
+            window.open(
+                'https://script.google.com/macros/s/AKfycbztfDzKffRaQXd5-_JyYGr_I26_7cXbmCApixAxv6ps/dev',
+                'ForgotPasswordPopup',
+                `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes,toolbar=no,location=no`
+            );
+        }
+        
+        // Inactivity Timer (15 minutes)
+        const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
+        let inactivityTimer;
+        
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => {
+                window.location.reload(true);
+            }, INACTIVITY_TIMEOUT);
+        }
+        
+        function setupActivityListeners() {
+            document.addEventListener('mousemove', resetInactivityTimer);
+            document.addEventListener('click', resetInactivityTimer);
+            document.addEventListener('keydown', resetInactivityTimer);
+            document.addEventListener('touchstart', resetInactivityTimer);
+            document.addEventListener('touchmove', resetInactivityTimer);
+        }
+        
+        function initInactivityTimer() {
+            setupActivityListeners();
+            resetInactivityTimer();
+        }
+        
+        window.addEventListener('load', initInactivityTimer);
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                resetInactivityTimer();
+            }
+        });
+    </script>
+</body>
+</html>
