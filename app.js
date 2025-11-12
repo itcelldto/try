@@ -555,7 +555,7 @@ function startBackgroundNotificationCheck() {
     checkAndUpdateNotifications();
     
     // Then check every 30 seconds
-    setInterval(checkAndUpdateNotifications, 30000);
+    setInterval(checkAndUpdateNotifications, 15000);
 }
 
 // Notification check function
