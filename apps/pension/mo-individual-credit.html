@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Money Order Pension Credit Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            padding-top: 20px;
+        }
+        
+        .card {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline-secondary {
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+        }
+        
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .table th {
+            padding: 15px;
+            font-weight: 600;
+        }
+        
+        .table td {
+            padding: 12px 15px;
+            vertical-align: middle;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            padding: 15px 20px;
+        }
+        
+        .total-amount {
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .filter-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .table-container {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="min-width:100%;">
+        <div class="filter-section">
+            <h3><i class="fas fa-file-invoice-dollar me-2"></i>Money Order Pension- Individual Credit Report</h3>
+            <hr>
+            <div class="row">
+                <div class="col-md-2">
+                    <div class="mb-2">
+                        <label for="trCode" class="form-label">Treasury Code</label>
+                        <input type="text" class="form-control" id="trCode" placeholder="Enter treasury code">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-2">
+                        <label for="pensionType" class="form-label">Pension Type</label>
+                        <input type="text" class="form-control" id="pensionType" placeholder="Pension type">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-2">
+                        <label for="pensionCode" class="form-label">Code</label>
+                        <input type="text" class="form-control" id="pensionCode" placeholder="Pension code">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-2">
+                        <label for="period" class="form-label">Month (MM/YYYY)</label>
+                        <input type="text" class="form-control" id="period" placeholder="e.g., 12/2024">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-2">
+                        <label for="creditType" class="form-label">Credit Type</label>
+                        <select class="form-select" id="creditType">
+                            <option value="">All Credit Types</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2 text-center">
+                    <button id="fetchData" class="btn btn-primary me-2" style="margin-top:30px;"><i class="fas fa-sync-alt me-2"></i>View</button>
+                    <button id="clearFilters" class="btn btn-outline-secondary" style="margin-top:30px;"><i class="fas fa-times me-2"></i>Clear</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="loading" id="loadingIndicator">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Fetching data ...</p>
+        </div>
+        
+        <div class="alert alert-warning d-none" id="noDataAlert">
+            <i class="fas fa-exclamation-triangle me-2"></i>No data found for the selected criteria.
+        </div>
+        
+        <div class="table-container" id="tableContainer">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sl.No</th>
+                                    <th>Period</th>
+                                    <th>Credit Type</th>
+                                    <th>Remitter Reference</th>
+                                    <th>Pensioner Name</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTable">
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="total-amount text-center" id="totalAmount">Total: 0.00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_KEY = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+        const SPREADSHEET_ID = '1HOo8P4sAWp0N63Xfi8Fcna0zU2euo8_a5h3kSaOvJcI';
+        const SHEET_NAME = 'IndividualDetails';
+        const RANGE = 'A:F';
+        
+        // DOM Elements
+        const trCodeInput = document.getElementById('trCode');
+        const pensionTypeInput = document.getElementById('pensionType');
+        const pensionCodeInput = document.getElementById('pensionCode');
+        const periodInput = document.getElementById('period');
+        const creditTypeSelect = document.getElementById('creditType');
+        const fetchDataBtn = document.getElementById('fetchData');
+        const clearFiltersBtn = document.getElementById('clearFilters');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const noDataAlert = document.getElementById('noDataAlert');
+        const dataTable = document.getElementById('dataTable');
+        const totalAmountSpan = document.getElementById('totalAmount');
+        const tableContainer = document.getElementById('tableContainer');
+        
+        // Global data storage
+        let allData = [];
+        let creditTypes = [];
+        
+        // Initialize the application - Load credit types on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load credit types when page initializes
+            loadCreditTypes();
+            
+            // Add event listeners
+            fetchDataBtn.addEventListener('click', fetchDataFromSheet);
+            clearFiltersBtn.addEventListener('click', clearFilters);
+        });
+        
+        // Load credit types from Google Sheets
+        async function loadCreditTypes() {
+            showLoading(true);
+            
+            try {
+                // Construct the URL for the Google Sheets API
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!${RANGE}?key=${API_KEY}`;
+                
+                // Fetch data from Google Sheets
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.values && data.values.length > 0) {
+                    // Process the data to extract credit types
+                    const rawData = data.values;
+                    const dataRows = rawData.slice(1); // Skip header row
+                    
+                    // Extract unique credit types from column F (index 5)
+                    const types = new Set();
+                    dataRows.forEach(row => {
+                        const creditType = row[5] || ''; // Column F is index 5
+                        if (creditType && creditType.trim() !== '') {
+                            types.add(creditType.trim());
+                        }
+                    });
+                    
+                    creditTypes = Array.from(types).sort();
+                    
+                    // Populate credit type dropdown
+                    populateCreditTypeDropdown();
+                } else {
+                    throw new Error('No data found in the sheet');
+                }
+            } catch (error) {
+                console.error('Error loading credit types:', error);
+                showError('Failed to load credit types. Please check the console for details.');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Fetch data from Google Sheets
+        async function fetchDataFromSheet() {
+            showLoading(true);
+            noDataAlert.classList.add('d-none');
+            tableContainer.style.display = 'none';
+            
+            try {
+                // Construct the URL for the Google Sheets API
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!${RANGE}?key=${API_KEY}`;
+                
+                // Fetch data from Google Sheets
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.values && data.values.length > 0) {
+                    // Process the data (skip header row)
+                    allData = processSheetData(data.values);
+                    
+                    // Apply filters and display data
+                    applyFiltersAndDisplay();
+                } else {
+                    throw new Error('No data found in the sheet');
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                showError('Failed to fetch data. Please check the console for details.');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Process the raw data from Google Sheets
+        function processSheetData(rawData) {
+            // Skip the header row (index 0)
+            const dataRows = rawData.slice(1);
+            
+            return dataRows.map((row, index) => {
+                // Extract remitter reference components
+                const remitterRef = row[3] || '';
+                const trCodeMatch = remitterRef.match(/Trcode:(\d+)/);
+                const pensionCodeMatch = remitterRef.match(/Pension Code:([\d\/]+)/);
+                
+                // Extract pension type and code from the remitter reference
+                let pensionType = '';
+                let pensionCode = '';
+                if (pensionCodeMatch) {
+                    const pensionParts = pensionCodeMatch[1].split('/');
+                    if (pensionParts.length > 1) {
+                        pensionType = pensionParts[0];
+                        pensionCode = pensionParts[1];
+                    } else {
+                        pensionCode = pensionParts[0];
+                    }
+                }
+                
+                return {
+                    amount: parseFloat(row[0]) || 0,
+                    pensionerName: row[1] || '',
+                    trackCode: row[2] || '',
+                    remitterReference: remitterRef,
+                    trCode: trCodeMatch ? trCodeMatch[1] : '',
+                    pensionType: pensionType,
+                    pensionCode: pensionCode,
+                    period: row[4] || '',
+                    creditType: row[5] || '',
+                    // Add sortable date for period
+                    sortableDate: convertPeriodToDate(row[4] || '')
+                };
+            });
+        }
+        
+        // Convert period string (MM/YYYY) to Date object for sorting
+        function convertPeriodToDate(period) {
+            if (!period || !period.includes('/')) return new Date(0);
+            
+            const [month, year] = period.split('/');
+            return new Date(parseInt(year), parseInt(month) - 1, 1);
+        }
+        
+        // Populate the credit type dropdown
+        function populateCreditTypeDropdown() {
+            // Clear existing options except the first one
+            while (creditTypeSelect.options.length > 1) {
+                creditTypeSelect.remove(1);
+            }
+            
+            // Add credit types to dropdown
+            creditTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                creditTypeSelect.appendChild(option);
+            });
+        }
+        
+        // Apply filters and display the data
+        function applyFiltersAndDisplay() {
+            const trCodeFilter = trCodeInput.value.trim();
+            const pensionTypeFilter = pensionTypeInput.value.trim();
+            const pensionCodeFilter = pensionCodeInput.value.trim();
+            const periodFilter = periodInput.value.trim();
+            const creditTypeFilter = creditTypeSelect.value;
+            
+            // Filter the data based on user inputs with STRICT matching
+            let filteredData = allData;
+            
+            if (trCodeFilter) {
+                filteredData = filteredData.filter(item => 
+                    item.trCode === trCodeFilter
+                );
+            }
+            
+            if (pensionTypeFilter) {
+                filteredData = filteredData.filter(item => 
+                    item.pensionType === pensionTypeFilter
+                );
+            }
+            
+            if (pensionCodeFilter) {
+                filteredData = filteredData.filter(item => 
+                    item.pensionCode === pensionCodeFilter
+                );
+            }
+            
+            if (periodFilter) {
+                filteredData = filteredData.filter(item => 
+                    item.period === periodFilter
+                );
+            }
+            
+            if (creditTypeFilter) {
+                filteredData = filteredData.filter(item => 
+                    item.creditType === creditTypeFilter
+                );
+            }
+            
+            // Sort by period in descending order (newest first)
+            filteredData.sort((a, b) => b.sortableDate - a.sortableDate);
+            
+            // Display the filtered data
+            displayData(filteredData);
+        }
+        
+        // Display data in the table
+        function displayData(data) {
+            // Clear the table
+            dataTable.innerHTML = '';
+            
+            if (data.length === 0) {
+                noDataAlert.classList.remove('d-none');
+                totalAmountSpan.textContent = 'Total: 0.00';
+                tableContainer.style.display = 'none';
+                return;
+            }
+            
+            // Calculate total amount
+            const totalAmount = data.reduce((sum, item) => sum + item.amount, 0);
+            totalAmountSpan.textContent = `Total: ${totalAmount.toFixed(2)}`;
+            
+            // Populate the table with serial numbers
+            data.forEach((item, index) => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.period}</td>
+                    <td>${item.creditType}</td>
+                    <td>${item.remitterReference}</td>
+                    <td>${item.pensionerName}</td>
+                    <td>${item.amount.toFixed(2)}</td>
+                `;
+                
+                dataTable.appendChild(row);
+            });
+            
+            // Show the table
+            tableContainer.style.display = 'block';
+        }
+        
+        // Clear all filters
+        function clearFilters() {
+            trCodeInput.value = '';
+            pensionTypeInput.value = '';
+            pensionCodeInput.value = '';
+            periodInput.value = '';
+            creditTypeSelect.value = '';
+            dataTable.innerHTML = '';
+            tableContainer.style.display = 'none';
+            noDataAlert.classList.add('d-none');
+        }
+        
+        // Show/hide loading indicator
+        function showLoading(show) {
+            loadingIndicator.style.display = show ? 'block' : 'none';
+        }
+        
+        // Show error message
+        function showError(message) {
+            noDataAlert.textContent = message;
+            noDataAlert.classList.remove('d-none');
+        }
+    </script>
+</body>
+</html>
