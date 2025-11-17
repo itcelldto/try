@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pension Return Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #e74c3c;
+            --accent-color: #3498db;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            padding-top: 20px;
+        }
+        
+        .card {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 0 0.25rem rgba(231, 76, 60, 0.25);
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary-color);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary:hover {
+            background-color: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline-secondary {
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+        }
+        
+        .table {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        
+        .table th {
+            padding: 15px;
+            font-weight: 600;
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .table td {
+            padding: 12px 15px;
+            vertical-align: middle;
+        }
+        
+        .table tbody tr:hover {
+            background-color: rgba(231, 76, 60, 0.1);
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        .alert {
+            border-radius: 10px;
+            padding: 15px 20px;
+        }
+        
+        .total-amount {
+            font-size: 1.2rem;
+            font-weight: 600;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            background-color: rgba(231, 76, 60, 0.1);
+            color: var(--secondary-color);
+        }
+        
+        .filter-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            margin-bottom: 25px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .table-container {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="min-width:100%;">
+        <div class="filter-section">
+            <h3><i class="fas fa-undo-alt me-2"></i>Pension Return Report</h3>
+            <hr>
+            <div class="row">
+                <div class="col-md-2">
+                    <div class="mb-2">
+                        <label for="trCode" class="form-label">Track Code</label>
+                        <input type="text" class="form-control" id="trCode" placeholder="Enter track code">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-2">
+                        <label for="pensionType" class="form-label">Pension Type</label>
+                        <input type="text" class="form-control" id="pensionType" placeholder="Pension type">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-2">
+                        <label for="pensionCode" class="form-label">Pensioner Code</label>
+                        <input type="text" class="form-control" id="pensionCode" placeholder="Pensioner code">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-2">
+                        <label for="period" class="form-label">Period (MM/YYYY)</label>
+                        <input type="text" class="form-control" id="period" placeholder="e.g., 12/2024">
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="mb-2">
+                        <label for="returnReason" class="form-label">Return Reason</label>
+                        <select class="form-select" id="returnReason">
+                            <option value="">All Reasons</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-2 text-center">
+                    <button id="fetchData" class="btn btn-primary me-2" style="margin-top:30px;"><i class="fas fa-sync-alt me-2"></i>View</button>
+                    <button id="clearFilters" class="btn btn-outline-secondary" style="margin-top:30px;"><i class="fas fa-times me-2"></i>Clear</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="loading" id="loadingIndicator">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2">Fetching data ...</p>
+        </div>
+        
+        <div class="alert alert-warning d-none" id="noDataAlert">
+            <i class="fas fa-exclamation-triangle me-2"></i>No data found for the selected criteria.
+        </div>
+        
+        <div class="table-container" id="tableContainer">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Sl.No</th>
+                                    <th>Track Code</th>
+                                    <th>Pension Type</th>
+                                    <th>Pensioner Code</th>
+                                    <th>Pensioner Name</th>
+                                    <th>Return Amount</th>
+                                    <th>Chalan</th>
+                                    <th>Return Reason</th>
+                                    <th>Period</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dataTable">
+                                <!-- Data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="total-amount text-center" id="totalAmount">Total Return Amount: 0.00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const API_KEY = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+        const SPREADSHEET_ID = '1weOpS4nZW01q-ox3B_KRH_mNIbNkD_OHD4i59NhvHKE';
+        const SHEET_NAME = 'Sheet1';
+        const RANGE = 'A:Q';
+        
+        // DOM Elements
+        const trCodeInput = document.getElementById('trCode');
+        const pensionTypeInput = document.getElementById('pensionType');
+        const pensionCodeInput = document.getElementById('pensionCode');
+        const periodInput = document.getElementById('period');
+        const returnReasonSelect = document.getElementById('returnReason');
+        const fetchDataBtn = document.getElementById('fetchData');
+        const clearFiltersBtn = document.getElementById('clearFilters');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const noDataAlert = document.getElementById('noDataAlert');
+        const dataTable = document.getElementById('dataTable');
+        const totalAmountSpan = document.getElementById('totalAmount');
+        const tableContainer = document.getElementById('tableContainer');
+        
+        // Global data storage
+        let allData = [];
+        let returnReasons = [];
+        let pensionerNamesMap = new Map(); // To store pensioner names from the other sheet
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set current month as default
+            setCurrentMonth();
+            
+            // Load return reasons when page initializes
+            loadReturnReasons();
+            
+            // Pre-load pensioner names from the other sheet
+            loadPensionerNames();
+            
+            // Add event listeners
+            fetchDataBtn.addEventListener('click', fetchDataFromSheet);
+            clearFiltersBtn.addEventListener('click', clearFilters);
+        });
+        
+        // Set current month in MM/YYYY format
+        function setCurrentMonth() {
+            const currentDate = new Date();
+            const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0');
+            const currentYear = currentDate.getFullYear();
+            periodInput.value = `${currentMonth}/${currentYear}`;
+        }
+        
+        // Load pensioner names from the IndividualDetails sheet
+        async function loadPensionerNames() {
+            try {
+                const INDIVIDUAL_SHEET_ID = '1HOo8P4sAWp0N63Xfi8Fcna0zU2euo8_a5h3kSaOvJcI';
+                const INDIVIDUAL_SHEET_NAME = 'IndividualDetails';
+                const INDIVIDUAL_RANGE = 'A:F';
+                
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${INDIVIDUAL_SHEET_ID}/values/${INDIVIDUAL_SHEET_NAME}!${INDIVIDUAL_RANGE}?key=${API_KEY}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.values && data.values.length > 0) {
+                    const rawData = data.values.slice(1); // Skip header row
+                    
+                    rawData.forEach(row => {
+                        const remitterRef = row[3] || '';
+                        const pensionerName = row[1] || '';
+                        
+                        // Extract track code and pension code from remitter reference
+                        const trCodeMatch = remitterRef.match(/Trcode:(\d+)/);
+                        const pensionCodeMatch = remitterRef.match(/Pension Code:([\d\/]+)/);
+                        
+                        if (trCodeMatch && pensionCodeMatch) {
+                            const trCode = trCodeMatch[1];
+                            const pensionFullCode = pensionCodeMatch[1];
+                            const pensionParts = pensionFullCode.split('/');
+                            const pensionType = pensionParts.length > 1 ? pensionParts[0] : '';
+                            const pensionCode = pensionParts.length > 1 ? pensionParts[1] : pensionParts[0];
+                            
+                            // Create a unique key for the map
+                            const key = `${trCode}-${pensionType}-${pensionCode}`;
+                            pensionerNamesMap.set(key, pensionerName);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading pensioner names:', error);
+            }
+        }
+        
+        // Get pensioner name based on track code, pension type, and pension code
+        function getPensionerName(trCode, pensionType, pensionCode) {
+            const key = `${trCode}-${pensionType}-${pensionCode}`;
+            return pensionerNamesMap.get(key) || 'Name not found';
+        }
+        
+        // Load return reasons from Google Sheets
+        async function loadReturnReasons() {
+            showLoading(true);
+            
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!${RANGE}?key=${API_KEY}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.values && data.values.length > 0) {
+                    const rawData = data.values;
+                    const dataRows = rawData.slice(1); // Skip header row
+                    
+                    // Extract unique return reasons from column B (index 1)
+                    const reasons = new Set();
+                    dataRows.forEach(row => {
+                        const returnReason = row[1] || ''; // Column B is index 1
+                        if (returnReason && returnReason.trim() !== '') {
+                            reasons.add(returnReason.trim());
+                        }
+                    });
+                    
+                    returnReasons = Array.from(reasons).sort();
+                    
+                    // Populate return reason dropdown
+                    populateReturnReasonDropdown();
+                } else {
+                    throw new Error('No data found in the sheet');
+                }
+            } catch (error) {
+                console.error('Error loading return reasons:', error);
+                showError('Failed to load return reasons. Please check the console for details.');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Fetch data from Google Sheets
+        async function fetchDataFromSheet() {
+            showLoading(true);
+            noDataAlert.classList.add('d-none');
+            tableContainer.style.display = 'none';
+            
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!${RANGE}?key=${API_KEY}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                if (data.values && data.values.length > 0) {
+                    // Process the data (skip header row)
+                    allData = processSheetData(data.values);
+                    
+                    // Apply filters and display data
+                    applyFiltersAndDisplay();
+                } else {
+                    throw new Error('No data found in the sheet');
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                showError('Failed to fetch data. Please check the console for details.');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Process the raw data from Google Sheets
+        function processSheetData(rawData) {
+            // Skip the header row (index 0)
+            const dataRows = rawData.slice(1);
+            
+            return dataRows.map((row, index) => {
+                return {
+                    returnDate: row[0] || '',
+                    returnReason: row[1] || '',
+                    trackCode: row[2] || '',
+                    pensionType: row[3] || '',
+                    pensionCode: row[4] || '',
+                    returnAmount: parseFloat(row[5]) || 0,
+                    chalan: row[6] || '',
+                    major: row[7] || '',
+                    smj: row[8] || '',
+                    minor: row[9] || '',
+                    sub: row[10] || '',
+                    subSub: row[11] || '',
+                    det: row[12] || '',
+                    obj: row[13] || '',
+                    pn: row[14] || '',
+                    vc: row[15] || '',
+                    period: row[16] || '',
+                    // Add sortable date for period
+                    sortableDate: convertPeriodToDate(row[16] || '')
+                };
+            });
+        }
+        
+        // Convert period string (MM/YYYY) to Date object for sorting
+        function convertPeriodToDate(period) {
+            if (!period || !period.includes('/')) return new Date(0);
+            
+            const [month, year] = period.split('/');
+            return new Date(parseInt(year), parseInt(month) - 1, 1);
+        }
+        
+        // Populate the return reason dropdown
+        function populateReturnReasonDropdown() {
+            // Clear existing options except the first one
+            while (returnReasonSelect.options.length > 1) {
+                returnReasonSelect.remove(1);
+            }
+            
+            // Add return reasons to dropdown
+            returnReasons.forEach(reason => {
+                const option = document.createElement('option');
+                option.value = reason;
+                option.textContent = reason;
+                returnReasonSelect.appendChild(option);
+            });
+        }
+        
+        // Apply filters and display the data
+        function applyFiltersAndDisplay() {
+            const trCodeFilter = trCodeInput.value.trim();
+            const pensionTypeFilter = pensionTypeInput.value.trim();
+            const pensionCodeFilter = pensionCodeInput.value.trim();
+            const periodFilter = periodInput.value.trim();
+            const returnReasonFilter = returnReasonSelect.value;
+            
+            // Filter the data based on user inputs with STRICT matching
+            let filteredData = allData;
+            
+            if (trCodeFilter) {
+                filteredData = filteredData.filter(item => 
+                    item.trackCode === trCodeFilter
+                );
+            }
+            
+            if (pensionTypeFilter) {
+                filteredData = filteredData.filter(item => 
+                    item.pensionType === pensionTypeFilter
+                );
+            }
+            
+            if (pensionCodeFilter) {
+                filteredData = filteredData.filter(item => 
+                    item.pensionCode === pensionCodeFilter
+                );
+            }
+            
+            if (periodFilter) {
+                filteredData = filteredData.filter(item => 
+                    item.period === periodFilter
+                );
+            }
+            
+            if (returnReasonFilter) {
+                filteredData = filteredData.filter(item => 
+                    item.returnReason === returnReasonFilter
+                );
+            }
+            
+            // Sort by period in descending order (newest first)
+            filteredData.sort((a, b) => b.sortableDate - a.sortableDate);
+            
+            // Display the filtered data
+            displayData(filteredData);
+        }
+        
+        // Display data in the table
+        function displayData(data) {
+            // Clear the table
+            dataTable.innerHTML = '';
+            
+            if (data.length === 0) {
+                noDataAlert.classList.remove('d-none');
+                totalAmountSpan.textContent = 'Total Return Amount: 0.00';
+                tableContainer.style.display = 'none';
+                return;
+            }
+            
+            // Calculate total return amount
+            const totalAmount = data.reduce((sum, item) => sum + item.returnAmount, 0);
+            totalAmountSpan.textContent = `Total Return Amount: ${totalAmount.toFixed(2)}`;
+            
+            // Populate the table with serial numbers
+            data.forEach((item, index) => {
+                const row = document.createElement('tr');
+                const pensionerName = getPensionerName(item.trackCode, item.pensionType, item.pensionCode);
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.trackCode}</td>
+                    <td>${item.pensionType}</td>
+                    <td>${item.pensionCode}</td>
+                    <td>${pensionerName}</td>
+                    <td>${item.returnAmount.toFixed(2)}</td>
+                    <td>${item.chalan}</td>
+                    <td>${item.returnReason}</td>
+                    <td>${item.period}</td>
+                `;
+                
+                dataTable.appendChild(row);
+            });
+            
+            // Show the table
+            tableContainer.style.display = 'block';
+        }
+        
+        // Clear all filters
+        function clearFilters() {
+            trCodeInput.value = '';
+            pensionTypeInput.value = '';
+            pensionCodeInput.value = '';
+            setCurrentMonth(); // Reset to current month
+            returnReasonSelect.value = '';
+            dataTable.innerHTML = '';
+            tableContainer.style.display = 'none';
+            noDataAlert.classList.add('d-none');
+        }
+        
+        // Show/hide loading indicator
+        function showLoading(show) {
+            loadingIndicator.style.display = show ? 'block' : 'none';
+        }
+        
+        // Show error message
+        function showError(message) {
+            noDataAlert.textContent = message;
+            noDataAlert.classList.remove('d-none');
+        }
+    </script>
+</body>
+</html>
