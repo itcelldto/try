@@ -139,7 +139,7 @@
 <body>
     <div class="container" style="min-width:100%;">
         <div class="filter-section">
-            <h3><i class="fas fa-undo-alt me-2"></i>Pension Return Report</h3>
+            <h3><i class="fas fa-undo-alt me-2"></i>Money Order Pension Return Report</h3>
             <hr>
             <div class="row">
                 <div class="col-md-2">
@@ -200,14 +200,16 @@
                             <thead>
                                 <tr>
                                     <th>Sl.No</th>
+									<th>Period</th>
+									 <th>Return Reason</th>
+                                    
                                     <th>Track Code</th>
                                     <th>Pension Type</th>
                                     <th>Pensioner Code</th>
                                     <th>Pensioner Name</th>
                                     <th>Return Amount</th>
                                     <th>Chalan</th>
-                                    <th>Return Reason</th>
-                                    <th>Period</th>
+                                   
                                 </tr>
                             </thead>
                             <tbody id="dataTable">
@@ -510,14 +512,16 @@
                 
                 row.innerHTML = `
                     <td>${index + 1}</td>
+					       <td>${item.period}</td>
+					<td>${item.returnReason}</td>
+             
                     <td>${item.trackCode}</td>
                     <td>${item.pensionType}</td>
                     <td>${item.pensionCode}</td>
                     <td>${pensionerName}</td>
                     <td>${item.returnAmount.toFixed(2)}</td>
                     <td>${item.chalan}</td>
-                    <td>${item.returnReason}</td>
-                    <td>${item.period}</td>
+                    
                 `;
                 
                 dataTable.appendChild(row);
