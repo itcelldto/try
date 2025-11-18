@@ -8,13 +8,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        :root {
-            --primary-color: #2c3e50;
-            --secondary-color: #e74c3c;
-            --accent-color: #3498db;
-            --light-color: #ecf0f1;
-            --dark-color: #34495e;
-        }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -35,58 +28,8 @@
             transform: translateY(-5px);
         }
         
-        .form-control, .form-select {
-            border-radius: 8px;
-            padding: 10px 15px;
-            border: 1px solid #ddd;
-            transition: all 0.3s;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            border-color: var(--secondary-color);
-            box-shadow: 0 0 0 0.25rem rgba(231, 76, 60, 0.25);
-        }
-        
-        .btn-primary {
-            background-color: var(--secondary-color);
-            border: none;
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        
-        .btn-primary:hover {
-            background-color: #c0392b;
-            transform: translateY(-2px);
-        }
-        
-        .btn-outline-secondary {
-            border-radius: 8px;
-            padding: 10px 20px;
-            font-weight: 600;
-        }
-        
-        .table {
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-        
-        .table th {
-            padding: 15px;
-            font-weight: 600;
-          
-        }
-        
-        .table td {
-            padding: 12px 15px;
-            vertical-align: middle;
-        }
-        
-        .table tbody tr:hover {
-            background-color: rgba(231, 76, 60, 0.1);
-        }
+       
+   
         
         .loading {
             display: none;
@@ -99,17 +42,11 @@
             height: 3rem;
         }
         
-        .alert {
-            border-radius: 10px;
-            padding: 15px 20px;
-        }
+      
         
         .total-amount {
             font-size: 1.2rem;
             font-weight: 600;
-            padding: 10px 15px;
-            border-radius: 8px;
-            margin-top: 15px;
            
         }
         
@@ -121,13 +58,7 @@
             margin-bottom: 25px;
         }
         
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            padding: 20px;
-            color: #7f8c8d;
-            font-size: 0.9rem;
-        }
+     
         
         .table-container {
             display: none;
@@ -142,8 +73,8 @@
             <div class="row">
                 <div class="col-md-2">
                     <div class="mb-2">
-                        <label for="trCode" class="form-label">Treasury Code</label>
-                        <input type="text" class="form-control" id="trCode" placeholder="Enter treasury code">
+                        <label for="trCode" class="form-label">Track Code</label>
+                        <input type="text" class="form-control" id="trCode" placeholder="Enter track code">
                     </div>
                 </div>
                 <div class="col-md-2">
@@ -201,7 +132,7 @@
 									<th>Period</th>
 									 <th>Return Reason</th>
                                     
-                                    <th>Treasury Code</th>
+                                    <th>Track Code</th>
                                     <th>Pension Type</th>
                                     <th>Pensioner Code</th>
                                     <th>Pensioner Name</th>
@@ -315,7 +246,7 @@
         // Get pensioner name based on track code, pension type, and pension code
         function getPensionerName(trCode, pensionType, pensionCode) {
             const key = `${trCode}-${pensionType}-${pensionCode}`;
-            return pensionerNamesMap.get(key) || 'Name not found';
+            return pensionerNamesMap.get(key) || '-N/A-';
         }
         
         // Load return reasons from Google Sheets
