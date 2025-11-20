@@ -33,7 +33,27 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     
     <link rel="stylesheet" href="./eadmin.css">
+      <script>
+        // Mobile device detection and redirection
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   (window.innerWidth <= 768);
+        }
+        
+        // Redirect if mobile device
+        if (isMobileDevice()) {
+            window.location.href = "https://itcelldto.github.io/try/app";
+        }
 
+        // Service Worker registration
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/try/sw.js', { scope: '/try/' })
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Registration failed:', err));
+            });
+        }
+    </script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
