@@ -6,9 +6,11 @@
     <title>Pension Return Report</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
@@ -28,9 +30,6 @@
             transform: translateY(-5px);
         }
         
-       
-   
-        
         .loading {
             display: none;
             text-align: center;
@@ -42,12 +41,9 @@
             height: 3rem;
         }
         
-      
-        
         .total-amount {
             font-size: 1.2rem;
             font-weight: 600;
-           
         }
         
         .filter-section {
@@ -58,10 +54,52 @@
             margin-bottom: 25px;
         }
         
-     
-        
         .table-container {
             display: none;
+        }
+        
+        /* DataTable customizations */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_paginate {
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .dataTables_wrapper .dataTables_filter input {
+            border-radius: 8px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            border-radius: 5px;
+            margin: 0 2px;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #0d6efd;
+            color: white !important;
+            border: 1px solid #0d6efd;
+        }
+        
+        .dt-buttons .btn {
+            border-radius: 8px;
+            margin-right: 5px;
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .table-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
         }
     </style>
 </head>
@@ -124,21 +162,23 @@
         <div class="table-container" id="tableContainer">
             <div class="card">
                 <div class="card-body">
+                    <div class="table-header">
+                        <div class="table-title">Pension Return Details</div>
+                        <div class="total-amount" id="totalAmount">Total Return Amount: 0.00</div>
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">
+                        <table class="table table-striped table-hover" id="returnTable">
                             <thead>
                                 <tr>
                                     <th>Sl.No</th>
-									<th>Period</th>
-									 <th>Return Reason</th>
-                                    
-                                    <th>Track Code</th>
-                                    <th>Pension Type</th>
-                                    <th>Pensioner Code</th>
-                                    <th>Pensioner Name</th>
+                                    <th>Period</th>
+                                    <th>Return Reason</th>
+                                    <th>Treasury</th>
+                                    <th>Type</th>
+                                    <th>Code</th>
+                                    <th>Name</th>
                                     <th>Return Amount</th>
                                     <th>Chalan</th>
-                                   
                                 </tr>
                             </thead>
                             <tbody id="dataTable">
@@ -146,11 +186,23 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="total-amount text-center" id="totalAmount">Total Return Amount: 0.00</div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- DataTables JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
 
     <script>
         // Configuration
@@ -177,6 +229,7 @@
         let allData = [];
         let returnReasons = [];
         let pensionerNamesMap = new Map(); // To store pensioner names from the other sheet
+        let dataTableInstance = null;
         
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -292,6 +345,14 @@
             showLoading(true);
             noDataAlert.classList.add('d-none');
             tableContainer.style.display = 'none';
+            
+            // Clear existing DataTable instance if it exists
+            if (dataTableInstance) {
+                dataTableInstance.destroy();
+                dataTableInstance = null;
+            }
+            // Clear the table body
+            dataTable.innerHTML = '';
             
             try {
                 const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!${RANGE}?key=${API_KEY}`;
@@ -441,23 +502,85 @@
                 
                 row.innerHTML = `
                     <td>${index + 1}</td>
-					       <td>${item.period}</td>
-					<td>${item.returnReason}</td>
-             
+                    <td>${item.period}</td>
+                    <td>${item.returnReason}</td>
                     <td>${item.trackCode}</td>
                     <td>${item.pensionType}</td>
                     <td>${item.pensionCode}</td>
                     <td>${pensionerName}</td>
                     <td>${item.returnAmount.toFixed(2)}</td>
                     <td>${item.chalan}</td>
-                    
                 `;
                 
                 dataTable.appendChild(row);
             });
             
+            // Initialize or reinitialize DataTable
+            initializeDataTable();
+            
             // Show the table
             tableContainer.style.display = 'block';
+        }
+        
+        // Initialize DataTable with search, pagination, and export options
+        function initializeDataTable() {
+            // Destroy existing DataTable instance if it exists
+            if (dataTableInstance) {
+                dataTableInstance.destroy();
+                dataTableInstance = null;
+            }
+            
+            // Initialize DataTable
+            dataTableInstance = $('#returnTable').DataTable({
+                dom: '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>' +
+                     '<"row"<"col-sm-12"tr>>' +
+                     '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                buttons: [
+                    {
+                        extend: 'copy',
+                        className: 'btn btn-secondary',
+                        text: '<i class="fas fa-copy me-1"></i>Copy'
+                    },
+                    {
+                        extend: 'excel',
+                        className: 'btn btn-success',
+                        text: '<i class="fas fa-file-excel me-1"></i>Excel'
+                    },
+                    {
+                        extend: 'pdf',
+                        className: 'btn btn-danger',
+                        text: '<i class="fas fa-file-pdf me-1"></i>PDF'
+                    },
+                    {
+                        extend: 'print',
+                        className: 'btn btn-info',
+                        text: '<i class="fas fa-print me-1"></i>Print'
+                    },
+                    {
+                        extend: 'colvis',
+                        className: 'btn btn-warning',
+                        text: '<i class="fas fa-columns me-1"></i>Columns'
+                    }
+                ],
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100],
+                order: [[0, 'asc']],
+                language: {
+                    search: "Search:",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    infoEmpty: "Showing 0 to 0 of 0 entries",
+                    infoFiltered: "(filtered from _MAX_ total entries)",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    }
+                },
+                responsive: true,
+                destroy: true // This ensures the table is completely destroyed before reinitialization
+            });
         }
         
         // Clear all filters
@@ -470,6 +593,12 @@
             dataTable.innerHTML = '';
             tableContainer.style.display = 'none';
             noDataAlert.classList.add('d-none');
+            
+            // Destroy existing DataTable instance if it exists
+            if (dataTableInstance) {
+                dataTableInstance.destroy();
+                dataTableInstance = null;
+            }
         }
         
         // Show/hide loading indicator
