@@ -6,9 +6,11 @@
     <title>Money Order Pension Credit Report</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-      
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
@@ -40,8 +42,6 @@
             box-shadow: 0 0 0 0.25rem rgba(52, 152, 219, 0.25);
         }
         
-       
-        
         .loading {
             display: none;
             text-align: center;
@@ -64,6 +64,7 @@
             padding: 10px 15px;
             border-radius: 8px;
             margin-top: 15px;
+            background-color: #e9ecef;
         }
         
         .filter-section {
@@ -74,10 +75,52 @@
             margin-bottom: 25px;
         }
         
-      
-        
         .table-container {
             display: none;
+        }
+        
+        /* DataTable customizations */
+        .dataTables_wrapper .dataTables_length,
+        .dataTables_wrapper .dataTables_filter,
+        .dataTables_wrapper .dataTables_info,
+        .dataTables_wrapper .dataTables_paginate {
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .dataTables_wrapper .dataTables_filter input {
+            border-radius: 8px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            border-radius: 5px;
+            margin: 0 2px;
+        }
+        
+        .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: #0d6efd;
+            color: white !important;
+            border: 1px solid #0d6efd;
+        }
+        
+        .dt-buttons .btn {
+            border-radius: 8px;
+            margin-right: 5px;
+        }
+        
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .table-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #333;
         }
     </style>
 </head>
@@ -140,13 +183,20 @@
         <div class="table-container" id="tableContainer">
             <div class="card">
                 <div class="card-body">
+                    <div class="table-header">
+                        <div class="table-title">Pension Credit Details</div>
+                        <div class="total-amount" id="totalAmount">Total: 0.00</div>
+                    </div>
                     <div class="table-responsive">
-                        <table class="table table-striped table-hover">
+                        <table class="table table-striped table-hover" id="pensionTable">
                             <thead>
                                 <tr>
                                     <th>Sl.No</th>
                                     <th>Period</th>
                                     <th>Credit Type</th>
+                                    <th>Treasury Code</th>
+                                    <th>Pension Type</th>
+                                    <th>Pensioner Code</th>
                                     <th>Remitter Reference</th>
                                     <th>Pensioner Name</th>
                                     <th>Amount</th>
@@ -157,298 +207,397 @@
                             </tbody>
                         </table>
                     </div>
-                    <div class="total-amount text-center" id="totalAmount">Total: 0.00</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // Configuration
-        const API_KEY = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
-        const SPREADSHEET_ID = '1HOo8P4sAWp0N63Xfi8Fcna0zU2euo8_a5h3kSaOvJcI';
-        const SHEET_NAME = 'IndividualDetails';
-        const RANGE = 'A:F';
+    <!-- DataTables JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.bootstrap5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
+
+<script>
+    // Configuration
+    const API_KEY = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+    const SPREADSHEET_ID = '1HOo8P4sAWp0N63Xfi8Fcna0zU2euo8_a5h3kSaOvJcI';
+    const SHEET_NAME = 'IndividualDetails';
+    const RANGE = 'A:F';
+    
+    // DOM Elements
+    const trCodeInput = document.getElementById('trCode');
+    const pensionTypeInput = document.getElementById('pensionType');
+    const pensionCodeInput = document.getElementById('pensionCode');
+    const periodInput = document.getElementById('period');
+    const creditTypeSelect = document.getElementById('creditType');
+    const fetchDataBtn = document.getElementById('fetchData');
+    const clearFiltersBtn = document.getElementById('clearFilters');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+    const noDataAlert = document.getElementById('noDataAlert');
+    const dataTable = document.getElementById('dataTable');
+    const totalAmountSpan = document.getElementById('totalAmount');
+    const tableContainer = document.getElementById('tableContainer');
+    
+    // Global data storage
+    let allData = [];
+    let creditTypes = [];
+    let dataTableInstance = null;
+    
+    // Initialize the application - Load credit types on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load credit types when page initializes
+        setCurrentMonth();
+        loadCreditTypes();
         
-        // DOM Elements
-        const trCodeInput = document.getElementById('trCode');
-        const pensionTypeInput = document.getElementById('pensionType');
-        const pensionCodeInput = document.getElementById('pensionCode');
-        const periodInput = document.getElementById('period');
-        const creditTypeSelect = document.getElementById('creditType');
-        const fetchDataBtn = document.getElementById('fetchData');
-        const clearFiltersBtn = document.getElementById('clearFilters');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const noDataAlert = document.getElementById('noDataAlert');
-        const dataTable = document.getElementById('dataTable');
-        const totalAmountSpan = document.getElementById('totalAmount');
-        const tableContainer = document.getElementById('tableContainer');
+        // Add event listeners
+        fetchDataBtn.addEventListener('click', fetchDataFromSheet);
+        clearFiltersBtn.addEventListener('click', clearFilters);
+    });
+    
+    // Load credit types from Google Sheets
+    async function loadCreditTypes() {
+        showLoading(true);
         
-        // Global data storage
-        let allData = [];
-        let creditTypes = [];
-        
-        // Initialize the application - Load credit types on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load credit types when page initializes
-			setCurrentMonth();
-            loadCreditTypes();
+        try {
+            // Construct the URL for the Google Sheets API
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!${RANGE}?key=${API_KEY}`;
             
-            // Add event listeners
-            fetchDataBtn.addEventListener('click', fetchDataFromSheet);
-            clearFiltersBtn.addEventListener('click', clearFilters);
+            // Fetch data from Google Sheets
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.values && data.values.length > 0) {
+                // Process the data to extract credit types
+                const rawData = data.values;
+                const dataRows = rawData.slice(1); // Skip header row
+                
+                // Extract unique credit types from column F (index 5)
+                const types = new Set();
+                dataRows.forEach(row => {
+                    const creditType = row[5] || ''; // Column F is index 5
+                    if (creditType && creditType.trim() !== '') {
+                        types.add(creditType.trim());
+                    }
+                });
+                
+                creditTypes = Array.from(types).sort();
+                
+                // Populate credit type dropdown
+                populateCreditTypeDropdown();
+            } else {
+                throw new Error('No data found in the sheet');
+            }
+        } catch (error) {
+            console.error('Error loading credit types:', error);
+            showError('Failed to load credit types. Please check the console for details.');
+        } finally {
+            showLoading(false);
+        }
+    }
+    
+    // Fetch data from Google Sheets
+    async function fetchDataFromSheet() {
+        showLoading(true);
+        noDataAlert.classList.add('d-none');
+        tableContainer.style.display = 'none';
+        
+        // Clear existing DataTable instance if it exists
+        if (dataTableInstance) {
+            dataTableInstance.destroy();
+            dataTableInstance = null;
+        }
+        // Clear the table body
+        dataTable.innerHTML = '';
+        
+        try {
+            // Construct the URL for the Google Sheets API
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!${RANGE}?key=${API_KEY}`;
+            
+            // Fetch data from Google Sheets
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.values && data.values.length > 0) {
+                // Process the data (skip header row)
+                allData = processSheetData(data.values);
+                
+                // Apply filters and display data
+                applyFiltersAndDisplay();
+            } else {
+                throw new Error('No data found in the sheet');
+            }
+        } catch (error) {
+            console.error('Error fetching data:', error);
+            showError('Failed to fetch data. Please check the console for details.');
+        } finally {
+            showLoading(false);
+        }
+    }
+    
+    // Process the raw data from Google Sheets
+    function processSheetData(rawData) {
+        // Skip the header row (index 0)
+        const dataRows = rawData.slice(1);
+        
+        return dataRows.map((row, index) => {
+            // Extract remitter reference components
+            const remitterRef = row[3] || '';
+            const trCodeMatch = remitterRef.match(/Trcode:(\d+)/);
+            const pensionCodeMatch = remitterRef.match(/Pension Code:([\d\/]+)/);
+            
+            // Extract pension type and code from the remitter reference
+            let pensionType = '';
+            let pensionCode = '';
+            let pensionerCode = '';
+            
+            if (pensionCodeMatch) {
+                const pensionParts = pensionCodeMatch[1].split('/');
+                if (pensionParts.length > 1) {
+                    pensionType = pensionParts[0];
+                    pensionerCode = pensionParts[1];
+                } else {
+                    pensionerCode = pensionParts[0];
+                }
+            }
+            
+            return {
+                amount: parseFloat(row[0]) || 0,
+                pensionerName: row[1] || '',
+                trackCode: row[2] || '',
+                remitterReference: remitterRef,
+                trCode: trCodeMatch ? trCodeMatch[1] : '',
+                pensionType: pensionType,
+                pensionerCode: pensionerCode,
+                period: row[4] || '',
+                creditType: row[5] || '',
+                // Add sortable date for period
+                sortableDate: convertPeriodToDate(row[4] || '')
+            };
+        });
+    }
+    
+    // Convert period string (MM/YYYY) to Date object for sorting
+    function convertPeriodToDate(period) {
+        if (!period || !period.includes('/')) return new Date(0);
+        
+        const [month, year] = period.split('/');
+        return new Date(parseInt(year), parseInt(month) - 1, 1);
+    }
+    
+    // Populate the credit type dropdown
+    function populateCreditTypeDropdown() {
+        // Clear existing options except the first one
+        while (creditTypeSelect.options.length > 1) {
+            creditTypeSelect.remove(1);
+        }
+        
+        // Add credit types to dropdown
+        creditTypes.forEach(type => {
+            const option = document.createElement('option');
+            option.value = type;
+            option.textContent = type;
+            creditTypeSelect.appendChild(option);
+        });
+    }
+    
+    // Apply filters and display the data
+    function applyFiltersAndDisplay() {
+        const trCodeFilter = trCodeInput.value.trim();
+        const pensionTypeFilter = pensionTypeInput.value.trim();
+        const pensionCodeFilter = pensionCodeInput.value.trim();
+        const periodFilter = periodInput.value.trim();
+        const creditTypeFilter = creditTypeSelect.value;
+        
+        // Filter the data based on user inputs with STRICT matching
+        let filteredData = allData;
+        
+        if (trCodeFilter) {
+            filteredData = filteredData.filter(item => 
+                item.trCode === trCodeFilter
+            );
+        }
+        
+        if (pensionTypeFilter) {
+            filteredData = filteredData.filter(item => 
+                item.pensionType === pensionTypeFilter
+            );
+        }
+        
+        if (pensionCodeFilter) {
+            filteredData = filteredData.filter(item => 
+                item.pensionerCode === pensionCodeFilter
+            );
+        }
+        
+        if (periodFilter) {
+            filteredData = filteredData.filter(item => 
+                item.period === periodFilter
+            );
+        }
+        
+        if (creditTypeFilter) {
+            filteredData = filteredData.filter(item => 
+                item.creditType === creditTypeFilter
+            );
+        }
+        
+        // Sort by period in descending order (newest first)
+        filteredData.sort((a, b) => b.sortableDate - a.sortableDate);
+        
+        // Display the filtered data
+        displayData(filteredData);
+    }
+    
+    // Display data in the table
+    function displayData(data) {
+        // Clear the table
+        dataTable.innerHTML = '';
+        
+        if (data.length === 0) {
+            noDataAlert.classList.remove('d-none');
+            totalAmountSpan.textContent = 'Total: 0.00';
+            tableContainer.style.display = 'none';
+            return;
+        }
+        
+        // Calculate total amount
+        const totalAmount = data.reduce((sum, item) => sum + item.amount, 0);
+        totalAmountSpan.textContent = `Total: ${totalAmount.toFixed(2)}`;
+        
+        // Populate the table with serial numbers
+        data.forEach((item, index) => {
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${item.period}</td>
+                <td>${item.creditType}</td>
+                <td>${item.trCode}</td>
+                <td>${item.pensionType}</td>
+                <td>${item.pensionerCode}</td>
+                <td>${item.remitterReference}</td>
+                <td>${item.pensionerName}</td>
+                <td>${item.amount.toFixed(2)}</td>
+            `;
+            
+            dataTable.appendChild(row);
         });
         
-        // Load credit types from Google Sheets
-        async function loadCreditTypes() {
-            showLoading(true);
-            
-            try {
-                // Construct the URL for the Google Sheets API
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!${RANGE}?key=${API_KEY}`;
-                
-                // Fetch data from Google Sheets
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (data.values && data.values.length > 0) {
-                    // Process the data to extract credit types
-                    const rawData = data.values;
-                    const dataRows = rawData.slice(1); // Skip header row
-                    
-                    // Extract unique credit types from column F (index 5)
-                    const types = new Set();
-                    dataRows.forEach(row => {
-                        const creditType = row[5] || ''; // Column F is index 5
-                        if (creditType && creditType.trim() !== '') {
-                            types.add(creditType.trim());
-                        }
-                    });
-                    
-                    creditTypes = Array.from(types).sort();
-                    
-                    // Populate credit type dropdown
-                    populateCreditTypeDropdown();
-                } else {
-                    throw new Error('No data found in the sheet');
+        // Initialize or reinitialize DataTable
+        initializeDataTable();
+        
+        // Show the table
+        tableContainer.style.display = 'block';
+    }
+    
+    // Initialize DataTable with search, pagination, and export options
+    function initializeDataTable() {
+        // Destroy existing DataTable instance if it exists
+        if (dataTableInstance) {
+            dataTableInstance.destroy();
+            dataTableInstance = null;
+        }
+        
+        // Initialize DataTable
+        dataTableInstance = $('#pensionTable').DataTable({
+            dom: '<"row"<"col-sm-12 col-md-6"B><"col-sm-12 col-md-6"f>>' +
+                 '<"row"<"col-sm-12"tr>>' +
+                 '<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+            buttons: [
+                {
+                    extend: 'copy',
+                    className: 'btn btn-secondary',
+                    text: '<i class="fas fa-copy me-1"></i>Copy'
+                },
+                {
+                    extend: 'excel',
+                    className: 'btn btn-success',
+                    text: '<i class="fas fa-file-excel me-1"></i>Excel'
+                },
+                {
+                    extend: 'pdf',
+                    className: 'btn btn-danger',
+                    text: '<i class="fas fa-file-pdf me-1"></i>PDF'
+                },
+                {
+                    extend: 'print',
+                    className: 'btn btn-info',
+                    text: '<i class="fas fa-print me-1"></i>Print'
+                },
+                {
+                    extend: 'colvis',
+                    className: 'btn btn-warning',
+                    text: '<i class="fas fa-columns me-1"></i>Columns'
                 }
-            } catch (error) {
-                console.error('Error loading credit types:', error);
-                showError('Failed to load credit types. Please check the console for details.');
-            } finally {
-                showLoading(false);
-            }
-        }
-        
-        // Fetch data from Google Sheets
-        async function fetchDataFromSheet() {
-            showLoading(true);
-            noDataAlert.classList.add('d-none');
-            tableContainer.style.display = 'none';
-            
-            try {
-                // Construct the URL for the Google Sheets API
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}!${RANGE}?key=${API_KEY}`;
-                
-                // Fetch data from Google Sheets
-                const response = await fetch(url);
-                const data = await response.json();
-                
-                if (data.values && data.values.length > 0) {
-                    // Process the data (skip header row)
-                    allData = processSheetData(data.values);
-                    
-                    // Apply filters and display data
-                    applyFiltersAndDisplay();
-                } else {
-                    throw new Error('No data found in the sheet');
+            ],
+            pageLength: 10,
+            lengthMenu: [10, 25, 50, 100],
+            order: [[0, 'asc']],
+            language: {
+                search: "Search:",
+                lengthMenu: "Show _MENU_ entries",
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                infoEmpty: "Showing 0 to 0 of 0 entries",
+                infoFiltered: "(filtered from _MAX_ total entries)",
+                paginate: {
+                    first: "First",
+                    last: "Last",
+                    next: "Next",
+                    previous: "Previous"
                 }
-            } catch (error) {
-                console.error('Error fetching data:', error);
-                showError('Failed to fetch data. Please check the console for details.');
-            } finally {
-                showLoading(false);
-            }
-        }
+            },
+            responsive: true,
+            destroy: true // This ensures the table is completely destroyed before reinitialization
+        });
+    }
+    
+    // Clear all filters
+    function clearFilters() {
+        trCodeInput.value = '';
+        pensionTypeInput.value = '';
+        pensionCodeInput.value = '';
+        periodInput.value = '';
+        creditTypeSelect.value = '';
         
-        // Process the raw data from Google Sheets
-        function processSheetData(rawData) {
-            // Skip the header row (index 0)
-            const dataRows = rawData.slice(1);
-            
-            return dataRows.map((row, index) => {
-                // Extract remitter reference components
-                const remitterRef = row[3] || '';
-                const trCodeMatch = remitterRef.match(/Trcode:(\d+)/);
-                const pensionCodeMatch = remitterRef.match(/Pension Code:([\d\/]+)/);
-                
-                // Extract pension type and code from the remitter reference
-                let pensionType = '';
-                let pensionCode = '';
-                if (pensionCodeMatch) {
-                    const pensionParts = pensionCodeMatch[1].split('/');
-                    if (pensionParts.length > 1) {
-                        pensionType = pensionParts[0];
-                        pensionCode = pensionParts[1];
-                    } else {
-                        pensionCode = pensionParts[0];
-                    }
-                }
-                
-                return {
-                    amount: parseFloat(row[0]) || 0,
-                    pensionerName: row[1] || '',
-                    trackCode: row[2] || '',
-                    remitterReference: remitterRef,
-                    trCode: trCodeMatch ? trCodeMatch[1] : '',
-                    pensionType: pensionType,
-                    pensionCode: pensionCode,
-                    period: row[4] || '',
-                    creditType: row[5] || '',
-                    // Add sortable date for period
-                    sortableDate: convertPeriodToDate(row[4] || '')
-                };
-            });
-        }
+        // Clear the table and hide container
+        dataTable.innerHTML = '';
+        tableContainer.style.display = 'none';
+        noDataAlert.classList.add('d-none');
+        setCurrentMonth();
         
-        // Convert period string (MM/YYYY) to Date object for sorting
-        function convertPeriodToDate(period) {
-            if (!period || !period.includes('/')) return new Date(0);
-            
-            const [month, year] = period.split('/');
-            return new Date(parseInt(year), parseInt(month) - 1, 1);
+        // Destroy existing DataTable instance if it exists
+        if (dataTableInstance) {
+            dataTableInstance.destroy();
+            dataTableInstance = null;
         }
-        
-        // Populate the credit type dropdown
-        function populateCreditTypeDropdown() {
-            // Clear existing options except the first one
-            while (creditTypeSelect.options.length > 1) {
-                creditTypeSelect.remove(1);
-            }
-            
-            // Add credit types to dropdown
-            creditTypes.forEach(type => {
-                const option = document.createElement('option');
-                option.value = type;
-                option.textContent = type;
-                creditTypeSelect.appendChild(option);
-            });
-        }
-        
-        // Apply filters and display the data
-        function applyFiltersAndDisplay() {
-            const trCodeFilter = trCodeInput.value.trim();
-            const pensionTypeFilter = pensionTypeInput.value.trim();
-            const pensionCodeFilter = pensionCodeInput.value.trim();
-            const periodFilter = periodInput.value.trim();
-            const creditTypeFilter = creditTypeSelect.value;
-            
-            // Filter the data based on user inputs with STRICT matching
-            let filteredData = allData;
-            
-            if (trCodeFilter) {
-                filteredData = filteredData.filter(item => 
-                    item.trCode === trCodeFilter
-                );
-            }
-            
-            if (pensionTypeFilter) {
-                filteredData = filteredData.filter(item => 
-                    item.pensionType === pensionTypeFilter
-                );
-            }
-            
-            if (pensionCodeFilter) {
-                filteredData = filteredData.filter(item => 
-                    item.pensionCode === pensionCodeFilter
-                );
-            }
-            
-            if (periodFilter) {
-                filteredData = filteredData.filter(item => 
-                    item.period === periodFilter
-                );
-            }
-            
-            if (creditTypeFilter) {
-                filteredData = filteredData.filter(item => 
-                    item.creditType === creditTypeFilter
-                );
-            }
-            
-            // Sort by period in descending order (newest first)
-            filteredData.sort((a, b) => b.sortableDate - a.sortableDate);
-            
-            // Display the filtered data
-            displayData(filteredData);
-        }
-        
-        // Display data in the table
-        function displayData(data) {
-            // Clear the table
-            dataTable.innerHTML = '';
-            
-            if (data.length === 0) {
-                noDataAlert.classList.remove('d-none');
-                totalAmountSpan.textContent = 'Total: 0.00';
-                tableContainer.style.display = 'none';
-                return;
-            }
-            
-            // Calculate total amount
-            const totalAmount = data.reduce((sum, item) => sum + item.amount, 0);
-            totalAmountSpan.textContent = `Total: ${totalAmount.toFixed(2)}`;
-            
-            // Populate the table with serial numbers
-            data.forEach((item, index) => {
-                const row = document.createElement('tr');
-                
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${item.period}</td>
-                    <td>${item.creditType}</td>
-                    <td>${item.remitterReference}</td>
-                    <td>${item.pensionerName}</td>
-                    <td>${item.amount.toFixed(2)}</td>
-                `;
-                
-                dataTable.appendChild(row);
-            });
-            
-            // Show the table
-            tableContainer.style.display = 'block';
-        }
-        
-        // Clear all filters
-        function clearFilters() {
-            trCodeInput.value = '';
-            pensionTypeInput.value = '';
-            pensionCodeInput.value = '';
-            periodInput.value = '';
-            creditTypeSelect.value = '';
-            dataTable.innerHTML = '';
-            tableContainer.style.display = 'none';
-            noDataAlert.classList.add('d-none');
-			setCurrentMonth();
-        }
-        
-        // Show/hide loading indicator
-        function showLoading(show) {
-            loadingIndicator.style.display = show ? 'block' : 'none';
-        }
-        
-        // Show error message
-        function showError(message) {
-            noDataAlert.textContent = message;
-            noDataAlert.classList.remove('d-none');
-        }
-		  // Set current month in MM/YYYY format
-        function setCurrentMonth() {
-            const currentDate = new Date();
-            const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0');
-            const currentYear = currentDate.getFullYear();
-            periodInput.value = `${currentMonth}/${currentYear}`;
-        }
-    </script>
+    }
+    
+    // Show/hide loading indicator
+    function showLoading(show) {
+        loadingIndicator.style.display = show ? 'block' : 'none';
+    }
+    
+    // Show error message
+    function showError(message) {
+        noDataAlert.textContent = message;
+        noDataAlert.classList.remove('d-none');
+    }
+    
+    // Set current month in MM/YYYY format
+    function setCurrentMonth() {
+        const currentDate = new Date();
+        const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0');
+        const currentYear = currentDate.getFullYear();
+        periodInput.value = `${currentMonth}/${currentYear}`;
+    }
+</script>
 </body>
 </html>
