@@ -202,7 +202,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>District Treasury Trivandrum</h1>
+            <h1>3.District Treasury Trivandrum</h1>
         </div>
         
         <div class="content">
@@ -254,7 +254,7 @@
         const COMMON_VOICE_FILES = [
             '0.wav', '1.wav', '2.wav', '3.wav', '4.wav',
             '5.wav', '6.wav', '7.wav', '8.wav', '9.wav',
-            'token_number.wav'  // New file for "token number" phrase
+            'token_no.wav'  // "token number" phrase
         ];
         
         // Preload common voice files
@@ -272,19 +272,29 @@
             console.log('Common voice files preloading initiated');
         }
         
-        // Extract section name without the last number
-        function getBaseSectionName(sectionName) {
-            // Remove trailing numbers and spaces
-            return sectionName.replace(/\s*\d+$/, '').trim();
+        // Extract section name and number
+        function extractSectionParts(sectionName) {
+            // Extract the last number from the section name
+            const numberMatch = sectionName.match(/\d+$/);
+            const sectionNumber = numberMatch ? numberMatch[0] : null;
+            
+            // Get section name without the number
+            const baseSectionName = sectionNumber ? 
+                sectionName.replace(new RegExp(`\\s*${sectionNumber}$`), '').trim() : 
+                sectionName.trim();
+            
+            return {
+                baseName: baseSectionName,
+                number: sectionNumber
+            };
         }
         
         // Load section voice file if not already loaded
         async function loadSectionVoice(sectionName) {
-            // Get base section name without number
-            const baseSectionName = getBaseSectionName(sectionName);
+            const { baseName } = extractSectionParts(sectionName);
             
             // Convert to lowercase and create filename
-            const fileName = baseSectionName.toLowerCase().replace(/\s+/g, '_') + '.wav';
+            const fileName = baseName.toLowerCase().replace(/\s+/g, '_') + '.wav';
             
             // Check if already in cache
             if (sectionVoiceCache.has(fileName)) {
@@ -300,7 +310,7 @@
             return new Promise((resolve, reject) => {
                 audio.addEventListener('canplaythrough', () => resolve(audio));
                 audio.addEventListener('error', () => {
-                    console.warn(`Could not load voice file for section: ${baseSectionName} (${fileName})`);
+                    console.warn(`Could not load voice file for section: ${baseName} (${fileName})`);
                     // Return null instead of rejecting
                     resolve(null);
                 });
@@ -340,15 +350,18 @@
         
         // Play "token number" phrase
         async function playTokenNumberPhrase() {
-            await playCommonVoice('token_number.wav');
+            await playCommonVoice('token_no.wav');
         }
         
-        // Play section voice
-        async function playSectionVoice(sectionName) {
+        // Play section voice with number
+        async function playSectionVoiceWithNumber(sectionName) {
             try {
-                // Get base section name without number
-                const baseSectionName = getBaseSectionName(sectionName);
-                const fileName = baseSectionName.toLowerCase().replace(/\s+/g, '_') + '.wav';
+                const { baseName, number } = extractSectionParts(sectionName);
+                
+                if (!baseName) return;
+                
+                // Play section name
+                const fileName = baseName.toLowerCase().replace(/\s+/g, '_') + '.wav';
                 const audio = sectionVoiceCache.get(fileName);
                 
                 if (audio) {
@@ -365,12 +378,27 @@
                         await new Promise(resolve => newAudio.onended = resolve);
                     }
                 }
+                
+                // If there's a number, play it after the section name
+                if (number) {
+                    // Pause between section name and number
+                    await new Promise(resolve => setTimeout(resolve, 150));
+                    
+                    // Play the number digit by digit
+                    const numberDigits = number.toString().split('');
+                    for (const digit of numberDigits) {
+                        await playDigitVoice(digit);
+                        // Small pause between digits
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                }
+                
             } catch (error) {
                 console.warn(`Could not play section voice for ${sectionName}:`, error);
             }
         }
         
-        // Announce token in format: "Token number [digits] [section name]"
+        // Announce token in format: "Token number [digits] [section name] [section number]"
         async function announceToken(section, tokenNumber) {
             if (!audioCache.size) {
                 console.warn('Voice files not loaded yet');
@@ -397,8 +425,8 @@
                 // Pause between token number and section
                 await new Promise(resolve => setTimeout(resolve, 200));
                 
-                // Announce section name using voice file
-                await playSectionVoice(section);
+                // Announce section name with number
+                await playSectionVoiceWithNumber(section);
                 
             } catch (error) {
                 console.error('Error in token announcement:', error);
@@ -565,9 +593,9 @@
             // Get unique base section names
             const uniqueBaseSections = new Set();
             sections.forEach(section => {
-                const baseSection = getBaseSectionName(section);
-                if (baseSection) {
-                    uniqueBaseSections.add(baseSection);
+                const { baseName } = extractSectionParts(section);
+                if (baseName) {
+                    uniqueBaseSections.add(baseName);
                 }
             });
             
