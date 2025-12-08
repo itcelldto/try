@@ -243,6 +243,7 @@
         
         // Store previous token data for comparison
         let previousTokenData = {};
+        let previousAllPassedTokens = {}; // Track all passed tokens per section
         
         // Preload notification bell sound
         const notificationBell = new Audio("https://itcelltreasury.github.io/try/bell.mp3");
@@ -459,23 +460,32 @@
                 if (!sectionsMap[section]) {
                     sectionsMap[section] = {
                         currentToken: null,
-                        queuedTokens: []
+                        queuedTokens: [],
+                        passedTokens: new Set() // Track all passed tokens
                     };
                 }
                 
                 if (status === 'Pass') {
-                    // Update current token if this token number is higher
+                    // Add to passed tokens set
+                    sectionsMap[section].passedTokens.add(tokenNo);
+                    
+                    // Update current token to the highest passed token
                     if (!sectionsMap[section].currentToken || tokenNo > sectionsMap[section].currentToken) {
                         sectionsMap[section].currentToken = tokenNo;
                     }
                 } else if (status === 'In Que') {
-                    sectionsMap[section].queuedTokens.push(tokenNo);
+                    // Only add to queued if not passed
+                    if (!sectionsMap[section].passedTokens.has(tokenNo)) {
+                        sectionsMap[section].queuedTokens.push(tokenNo);
+                    }
                 }
             });
             
-            // Sort queued tokens for each section
+            // Sort queued tokens for each section (filter out passed tokens)
             for (const section in sectionsMap) {
-                sectionsMap[section].queuedTokens.sort((a, b) => a - b);
+                sectionsMap[section].queuedTokens = sectionsMap[section].queuedTokens
+                    .filter(token => !sectionsMap[section].passedTokens.has(token))
+                    .sort((a, b) => a - b);
             }
             
             return sectionsMap;
@@ -485,22 +495,39 @@
         function checkForChangesAndAnnounce(newData) {
             if (!newData || Object.keys(previousTokenData).length === 0) {
                 previousTokenData = JSON.parse(JSON.stringify(newData));
-                return;
-            }
-            
-            // Check each section for changes
-            for (const section in newData) {
-                if (previousTokenData[section]) {
-                    const newToken = newData[section].currentToken;
-                    const oldToken = previousTokenData[section].currentToken;
-                    
-                    if (newToken !== oldToken && newToken !== null) {
-                        // Token has changed, play bell and announce it
-                        playNotificationBell().then(() => {
-                            announceTokenDigitByDigit(section, newToken);
+                // Initialize passed tokens tracking
+                for (const section in newData) {
+                    previousAllPassedTokens[section] = new Set();
+                    if (newData[section].passedTokens) {
+                        newData[section].passedTokens.forEach(token => {
+                            previousAllPassedTokens[section].add(token);
                         });
                     }
                 }
+                return;
+            }
+            
+            // Check each section for newly passed tokens
+            for (const section in newData) {
+                if (!previousAllPassedTokens[section]) {
+                    previousAllPassedTokens[section] = new Set();
+                }
+                
+                const newPassedTokens = newData[section].passedTokens || new Set();
+                
+                // Check for any newly passed tokens
+                newPassedTokens.forEach(token => {
+                    if (!previousAllPassedTokens[section].has(token)) {
+                        // This is a newly passed token, announce it
+                        console.log(`New token ${token} passed at ${section}`);
+                        playNotificationBell().then(() => {
+                            announceTokenDigitByDigit(section, token);
+                        });
+                        
+                        // Add to our set of passed tokens
+                        previousAllPassedTokens[section].add(token);
+                    }
+                });
             }
             
             // Update previous data
