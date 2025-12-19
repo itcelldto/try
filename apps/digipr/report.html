@@ -1,233 +1,470 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DigiPR- Digital Personal Register | Report</title>
+    <title>Digi PR Static Report | IT Cell Treasury</title>
     
-    <!-- Bootstrap & DataTables CSS -->
+    <!-- Bootstrap 5.3.0 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css">
+    
+    <!-- Select2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css">
     
     <!-- jQuery UI Datepicker -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.min.css">
     
-    <!-- jsPDF and html2canvas for PDF export -->
+    <!-- jsPDF for PDF export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     
     <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --success-color: #4cc9f0;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
         body {
-            background-color: #d7e2ff6e;
-            min-width: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
-        .card {
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border: none;
-            margin-bottom: 20px;
+        
+        .container-main {
+            max-width: 100%;
+            margin: 0 auto;
         }
-		.d-header {
-    background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
-    color: white;
-    padding: 15px 20px;
-    border-radius: 10px 10px 0 0 !important;
-}
-        .loading {
-            display: none;
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-            padding: 20px;
+        
+        /* Header styling */
+        .main-header {
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--card-shadow);
         }
-        .select2-container .select2-selection--single {
-            height: 37px !important;
-            padding: 5px 10px;
-            border: 1px solid #ced4da;
-            border-radius: 5px;
-        }
-        .select2-container .select2-selection__rendered {
-            line-height: 28px !important;
-        }
-        .select2-container .select2-selection__arrow {
-            height: 36px !important;
-        }
-        h5 {
-            color: #5f87c5;
-            font-weight: 600;
-        }
-        .table-container {
-            overflow-x: auto;
-        }
-        .dataTables_wrapper {
-            margin-top: 15px;
-        }
-        .total-row {
-            background-color: #f8f9fa;
-            font-weight: bold;
-        }
-        .filter-card {
-            background-color: #f8f9fa;
-        }
-        .btn-primary {
-            background-color: #5f87c5;
-            border-color: #5f87c5;
-        }
-        .btn-primary:hover {
-            background-color: #4a6da7;
-            border-color: #4a6da7;
-        }
-        .btn-export {
-            background-color: #28a745;
-            border-color: #28a745;
+        
+        .main-header h1 {
             color: white;
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.8rem;
         }
-        .btn-export:hover {
-            background-color: #218838;
-            border-color: #1e7e34;
+        
+        .main-header .badge {
+            background-color: rgba(255, 255, 255, 0.2);
+            font-size: 0.8rem;
+            font-weight: 500;
         }
-        #resultHeading {
-            color: #5f87c5;
-            margin-bottom: 10px;
+        
+        /* Card styling */
+        .modern-card {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+			padding: 15px;
         }
-        #recordCount {
-            font-size: 14px;
-            color: #ff0000;
-            font-weight: normal;
+        
+        .modern-card:hover {
+            transform: translateY(-2px);
         }
-        .header-actions {
+        
+        .modern-card .card-header {
+            background: var(--light-bg);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 1.25rem 1.5rem;
+            border-radius: 12px 12px 0 0 !important;
+        }
+        
+        .modern-card .card-header h5 {
+            color: var(--secondary-color);
+            font-weight: 600;
+            margin: 0;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 15px;
+            gap: 0.5rem;
         }
-        table.dataTable thead th {
-            border-bottom: 2px solid #5f87c5;
-            background-color: #f1f5fd;
+        
+        .modern-card .card-header h5 i {
+            font-size: 1.2rem;
         }
-        table.dataTable tbody tr:hover {
-            background-color: #f0f4ff;
+        
+        /* Form controls */
+        .form-control, .select2-container--bootstrap4 .select2-selection {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
         }
-        .datepicker {
-            background-color: white;
-            cursor: pointer;
+        
+        .form-control:focus, .select2-container--bootstrap4 .select2-selection--single:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
         }
-        .required-field {
-            border: 1px solid #dc3545 !important;
+        
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 0.5rem;
         }
+        
         .form-label.required::after {
             content: " *";
             color: #dc3545;
         }
-        .no-data-message {
-            text-align: center;
-            padding: 40px;
-            color: #6c757d;
-            font-style: italic;
+        
+        /* Button styling */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
-        .btn-export:disabled {
-            background-color: #6c757d;
-            border-color: #6c757d;
-            cursor: not-allowed;
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4cc9f0 0%, #4895ef 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(76, 201, 240, 0.4);
+        }
+        
+        /* Loading spinner */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: var(--primary-color);
+        }
+        
+        /* DataTable styling */
+        .dataTables_wrapper {
+            margin-top: 1rem;
+        }
+        
+        #reportTable {
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        #reportTable thead th {
+            background: var(--light-bg);
+            color: var(--secondary-color);
+            font-weight: 600;
+            border-bottom: 2px solid var(--primary-color);
+            padding: 1rem;
+            white-space: nowrap;
+        }
+        
+        #reportTable tbody td {
+            padding: 0.75rem 1rem;
+            vertical-align: middle;
+        }
+        
+        #reportTable tbody tr:hover {
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        
+        /* Results header */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--light-bg);
+        }
+        
+        .results-header h5 {
+            color: var(--secondary-color);
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .record-badge {
+            background: linear-gradient(135deg, var(--success-color) 0%, #4895ef 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        /* Alert styling */
+        .alert-custom {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+        }
+        
+        /* Filter card */
+        .filter-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .results-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .main-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .btn-primary, .btn-success {
+                width: 100%;
+            }
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+        
+        /* Select2 custom */
+        .select2-container--bootstrap4 .select2-selection--single {
+            height: auto;
+            padding: 0.5rem;
+        }
+        
+        .select2-container--bootstrap4 .select2-selection__rendered {
+            line-height: 1.5;
+        }
+        
+        /* Datepicker customization */
+        .ui-datepicker {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .ui-datepicker .ui-state-active {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 4px;
+        }
+        
+        /* No data message */
+        .no-data-message {
+            padding: 3rem;
+            text-align: center;
+            color: #6c757d;
+        }
+        
+        .no-data-message i {
+            font-size: 3rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
-<body class="container py-4">
-    <div class="card p-4 filter-card">
-        <h5>DigiPR- Digital Personal Register | Report</h5>
-        <hr>
-        <div class="row g-3">
-            <div class="col-md-3">
-                <label for="treasuryCode" class="form-label required">Treasury Code:</label>
-                <select id="treasuryCode" class="form-control select2" required>
-                    <option value="">Select Treasury Code</option>
-                    <!-- Will be populated from Google Sheets -->
-                </select>
+<body>
+    <div class="container container-main py-4">
+        <!-- Header -->
+        <div class="main-header d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="bi bi-file-earmark-text"></i> Digi PR Static Report</h1>
+                <span class="badge">IT Cell IT Cell HelpDesk</span>
             </div>
-            <div class="col-md-3">
-                <label for="section" class="form-label required">Section:</label>
-                <select id="section" class="form-control select2" required>
-                    <option value="">Select Section</option>
-                    <!-- Will be populated from Google Sheets -->
-                </select>
-            </div>
-            <div class="col-md-2">
-                <label for="fromDate" class="form-label required">From Date:</label>
-                <input type="text" id="fromDate" class="form-control datepicker" placeholder="DD/MM/YYYY" required>
-            </div>
-            <div class="col-md-2">
-                <label for="toDate" class="form-label required">To Date:</label>
-                <input type="text" id="toDate" class="form-control datepicker" placeholder="DD/MM/YYYY" required>
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button class="btn btn-primary w-100" onclick="validateAndLoadData()">View Report</button>
+            <div class="d-none d-md-block">
+                <span class="text-white-50">v1.0.0</span>
             </div>
         </div>
-    </div>
-
-    <div class="loading mt-3" id="loading">
-        <img src="https://itcelldto.github.io/try/Spinner-3.gif" alt="Loading..." style="height: 40px;">
-        <div>Loading. Please wait...</div>
-    </div>
-
-    <div class="card p-4" id="resultsCard" style="display: none;">
-        <div class="header-actions">
-            <h5 id="resultHeading">DigiPR- Digital Personal Register | Report Details <span id="recordCount"></span></h5>
-            <button class="btn btn-export" onclick="exportToPDF()" id="exportBtn" disabled>
-                <i class="bi bi-file-pdf"></i> Export to PDF
-            </button>
+        
+        <!-- Filter Card -->
+        <div class="modern-card filter-card mb-4 fade-in">
+           
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="treasuryCode" class="form-label required">
+                            <i class="bi bi-building"></i> Treasury Code
+                        </label>
+                        <select id="treasuryCode" class="form-control select2" required>
+                            <option value="">Select Treasury Code</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="section" class="form-label required">
+                            <i class="bi bi-layers"></i> Section
+                        </label>
+                        <select id="section" class="form-control select2" required>
+                            <option value="">Select Section</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="fromDate" class="form-label required">
+                            <i class="bi bi-calendar"></i> From Date
+                        </label>
+                        <input type="text" id="fromDate" class="form-control datepicker" placeholder="DD/MM/YYYY" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="toDate" class="form-label required">
+                            <i class="bi bi-calendar-check"></i> To Date
+                        </label>
+                        <input type="text" id="toDate" class="form-control datepicker" placeholder="DD/MM/YYYY" required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" onclick="validateAndLoadData()">
+                            <i class="bi bi-eye"></i> View Report
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-        <hr>
-        <div class="table-container">
-            <table id="reportTable" class="table table-striped table-bordered" style="width:100%">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Treasury Code</th>
-                        <th>Section</th>
-                        <th>SL.No</th>
-                        <th>Current No</th>
-                        <th>Date of Receipt by clerk</th>
-                        <th>Title</th>
-                        <th>From Whom Outside no</th>
-                        <th>Date</th>
-                        <th>Submitted by Clerk</th>
-                        <th>Returned to clerk</th>
-                        <th>Reference issued to whom</th>
-                        <th>Reference issued date</th>
-                        <th>Replay or fresh Current received from whom and number</th>
-                        <th>Received date</th>
-                        <th>Date of receipt by clerk</th>
-                        <th>Nature of Disposal</th>
-                        <th>Date of disposal</th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody">
-                    <!-- Data will be populated here -->
-                </tbody>
-                <tfoot>
-                    <tr class="total-row">
-                        <td colspan="17" class="text-end fw-bold">Total Records:</td>
-                        <td id="totalRecords" class="fw-bold" style="color:green">0</td>
-                    </tr>
-                </tfoot>
-            </table>
+        
+        <!-- Loading Indicator -->
+        <div class="loading mt-4" id="loading">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="mt-3">
+                <h5 class="text-primary">Loading Data...</h5>
+                <p class="text-muted">Please wait while we fetch data from Google Sheets</p>
+            </div>
         </div>
+        
+        <!-- Results Card -->
+        <div class="modern-card mb-4 fade-in" id="resultsCard" style="display: none;">
+            <div class="card-header">
+                <div class="results-header">
+                    <div>
+                        <h5 id="resultHeading">
+                            <i class="bi bi-table"></i> PR Report Details
+                            <span id="recordCount" class="record-badge ms-2">0 records</span>
+                        </h5>
+                        <small class="text-muted" id="filterInfo"></small>
+                    </div>
+                    <button class="btn btn-success" onclick="exportToPDF()" id="exportBtn" disabled>
+                        <i class="bi bi-file-earmark-pdf"></i> Export to PDF
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="reportTable" class="table table-hover" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Treasury Code</th>
+                                <th>Section</th>
+                                <th>SL.No</th>
+                                <th>Current No</th>
+                                <th>Date of Receipt</th>
+                                <th>Title</th>
+                                <th>From Whom</th>
+                                <th>Date</th>
+                                <th>Submitted by</th>
+                                <th>Returned to</th>
+                                <th>Reference to</th>
+                                <th>Ref Date</th>
+                                <th>Replay/Fresh</th>
+                                <th>Received Date</th>
+                                <th>Receipt Date</th>
+                                <th>Nature</th>
+                                <th>Disposal Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Data will be populated here -->
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td colspan="17" class="text-end fw-bold">Total Records:</td>
+                                <td id="totalRecords" class="fw-bold text-primary">0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        
     </div>
 
-    <!-- jQuery, Bootstrap, DataTables, SweetAlert, Select2 -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- DataTables -->
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    
+    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
+    
+    <!-- Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     
     <!-- jQuery UI Datepicker -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
 
+    <!-- Main Script -->
     <script>
         // Google Sheets configuration
         const SHEET_ID = "1W3SlfTY_139CAyId57CDFV_BDgAadxED83D_2N1mNR8";
@@ -238,31 +475,44 @@
         let allUniqueTreasuryCodes = [];
         let allUniqueSections = [];
         let currentFilterCriteria = null;
-        let currentDataForExport = []; // Store current data for export
+        let currentDataForExport = [];
         
         $(document).ready(function() {
-            // Initialize datepicker
+            // Initialize datepicker with modern styling
             $(".datepicker").datepicker({
                 dateFormat: "dd/mm/yy",
                 changeMonth: true,
                 changeYear: true,
-                yearRange: "c-10:c+10"
+                yearRange: "c-10:c+10",
+                showButtonPanel: true,
+                beforeShow: function(input, inst) {
+                    setTimeout(function() {
+                        inst.dpDiv.css({
+                            'margin-top': '5px',
+                            'border-radius': '8px',
+                            'box-shadow': '0 0.5rem 1rem rgba(0, 0, 0, 0.15)'
+                        });
+                    }, 0);
+                }
             });
             
-            // Set default dates (last 30 days)
+            // Set default dates
             setDefaultDates();
             
-            // Initialize Select2
-            $('.select2').select2();
+            // Initialize Select2 with Bootstrap 4 theme
+            $('.select2').select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                placeholder: 'Select an option',
+                allowClear: true
+            });
             
-            // Load filter options from Google Sheets
+            // Load filter options
             loadFilterOptions();
             
             // Add validation on input change
             $('#treasuryCode, #section, #fromDate, #toDate').on('change', function() {
                 validateField($(this));
-                
-                // Clear results when any filter changes
                 clearResults();
             });
         });
@@ -272,10 +522,7 @@
             const lastMonth = new Date(today);
             lastMonth.setDate(today.getDate() - 30);
             
-            // Format today as DD/MM/YYYY
             const toDateStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
-            
-            // Format last month as DD/MM/YYYY
             const fromDateStr = `${String(lastMonth.getDate()).padStart(2, '0')}/${String(lastMonth.getMonth() + 1).padStart(2, '0')}/${lastMonth.getFullYear()}`;
             
             $('#toDate').val(toDateStr);
@@ -285,7 +532,6 @@
         function loadFilterOptions() {
             showLoading(true);
             
-            // We only need columns B and C for the filter options
             const range = `${SHEET_NAME}!B:C`;
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
             
@@ -295,26 +541,31 @@
                     const rows = data.values || [];
                     
                     if (rows.length === 0) {
-                        Swal.fire('Error', 'No data found in the sheet', 'error');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'No Data',
+                            text: 'No data found in the sheet',
+                            confirmButtonColor: '#4361ee'
+                        });
                         showLoading(false);
                         return;
                     }
                     
-                    // Skip header row
                     const dataRows = rows.slice(1);
-                    
-                    // Extract unique values
                     allUniqueTreasuryCodes = [...new Set(dataRows.map(row => row[0] || '').filter(Boolean))].sort();
                     allUniqueSections = [...new Set(dataRows.map(row => row[1] || '').filter(Boolean))].sort();
                     
-                    // Populate filter dropdowns
                     populateFilterDropdowns();
-                    
                     showLoading(false);
                 })
                 .catch(error => {
-                    console.error("Error fetching filter options:", error);
-                    Swal.fire('Error', 'Failed to load filter options from Google Sheets', 'error');
+                    console.error("Error:", error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Connection Error',
+                        text: 'Failed to load filter options',
+                        confirmButtonColor: '#4361ee'
+                    });
                     showLoading(false);
                 });
         }
@@ -323,51 +574,37 @@
             const treasurySelect = $('#treasuryCode');
             const sectionSelect = $('#section');
             
-            // Clear existing options except the first one
             treasurySelect.find('option:not(:first)').remove();
             sectionSelect.find('option:not(:first)').remove();
             
-            // Add unique treasury codes
             allUniqueTreasuryCodes.forEach(code => {
                 treasurySelect.append(`<option value="${code}">${code}</option>`);
             });
             
-            // Add unique sections
             allUniqueSections.forEach(section => {
                 sectionSelect.append(`<option value="${section}">${section}</option>`);
             });
             
-            // Refresh Select2
             treasurySelect.trigger('change.select2');
             sectionSelect.trigger('change.select2');
         }
         
         function clearResults() {
-            // Hide results card
             $('#resultsCard').hide();
-            
-            // Clear table data
             $('#tableBody').empty();
             
-            // Reset DataTable if it exists
             if (dataTable) {
                 dataTable.destroy();
                 dataTable = null;
             }
             
-            // Reset counters
             $('#totalRecords').text('0');
-            $('#recordCount').text('');
-            
-            // DO NOT reset current filter criteria and data when just changing filters
-            // We only reset them when explicitly loading new data
-            
-            // Disable export button when no data
+            $('#recordCount').text('0 records');
+            $('#filterInfo').html('');
             $('#exportBtn').prop('disabled', true);
         }
         
         function validateAndLoadData() {
-            // Validate all required fields
             const treasuryCode = $('#treasuryCode').val();
             const section = $('#section').val();
             const fromDate = $('#fromDate').val();
@@ -375,43 +612,52 @@
             
             let isValid = true;
             
-            // Validate each field
+            // Validation
             if (!treasuryCode) {
-                $('#treasuryCode').addClass('required-field');
+                $('#treasuryCode').addClass('is-invalid');
                 isValid = false;
             } else {
-                $('#treasuryCode').removeClass('required-field');
+                $('#treasuryCode').removeClass('is-invalid');
             }
             
             if (!section) {
-                $('#section').addClass('required-field');
+                $('#section').addClass('is-invalid');
                 isValid = false;
             } else {
-                $('#section').removeClass('required-field');
+                $('#section').removeClass('is-invalid');
             }
             
             if (!fromDate) {
-                $('#fromDate').addClass('required-field');
+                $('#fromDate').addClass('is-invalid');
                 isValid = false;
             } else {
-                $('#fromDate').removeClass('required-field');
+                $('#fromDate').removeClass('is-invalid');
             }
             
             if (!toDate) {
-                $('#toDate').addClass('required-field');
+                $('#toDate').addClass('is-invalid');
                 isValid = false;
             } else {
-                $('#toDate').removeClass('required-field');
+                $('#toDate').removeClass('is-invalid');
             }
             
             if (!isValid) {
-                Swal.fire('Validation Error', 'Please fill all required fields marked with *', 'error');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Please fill all required fields',
+                    confirmButtonColor: '#4361ee'
+                });
                 return;
             }
             
-            // Validate date format and logic
             if (!isValidDate(fromDate) || !isValidDate(toDate)) {
-                Swal.fire('Date Error', 'Please enter valid dates in DD/MM/YYYY format', 'error');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Date',
+                    text: 'Please enter valid dates in DD/MM/YYYY format',
+                    confirmButtonColor: '#4361ee'
+                });
                 return;
             }
             
@@ -419,32 +665,28 @@
             const toDateObj = parseDate(toDate);
             
             if (fromDateObj > toDateObj) {
-                Swal.fire('Date Error', 'From Date cannot be greater than To Date', 'error');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Date Error',
+                    text: 'From Date cannot be greater than To Date',
+                    confirmButtonColor: '#4361ee'
+                });
                 return;
             }
             
-            // Check if same criteria are already loaded
             const newCriteria = { treasuryCode, section, fromDate, toDate };
             if (currentFilterCriteria && 
-                currentFilterCriteria.treasuryCode === newCriteria.treasuryCode &&
-                currentFilterCriteria.section === newCriteria.section &&
-                currentFilterCriteria.fromDate === newCriteria.fromDate &&
-                currentFilterCriteria.toDate === newCriteria.toDate) {
-                
-                // Same criteria, no need to reload
+                JSON.stringify(currentFilterCriteria) === JSON.stringify(newCriteria)) {
                 return;
             }
             
-            // Store current criteria
             currentFilterCriteria = newCriteria;
-            
-            // All validations passed, load data
             loadDataByCriteria(treasuryCode, section, fromDateObj, toDateObj);
         }
         
         function validateField(field) {
             if (field.val()) {
-                field.removeClass('required-field');
+                field.removeClass('is-invalid');
             }
         }
         
@@ -472,18 +714,14 @@
         
         function loadDataByCriteria(treasuryCode, section, fromDate, toDate) {
             showLoading(true);
-            
-            // Clear any existing results first
             clearResults();
             
-            // Adjust date range for inclusive search
             const searchFromDate = new Date(fromDate);
             searchFromDate.setHours(0, 0, 0, 0);
             
             const searchToDate = new Date(toDate);
             searchToDate.setHours(23, 59, 59, 999);
             
-            // Load all data and filter locally
             const range = `${SHEET_NAME}!A:R`;
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
             
@@ -494,34 +732,26 @@
                     
                     if (rows.length === 0) {
                         showLoading(false);
-                        Swal.fire('No Data', 'No data found in the sheet', 'info');
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'No Data',
+                            text: 'No data found in the sheet',
+                            confirmButtonColor: '#4361ee'
+                        });
                         return;
                     }
                     
-                    // Get headers
                     const headers = rows[0];
-                    
-                    // Process and filter data
                     const filteredData = rows.slice(1).filter(row => {
-                        // Check if row has enough columns
                         if (row.length < 6) return false;
-                        
-                        // Treasury Code filter (Column B, index 1)
                         if (row[1] !== treasuryCode) return false;
-                        
-                        // Section filter (Column C, index 2)
                         if (row[2] !== section) return false;
                         
-                        // Date filter - Date of Receipt by clerk (Column F, index 5)
                         const receiptDateStr = row[5];
                         if (!receiptDateStr) return false;
                         
                         const receiptDate = parseDate(receiptDateStr);
-                        if (receiptDate < searchFromDate || receiptDate > searchToDate) {
-                            return false;
-                        }
-                        
-                        return true;
+                        return receiptDate >= searchFromDate && receiptDate <= searchToDate;
                     }).map(row => {
                         const obj = {};
                         headers.forEach((header, index) => {
@@ -530,17 +760,18 @@
                         return obj;
                     });
                     
-                    // Store current data for export
                     currentDataForExport = filteredData;
-                    
-                    // Display filtered data
                     displayData(filteredData, treasuryCode, section, fromDate, toDate);
-                    
                     showLoading(false);
                 })
                 .catch(error => {
-                    console.error("Error fetching data:", error);
-                    Swal.fire('Error', 'Failed to load data from Google Sheets', 'error');
+                    console.error("Error:", error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to load data from Google Sheets',
+                        confirmButtonColor: '#4361ee'
+                    });
                     showLoading(false);
                 });
         }
@@ -550,50 +781,48 @@
             tableBody.empty();
             
             if (data.length === 0) {
-                // Show no data message
                 const noDataRow = `
                     <tr>
-                        <td colspan="18" class="text-center no-data-message">
-                            <div style="font-size: 16px; margin-bottom: 10px;">📭</div>
-                            <div>No records found for the selected criteria.</div>
-                            <div style="font-size: 12px; margin-top: 10px;">
-                                Treasury Code: <strong>${treasuryCode}</strong> | 
-                                Section: <strong>${section}</strong> | 
-                                Date Range: <strong>${formatDateForDisplay(fromDate)} to ${formatDateForDisplay(toDate)}</strong>
+                        <td colspan="18" class="text-center py-5">
+                            <div class="no-data-message">
+                                <i class="bi bi-inbox"></i>
+                                <h5 class="mt-3">No Records Found</h5>
+                                <p class="text-muted">
+                                    Treasury Code: <strong>${treasuryCode}</strong> | 
+                                    Section: <strong>${section}</strong><br>
+                                    Date Range: <strong>${formatDateForDisplay(fromDate)} to ${formatDateForDisplay(toDate)}</strong>
+                                </p>
                             </div>
                         </td>
                     </tr>
                 `;
                 tableBody.append(noDataRow);
                 
-                // Still show results card but with no data
                 $('#resultsCard').show();
-                $('#resultHeading').html(`DigiPR Report Details <span id="recordCount" style="color: red;">(0 records found)</span>`);
+                $('#recordCount').text('0 records');
                 $('#totalRecords').text('0');
-                
-                // Disable export button when no data
+                $('#filterInfo').html(`
+                    <span class="text-muted">
+                        <i class="bi bi-funnel"></i> Filters: ${treasuryCode} | ${section} | 
+                        ${formatDateForDisplay(fromDate)} to ${formatDateForDisplay(toDate)}
+                    </span>
+                `);
                 $('#exportBtn').prop('disabled', true);
-                
-                // Clear export data
                 currentDataForExport = [];
                 
-                Swal.fire('No Records', 'No records found for the selected criteria.', 'info');
                 return;
             }
-            
-            // Enable export button
-            $('#exportBtn').prop('disabled', false);
             
             // Populate table
             data.forEach((item, index) => {
                 const row = `
                     <tr>
-                        <td>${item['ID'] || ''}</td>
+                        <td><span class="badge bg-light text-dark">${item['ID'] || ''}</span></td>
                         <td>${item['Treasury Code'] || ''}</td>
                         <td>${item['Section'] || ''}</td>
                         <td>${item['SL.No'] || ''}</td>
                         <td>${item['Current No'] || ''}</td>
-                        <td>${item['Date of Receipt by clerk'] || ''}</td>
+                        <td><span class="badge bg-info text-white">${item['Date of Receipt by clerk'] || ''}</span></td>
                         <td>${item['Title'] || ''}</td>
                         <td>${item['From Whom  Outside no'] || ''}</td>
                         <td>${item['date'] || ''}</td>
@@ -604,30 +833,26 @@
                         <td>${item['Replay or fresh Current received from whom and number'] || ''}</td>
                         <td>${item['received date'] || ''}</td>
                         <td>${item['Date of receipt by clerk'] || ''}</td>
-                        <td>${item['Nature of Disposal'] || ''}</td>
-                        <td>${item['Date of disposal'] || ''}</td>
+                        <td><span class="badge bg-warning text-dark">${item['Nature of Disposal'] || ''}</span></td>
+                        <td><span class="badge bg-secondary">${item['Date of disposal'] || ''}</span></td>
                     </tr>
                 `;
                 tableBody.append(row);
             });
             
-            // Update header with filter criteria
-            const fromDateStr = formatDateForDisplay(fromDate);
-            const toDateStr = formatDateForDisplay(toDate);
-            
-            $('#resultHeading').html(`
-DigiPR Report - ${treasuryCode} / ${section}
-                <span id="recordCount" style="color: green; font-size: 12px;">
-                    (${data.length} records from ${fromDateStr} to ${toDateStr})
+            // Update UI
+            $('#recordCount').text(`${data.length} records`);
+            $('#totalRecords').text(data.length);
+            $('#filterInfo').html(`
+                <span class="text-muted">
+                    ${treasuryCode} | ${section} | 
+                    ${formatDateForDisplay(fromDate)} to ${formatDateForDisplay(toDate)}
                 </span>
             `);
-            
-            $('#totalRecords').text(data.length);
-            
-            // Show results card
             $('#resultsCard').show();
+            $('#exportBtn').prop('disabled', false);
             
-            // Initialize or reinitialize DataTable
+            // Initialize DataTable
             if (dataTable) {
                 dataTable.destroy();
             }
@@ -642,7 +867,7 @@ DigiPR Report - ${treasuryCode} / ${section}
                 scrollX: true,
                 dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>tip',
                 language: {
-                    search: "Search within results:",
+                    search: "Search records:",
                     lengthMenu: "Show _MENU_ entries",
                     info: "Showing _START_ to _END_ of _TOTAL_ entries",
                     paginate: {
@@ -651,17 +876,12 @@ DigiPR Report - ${treasuryCode} / ${section}
                         next: "Next",
                         previous: "Previous"
                     }
-                },
-                drawCallback: function(settings) {
-                    // Update total records count after each draw
-                    const api = this.api();
-                    $('#totalRecords').text(api.rows({ filter: 'applied' }).count());
                 }
             });
             
             // Scroll to results
             $('html, body').animate({
-                scrollTop: $('#resultsCard').offset().top - 20
+                scrollTop: $('#resultsCard').offset().top - 100
             }, 500);
         }
         
@@ -673,15 +893,13 @@ DigiPR Report - ${treasuryCode} / ${section}
         }
         
         function exportToPDF() {
-            // Debug: Check what data we have
-            console.log("Exporting PDF...");
-            console.log("currentFilterCriteria:", currentFilterCriteria);
-            console.log("currentDataForExport length:", currentDataForExport.length);
-            
-            // Check if we have data to export
             if (!currentFilterCriteria || currentDataForExport.length === 0) {
-                console.log("No data available for export");
-                Swal.fire('No Data', 'No data available to export. Please load data first by clicking "View Report".', 'warning');
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Data',
+                    text: 'Please load data first by clicking "View Report"',
+                    confirmButtonColor: '#4361ee'
+                });
                 return;
             }
             
@@ -692,10 +910,9 @@ DigiPR Report - ${treasuryCode} / ${section}
                 format: 'a4'
             });
             
-            // Get filter criteria
             const { treasuryCode, section, fromDate, toDate } = currentFilterCriteria;
             
-            // Prepare table data for PDF
+            // Prepare data
             const headers = [
                 ['ID', 'Treasury', 'Section', 'SL.No', 'Current No', 
                  'Date of Receipt', 'Title', 'From Whom', 'Date',
@@ -704,54 +921,55 @@ DigiPR Report - ${treasuryCode} / ${section}
                  'Nature of Disposal', 'Disposal Date']
             ];
             
-            const tableData = currentDataForExport.map(item => {
-                return [
-                    item['ID'] || '',
-                    item['Treasury Code'] || '',
-                    item['Section'] || '',
-                    item['SL.No'] || '',
-                    item['Current No'] || '',
-                    item['Date of Receipt by clerk'] || '',
-                    item['Title'] || '',
-                    item['From Whom  Outside no'] || '',
-                    item['date'] || '',
-                    item['Submitted by Clerk'] || '',
-                    item['Returned to clerk'] || '',
-                    item['Reference issued to whom'] || '',
-                    item['reference issued date'] || '',
-                    item['Replay or fresh Current received from whom and number'] || '',
-                    item['received date'] || '',
-                    item['Date of receipt by clerk'] || '',
-                    item['Nature of Disposal'] || '',
-                    item['Date of disposal'] || ''
-                ];
-            });
+            const tableData = currentDataForExport.map(item => [
+                item['ID'] || '',
+                item['Treasury Code'] || '',
+                item['Section'] || '',
+                item['SL.No'] || '',
+                item['Current No'] || '',
+                item['Date of Receipt by clerk'] || '',
+                item['Title'] || '',
+                item['From Whom  Outside no'] || '',
+                item['date'] || '',
+                item['Submitted by Clerk'] || '',
+                item['Returned to clerk'] || '',
+                item['Reference issued to whom'] || '',
+                item['reference issued date'] || '',
+                item['Replay or fresh Current received from whom and number'] || '',
+                item['received date'] || '',
+                item['Date of receipt by clerk'] || '',
+                item['Nature of Disposal'] || '',
+                item['Date of disposal'] || ''
+            ]);
             
-            // Add title and filter info
-            doc.setFontSize(16);
-            doc.text('DigiPR Report', 14, 15);
+            // Add title
+            doc.setFontSize(20);
+            doc.setTextColor(67, 97, 238);
+            doc.text('Digi PR Static Report', 14, 15);
             
             doc.setFontSize(10);
-            doc.text(`Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 14, 22);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 14, 22);
             
-            // Filter criteria
-            let criteriaY = 28;
+            // Add filter criteria
+            let y = 28;
             doc.setFontSize(10);
-            doc.text('Filter Criteria:', 14, criteriaY);
-            criteriaY += 5;
-            doc.text(`Treasury Code: ${treasuryCode}`, 14, criteriaY);
-            criteriaY += 5;
-            doc.text(`Section: ${section}`, 14, criteriaY);
-            criteriaY += 5;
-            doc.text(`Date Range: ${fromDate} to ${toDate}`, 14, criteriaY);
-            criteriaY += 5;
-            doc.text(`Total Records: ${currentDataForExport.length}`, 14, criteriaY);
+            doc.setTextColor(0, 0, 0);
+            doc.text('Filter Criteria:', 14, y);
+            y += 5;
+            doc.text(`Treasury Code: ${treasuryCode}`, 14, y);
+            y += 5;
+            doc.text(`Section: ${section}`, 14, y);
+            y += 5;
+            doc.text(`Date Range: ${fromDate} to ${toDate}`, 14, y);
+            y += 5;
+            doc.text(`Total Records: ${currentDataForExport.length}`, 14, y);
             
             // Create table
             doc.autoTable({
                 head: headers,
                 body: tableData,
-                startY: criteriaY + 5,
+                startY: y + 5,
                 theme: 'grid',
                 styles: {
                     fontSize: 6,
@@ -759,47 +977,25 @@ DigiPR Report - ${treasuryCode} / ${section}
                     overflow: 'linebreak'
                 },
                 headStyles: {
-                    fillColor: [95, 135, 197], // #5f87c5
+                    fillColor: [67, 97, 238],
                     textColor: 255,
                     fontSize: 7,
                     fontStyle: 'bold'
                 },
                 alternateRowStyles: {
-                    fillColor: [247, 247, 247]
+                    fillColor: [245, 245, 245]
                 },
-                margin: { left: 14, right: 14 },
-                tableWidth: 'auto',
-                columnStyles: {
-                    0: { cellWidth: 10 },
-                    1: { cellWidth: 20 },
-                    2: { cellWidth: 15 },
-                    3: { cellWidth: 10 },
-                    4: { cellWidth: 15 },
-                    5: { cellWidth: 15 },
-                    6: { cellWidth: 25 },
-                    7: { cellWidth: 20 },
-                    8: { cellWidth: 15 },
-                    9: { cellWidth: 20 },
-                    10: { cellWidth: 20 },
-                    11: { cellWidth: 20 },
-                    12: { cellWidth: 15 },
-                    13: { cellWidth: 25 },
-                    14: { cellWidth: 15 },
-                    15: { cellWidth: 15 },
-                    16: { cellWidth: 20 },
-                    17: { cellWidth: 15 }
-                }
+                margin: { left: 14, right: 14 }
             });
             
             // Save PDF
-            const fileName = `Digi_PR_${treasuryCode}_${section}_${fromDate.replace(/\//g, '-')}_to_${toDate.replace(/\//g, '-')}.pdf`;
+            const fileName = `DigiPR_Report_${treasuryCode}_${section}_${fromDate.replace(/\//g, '-')}_to_${toDate.replace(/\//g, '-')}.pdf`;
             doc.save(fileName);
             
-            // Show success message
             Swal.fire({
-                title: 'PDF Exported',
-                text: `Report has been exported as ${fileName}`,
                 icon: 'success',
+                title: 'PDF Exported',
+                text: `Report saved as ${fileName}`,
                 timer: 3000,
                 showConfirmButton: false
             });
