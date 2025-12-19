@@ -568,7 +568,7 @@
                 
                 // Still show results card but with no data
                 $('#resultsCard').show();
-                $('#resultHeading').html(`Token Report Details <span id="recordCount" style="color: red;">(0 records found)</span>`);
+                $('#resultHeading').html(`DigiPR Report Details <span id="recordCount" style="color: red;">(0 records found)</span>`);
                 $('#totalRecords').text('0');
                 
                 // Disable export button when no data
@@ -616,7 +616,7 @@
             const toDateStr = formatDateForDisplay(toDate);
             
             $('#resultHeading').html(`
-                Token Report - ${treasuryCode} / ${section}
+DigiPR Report - ${treasuryCode} / ${section}
                 <span id="recordCount" style="color: green; font-size: 12px;">
                     (${data.length} records from ${fromDateStr} to ${toDateStr})
                 </span>
@@ -729,7 +729,7 @@
             
             // Add title and filter info
             doc.setFontSize(16);
-            doc.text('DDO Token Static Report', 14, 15);
+            doc.text('DigiPR Report', 14, 15);
             
             doc.setFontSize(10);
             doc.text(`Generated on: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 14, 22);
@@ -792,7 +792,7 @@
             });
             
             // Save PDF
-            const fileName = `DDO_Token_${treasuryCode}_${section}_${fromDate.replace(/\//g, '-')}_to_${toDate.replace(/\//g, '-')}.pdf`;
+            const fileName = `Digi_PR_${treasuryCode}_${section}_${fromDate.replace(/\//g, '-')}_to_${toDate.replace(/\//g, '-')}.pdf`;
             doc.save(fileName);
             
             // Show success message
