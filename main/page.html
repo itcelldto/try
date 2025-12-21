@@ -1,1 +1,723 @@
-hello
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - IT Cell HelpDesk</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <style>
+        /* Custom AdminLTE 3 Theme Overrides */
+        :root {
+            --primary: #0e56d1;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --info: #17a2b8;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --light: #f8f9fa;
+            --dark: #343a40;
+        }
+        
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+        }
+        
+        .main-header {
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        .main-header .navbar-nav .nav-link {
+            position: relative;
+        }
+        
+        .main-sidebar {
+            background-color: #222d32;
+        }
+        
+        .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link.active,
+        .sidebar-light-primary .nav-sidebar > .nav-item > .nav-link.active {
+            background-color: #004ca0e8;
+            color: #fff;
+            border-left: 3px solid #81cb0b;
+        }
+        
+        .sidebar-dark-primary .nav-sidebar > .nav-item > .nav-link:hover,
+        .sidebar-light-primary .nav-sidebar > .nav-item > .nav-link:hover {
+            background-color: #004ca0e8;
+            color: #fff;
+            border-left: 3px solid #81cb0b;
+        }
+        
+        .sidebar .nav-link p {
+            display: inline;
+            margin-left: 5px;
+        }
+        
+        .brand-link {
+            border-bottom: 1px solid #4b545c;
+            background-color: #0e56d1;
+        }
+        
+        .brand-link .brand-text {
+            font-weight: 600;
+        }
+        
+        .content-header {
+            padding: 15px 0.5rem;
+        }
+        
+        /* Custom navbar styles */
+        .navbar-custom-menu {
+            margin-right: 10px;
+        }
+        
+        .navbar-custom-menu .user-image {
+            width: 25px;
+            height: 25px;
+            margin-right: 5px;
+        }
+        
+        .user-header {
+            height: auto;
+            padding: 10px;
+            text-align: center;
+            background: #fff;
+        }
+        
+        .user-header img {
+            width: 80px;
+            height: 80px;
+            border: 3px solid #fff;
+        }
+        
+        .user-footer {
+            padding: 10px;
+            background-color: #f9f9f9;
+        }
+        
+        .user-footer .btn {
+            margin: 0 5px;
+        }
+        
+        .user-name-display {
+            color: #eaecef;
+        }
+        
+        .user-role-display {
+            color: #eaecef;
+        }
+        
+        /* Treasury name in sidebar */
+        .treasury-name {
+            padding: 10px;
+            text-align: left;
+            font-weight: 400;
+            font-size: 12px;
+            color: #b8c7ce;
+            background-color: #0000005e;
+            border-bottom: 1px solid #3c8dbc5e;
+            overflow: hidden;
+        }
+        
+        /* Dynamic content area */
+        #dynamic-content {
+            width: 100%;
+            min-height: calc(100vh - 100px);
+            overflow: auto;
+        }
+        
+        /* Running text styles */
+        .running-text {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: #f8f9fa;
+            padding: 8.9px;
+            border-bottom: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        #news-reel {
+            font-weight: normal;
+            color: #333;
+            white-space: nowrap;
+            display: block;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        /* Loading spinner styles */
+        .loading-container {
+            position: relative;
+            width: 100%;
+            height: calc(100vh - 1px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .loading-content {
+            text-align: center;
+        }
+        
+        .loading-content img {
+            width: 50px;
+            height: 50px;
+        }
+        
+        .loading-content p {
+            margin-top: 10px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        /* Chatbot Css */
+        .chat-icon {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 40px;
+            height: 40px;
+            background: #4a6fc7;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .chat-icon:hover {
+            background: #3b5aa6;
+            transform: scale(1.05);
+        }
+        
+        .chat-icon i {
+            font-size: 24px;
+        }
+        
+        /* Popup styles */
+        .chat-popup {
+            position: fixed;
+            bottom: 100px;
+            right: 25px;
+            width: 360px;
+            height: 500px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .popup-header {
+            background: #4a6fc7;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .popup-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .close-btn:hover {
+            transform: rotate(90deg);
+        }
+        
+        .popup-iframe {
+            flex: 1;
+            border: none;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Overlay when popup is active */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+        
+        /* Custom treeview styles */
+        .nav-treeview {
+            margin-left: 15px !important;
+        }
+        
+        .nav-treeview .nav-link {
+            padding-left: 15px !important;
+        }
+        
+        .nav-treeview .nav-treeview {
+            margin-left: 10px !important;
+        }
+        
+        /* Treeview auto-close fix */
+        .nav-sidebar .menu-open > .nav-treeview {
+            display: block;
+        }
+        
+        .content-wrapper>.content {
+            padding: 0 !important;
+        }
+        
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .chat-popup {
+                width: 320px;
+                height: 400px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .chat-popup {
+                width: 300px;
+                right: 10px;
+                bottom: 80px;
+            }
+            
+            .chat-icon {
+                right: 15px;
+                bottom: 15px;
+                width: 50px;
+                height: 50px;
+            }
+        }
+        
+        .nav-sidebar .nav-link>.right, .nav-sidebar .nav-link>p>.right {
+            top: .97rem !important;
+        }
+        
+        /* For the date-time display */
+        #current-date-time {
+            font-family: 'Courier New', monospace;
+            background: #f8f9fa;
+            padding: 5px 10px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+    </style>
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+    <!-- Main Content -->
+    <div class="wrapper" id="main-wrapper">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <h4 style="font-size: 25px;color: #343a40;font-weight: bold;text-shadow: 2px 2px #f8f9fa;margin: 0;">eAdmin</h4>
+                </li>
+            </ul>
+
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <!-- Current Date and Time -->
+                <li class="nav-item">
+                    <span id="current-date-time" style="padding: 8px 15px; color: #343a40; font-weight: bold;"></span>
+                </li>
+                
+                <!-- User Menu -->
+                <li class="nav-item dropdown user-menu">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle" style="color: #0e56d1;"></i>
+                        <span class="d-none d-md-inline" id="session-storage-value"></span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right" style="box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);">
+                        <!-- User image -->
+                        <li class="user-header">
+                            <img src="./img/user.png" class="img-circle elevation-2" alt="User Image">
+                            <p id="user-name-display">
+                                <small id="user-name-display"></small>
+                            </p>
+                            <p id="user-role-display">
+                                <small id="user-role-display"></small>
+                            </p>
+                        </li>
+                        <!-- Menu Footer-->
+                        <li class="user-footer">
+                            <a href="#" class="btn btn-default btn2-flat">Profile</a>
+                            <a href="#" class="btn btn-default btn2-flat float-right" onclick="window.location.reload(); return false;">Sign out</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+        <!-- /.navbar -->
+
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+            <a href="" class="brand-link">
+                <span class="brand-text font-weight-light"><b>IT Cell</b> Help Desk</span>
+            </a>
+
+            <!-- Treasury Name Display -->
+            <div class="treasury-name" id="treasury-name-display"></div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false" id="sidebar-menu">
+                        <!-- Menu items will be dynamically populated here -->
+                    </ul>
+                </nav>
+                <!-- /.sidebar-menu -->
+            </div>
+            <!-- /.sidebar -->
+        </aside>
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Running Text (News Reel) -->
+            <div class="running-text">
+                <marquee id="news-reel" direction="left" scrollamount="3"></marquee>
+            </div>
+            
+            <!-- Main Content -->
+            <section class="content">
+                <!-- Loading Spinner -->
+                <div class="loading-container hidden" id="loading-spinner">
+                    <div class="loading-content">
+                        <img src="https://itcelldto.github.io/try/Spinner-3.gif" alt="Loading...">
+                        <p>Loading. Please wait...</p>
+                    </div>
+                </div>
+                
+                <!-- Dynamic Content Area -->
+                <div id="dynamic-content"></div>
+            </section>
+        </div>
+
+        <!-- /.content-wrapper -->
+        <!-- Main Footer -->
+        <footer class="main-footer">
+            <div class="float-right d-none d-sm-block">
+                Version 1 
+            </div>
+            <strong>Copyright &copy; 2025 <a href="#">IT Cell HelpDesk</a>.</strong> All rights reserved.
+        </footer>
+    </div>
+    
+    <!-- Chatbot area -->
+    <div class="chat-icon" id="chatIcon">
+        <i class="fas fa-comment"></i>
+    </div>
+
+    <div class="chat-popup" id="chatPopup">
+        <div class="popup-header">
+            <h3>eAdmin Support</h3>
+            <button class="close-btn" id="closePopup">&times;</button>
+        </div>
+        <iframe src="https://itcelltreasury.github.io/try/chat/e-chatplus.html" class="popup-iframe" id="chatIframe"></iframe>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Bootstrap 4 -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    
+    <script>
+        // Configuration
+        const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
+        const sheetId = '11wvVQ2G41ke3g6RdfYX8AJAl0w-fnf2NQ_Agufz0wXY';
+        
+        // Get user data from session storage (set by login page)
+        const treasuryName = sessionStorage.getItem('treasuryName') || 'IT Cell HelpDesk';
+        const userName = sessionStorage.getItem('userName') || 'Admin User';
+        const userRole = sessionStorage.getItem('userRole') || 'Administrator';
+        const menuSheetName = sessionStorage.getItem('menuSheet') || 'nav-links';
+        
+        // Set inactivity timeout to 15 minutes (900,000 milliseconds)
+        const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
+        let inactivityTimer;
+
+        // Function to reset the inactivity timer
+        function resetInactivityTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(reloadPage, INACTIVITY_TIMEOUT);
+        }
+
+        // Function to reload the page
+        function reloadPage() {
+            window.location.reload(true);
+        }
+
+        // Event listeners to detect activity
+        function setupActivityListeners() {
+            document.addEventListener('mousemove', resetInactivityTimer);
+            document.addEventListener('click', resetInactivityTimer);
+            document.addEventListener('keydown', resetInactivityTimer);
+            document.addEventListener('touchstart', resetInactivityTimer);
+            document.addEventListener('touchmove', resetInactivityTimer);
+        }
+
+        // Initialize the timer and event listeners
+        function initInactivityTimer() {
+            setupActivityListeners();
+            resetInactivityTimer();
+        }
+
+        // Update date and time function
+        function updateDateTime() {
+            const now = new Date();
+            const day = String(now.getDate()).padStart(2, '0');
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = now.getFullYear();
+            const dateString = `${day}-${month}-${year}`;
+
+            let hours = now.getHours();
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            const timeString = `${hours}:${minutes}:${seconds} ${ampm}`;
+
+            const dateTimeString = `${dateString} ${timeString}`;
+            document.getElementById('current-date-time').textContent = dateTimeString;
+        }
+
+        // Function to load dynamic content
+        function loadDynamicContent(content) {
+            const contentArea = $('#dynamic-content');
+            $('#loading-spinner').removeClass('hidden');
+            
+            if (content) {
+                contentArea.empty();
+                
+                if (content.startsWith('<iframe') || content.includes('src="')) {
+                    const iframe = document.createElement('iframe');
+                    iframe.style.width = '100%';
+                    iframe.style.height = 'calc(100vh - 1px)';
+                    iframe.style.border = 'none';
+                    
+                    let srcUrl;
+                    if (content.startsWith('http')) {
+                        srcUrl = content;
+                    } else {
+                        const srcMatch = content.match(/src="([^"]*)"/);
+                        srcUrl = srcMatch ? srcMatch[1] : '';
+                    }
+                    
+                    if (treasuryName) {
+                        const urlObj = new URL(srcUrl, window.location.href);
+                        if (!urlObj.searchParams.has('treasury')) {
+                            urlObj.searchParams.append('treasury', treasuryName);
+                            srcUrl = urlObj.toString();
+                        }
+                    }
+                    
+                    iframe.src = srcUrl;
+                    contentArea.append(iframe);
+                } else {
+                    contentArea.html(content);
+                    contentArea.find('script').each(function() {
+                        try {
+                            eval($(this).text());
+                        } catch (error) {
+                            console.error('Error executing script:', error);
+                        }
+                    });
+                }
+                
+                $('#loading-spinner').addClass('hidden');
+            } else {
+                contentArea.html('<div class="alert alert-info">No content available for this item.</div>');
+                $('#loading-spinner').addClass('hidden');
+            }
+        }
+
+        // Initialize dashboard on page load
+        $(document).ready(function() {
+            // Display user information
+            $('#treasury-name-display').text(treasuryName);
+            $('#session-storage-value').text(userName);
+            $('#user-name-display').text(treasuryName);
+            $('#user-role-display').text(userRole);
+            
+            // Start date/time updates
+            updateDateTime();
+            setInterval(updateDateTime, 1000);
+            
+            // Start inactivity timer
+            initInactivityTimer();
+            
+            // Load menu and initial content
+            initializeDashboard();
+            
+            // Initialize chatbot
+            initializeChatbot();
+        });
+
+        // Function to initialize the dashboard
+        function initializeDashboard() {
+            // Fetch data for the running text
+            const reelSheetName = 'Scroll-reel';
+            const reelUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${reelSheetName}?key=${apiKey}`;
+
+            $.get(reelUrl, function(data) {
+                const rows = data.values;
+                let runningText = '';
+
+                rows.slice(1).forEach(row => {
+                    if (row[0]) {
+                        runningText += row[0] + ' • ';
+                    }
+                });
+
+                $('#news-reel').text(runningText);
+            }).fail(function() {
+                console.log('Could not load running text');
+            });
+
+            // Fetch and populate the sidebar menu
+            const menuUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${menuSheetName}?key=${apiKey}`;
+
+            fetch(menuUrl)
+                .then(response => response.json())
+                .then(data => {
+                    const rows = data.values;
+                    let currentMainMenu = '';
+                    let mainMenuLi = null;
+                    let subMenuUl = null;
+                    let firstSubmenuItem = null;
+
+                    rows.slice(1).forEach((row, index) => {
+                        const mainMenu = row[0];
+                        const subMenu = row[1];
+                        const subMenuLink = row[2];
+                        const dynamicContent = row[3];
+                        const mainMenuIcon = row[4] || 'bi bi-folder';
+                        const subMenuIcon = row[5] || 'bi bi-circle';
+
+                        if (mainMenu !== currentMainMenu) {
+                            currentMainMenu = mainMenu;
+                            mainMenuLi = $('<li>').addClass('nav-item has-treeview');
+                            subMenuUl = $('<ul>').addClass('nav nav-treeview');
+
+                            const mainMenuLink = $('<a>')
+                                .addClass('nav-link')
+                                .append($('<i>').addClass('nav-icon ' + mainMenuIcon))
+                                .append('<p>' + mainMenu + '<i class="right fas fa-angle-left"></i></p>')
+                                .click(function(e) {
+                                    e.preventDefault();
+                                    $('.nav-item.has-treeview').not(mainMenuLi).removeClass('menu-open');
+                                    mainMenuLi.toggleClass('menu-open');
+                                });
+
+                            mainMenuLi.append(mainMenuLink);
+                            mainMenuLi.append(subMenuUl);
+                            $('#sidebar-menu').append(mainMenuLi);
+                        }
+
+                        if (subMenu && subMenuLink) {
+                            const subMenuLi = $('<li>').addClass('nav-item').append(
+                                $('<a>').addClass('nav-link').attr('href', '#').append(
+                                    $('<i>').addClass('nav-icon ' + subMenuIcon)
+                                ).append('<p>' + subMenu + '</p>').click(function(e) {
+                                    e.preventDefault();
+                                    loadDynamicContent(dynamicContent);
+                                })
+                            );
+                            subMenuUl.append(subMenuLi);
+                            
+                            if (!firstSubmenuItem && dynamicContent) {
+                                firstSubmenuItem = dynamicContent;
+                            }
+                        }
+                    });
+                    
+                    // Initialize treeview
+                    $('[data-widget="treeview"]').Treeview('init');
+                    $('#loading-spinner').addClass('hidden');
+                    
+                    // Load first item's content automatically
+                    if (firstSubmenuItem) {
+                        loadDynamicContent(firstSubmenuItem);
+                    } else {
+                        $('#dynamic-content').html('<div class="alert alert-info">Select a menu item to view content</div>');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading menu:', error);
+                    $('#dynamic-content').html('<div class="alert alert-danger">Failed to load menu. Please try again later.</div>');
+                    $('#loading-spinner').addClass('hidden');
+                });
+        }
+
+        // Chatbot functionality
+        function initializeChatbot() {
+            const chatIcon = document.getElementById('chatIcon');
+            const chatPopup = document.getElementById('chatPopup');
+            const closePopup = document.getElementById('closePopup');
+            const overlay = document.getElementById('overlay');
+            
+            chatIcon.addEventListener('click', function() {
+                chatPopup.style.display = 'flex';
+                overlay.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+            });
+            
+            closePopup.addEventListener('click', function() {
+                chatPopup.style.display = 'none';
+                overlay.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+            
+            overlay.addEventListener('click', function() {
+                chatPopup.style.display = 'none';
+                overlay.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            });
+            
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    chatPopup.style.display = 'none';
+                    overlay.style.display = 'none';
+                    document.body.style.overflow = 'auto';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
