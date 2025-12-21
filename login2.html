@@ -705,6 +705,12 @@
                     .catch(err => console.log('Registration failed:', err));
             });
         }
+        
+        // Check if user is already logged in
+        if (sessionStorage.getItem('isLoggedIn') === 'true') {
+            // Redirect to dashboard if already logged in
+            window.location.href = "index (74).html";
+        }
     </script>
 
     <!-- jQuery -->
@@ -865,11 +871,15 @@
                 
                 if (loginSuccessful) {
                     // Store user information
+                    sessionStorage.setItem('isLoggedIn', 'true');
                     sessionStorage.setItem('treasuryName', treasuryName);
                     sessionStorage.setItem('userName', userName);
                     sessionStorage.setItem('userRole', userRole);
                     sessionStorage.setItem('treasuryRow', treasuryRow);
                     sessionStorage.setItem('menuSheet', treasurySettings[treasuryRow][5] || 'nav-links');
+                    
+                    // Set login timestamp for session management
+                    sessionStorage.setItem('loginTime', new Date().getTime());
                     
                     // Show success and redirect to main dashboard
                     loginButton.innerHTML = '<i class="bi bi-check-circle me-2"></i> Success! Redirecting...';
@@ -877,7 +887,7 @@
                     
                     setTimeout(() => {
                         // Redirect to your main dashboard HTML file
-                        window.location.href = "index.html"; // Your main dashboard file
+                        window.location.href = "main/page.html"; // Your main dashboard file
                     }, 1000);
                     
                 } else {
