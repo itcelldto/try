@@ -11,37 +11,36 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <style>
-        /* Authentication Check Overlay */
-        .auth-overlay {
+        /* Simple Authentication Check */
+        .auth-check {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background-color: #06002c;
-            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><rect fill="%2306002c" width="400" height="400"/><g fill-opacity="0.05"><circle fill="%2300a65a" cx="100" cy="100" r="80"/><circle fill="%233c8dbc" cx="300" cy="300" r="80"/><circle fill="%23dd4b39" cx="200" cy="200" r="60"/></g></svg>');
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            z-index: 999999;
+            z-index: 99999;
         }
         
-        .auth-check-box {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
+        .auth-check-content {
+            background: white;
             padding: 40px;
+            border-radius: 10px;
             text-align: center;
-            max-width: 500px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 400px;
             width: 90%;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
         }
         
         .auth-spinner {
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #3498db;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
             border-radius: 50%;
-            width: 60px;
-            height: 60px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
@@ -49,33 +48,6 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-        
-        .auth-message {
-            font-size: 18px;
-            color: #333;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-        
-        .auth-error {
-            color: #dc3545;
-            margin-top: 20px;
-        }
-        
-        .auth-login-btn {
-            background-color: #3c8dbc;
-            color: white;
-            border: none;
-            padding: 10px 30px;
-            border-radius: 5px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        
-        .auth-login-btn:hover {
-            background-color: #367fa9;
         }
         
         /* Custom AdminLTE 3 Theme Overrides */
@@ -92,7 +64,6 @@
         
         body {
             font-family: 'Source Sans Pro', sans-serif;
-            display: none; /* Hidden until authenticated */
         }
         
         .main-header {
@@ -398,19 +369,22 @@
         }
     </style>
 </head>
-<body class="hold-transition sidebar-mini layout-fixed">
-    <!-- Authentication Check Overlay -->
-    <div class="auth-overlay" id="auth-overlay">
-        <div class="auth-check-box">
+<body class="hold-transition sidebar-mini layout-fixed" style="display: none;">
+    <!-- Simple Authentication Check -->
+    <div class="auth-check" id="auth-check">
+        <div class="auth-check-content">
             <div class="auth-spinner"></div>
-            <div class="auth-message">Verifying authentication...</div>
-            <div class="auth-error hidden" id="auth-error"></div>
-            <button class="auth-login-btn hidden" id="go-to-login">Go to Login</button>
+            <h4>Checking Authentication...</h4>
+            <p class="mt-3" id="auth-message">Please wait while we verify your session.</p>
+            <div id="auth-error" class="text-danger mt-2" style="display: none;">
+                <p>Authentication required. Redirecting to login...</p>
+                <button onclick="window.location.href='index.html'" class="btn btn-primary mt-2">Go to Login</button>
+            </div>
         </div>
     </div>
 
-    <!-- Main Content (Hidden until authenticated) -->
-    <div class="wrapper" id="main-wrapper" style="display: none;">
+    <!-- Main Content -->
+    <div class="wrapper" id="main-wrapper">
         <!-- Navbar -->
         <nav class="main-header navbar navbar-expand navbar-white navbar-light">
             <!-- Left navbar links -->
@@ -541,45 +515,41 @@
         const sheetId = '11wvVQ2G41ke3g6RdfYX8AJAl0w-fnf2NQ_Agufz0wXY';
         const loginPageUrl = 'index.html'; // Your login page URL
 
-        // Authentication check - runs immediately
-        (function checkAuthentication() {
-            // Get authentication data from session storage
-            const isAuthenticated = sessionStorage.getItem('isAuthenticated') === 'true';
-            const authTimestamp = parseInt(sessionStorage.getItem('authTimestamp') || '0');
-            const authTimeout = 8 * 60 * 60 * 1000; // 8 hours in milliseconds
+        // Check if user is logged in (compatible with your current login system)
+        function checkAuthentication() {
+            // Get values from sessionStorage (set by your login page)
+            const treasuryName = sessionStorage.getItem('treasuryName');
+            const userName = sessionStorage.getItem('userName');
             
-            const currentTime = Date.now();
-            const isSessionValid = (currentTime - authTimestamp) < authTimeout;
+            console.log('Checking authentication...');
+            console.log('treasuryName:', treasuryName);
+            console.log('userName:', userName);
+            console.log('All sessionStorage:', JSON.stringify(sessionStorage, null, 2));
             
-            if (isAuthenticated && isSessionValid) {
-                // Update timestamp to extend session
-                sessionStorage.setItem('authTimestamp', currentTime.toString());
-                // Hide auth overlay
-                document.getElementById('auth-overlay').style.display = 'none';
-                // Show the dashboard
+            // Check if we have required session data
+            if (treasuryName && userName) {
+                // User is authenticated
+                document.getElementById('auth-check').style.display = 'none';
                 document.body.style.display = 'block';
-                document.getElementById('main-wrapper').style.display = 'block';
+                
+                // Set a flag to indicate user is authenticated
+                sessionStorage.setItem('isAuthenticated', 'true');
+                
                 // Initialize the dashboard
                 initializeDashboard();
+                return true;
             } else {
-                // Show error message
-                document.getElementById('auth-error').textContent = 
-                    'Your session has expired or you are not authenticated.';
-                document.getElementById('auth-error').classList.remove('hidden');
-                document.getElementById('go-to-login').classList.remove('hidden');
-                // Stop spinner
-                document.querySelector('.auth-spinner').style.display = 'none';
+                // Not authenticated
+                document.getElementById('auth-message').style.display = 'none';
+                document.getElementById('auth-error').style.display = 'block';
+                
+                // Redirect to login after 3 seconds
+                setTimeout(() => {
+                    window.location.href = loginPageUrl;
+                }, 3000);
+                return false;
             }
-        })();
-
-        // Go to login button handler
-        document.getElementById('go-to-login').addEventListener('click', function() {
-            // Clear any existing session data
-            sessionStorage.clear();
-            localStorage.clear();
-            // Redirect to login page
-            window.location.href = loginPageUrl;
-        });
+        }
 
         // Logout function
         function logout() {
@@ -591,10 +561,14 @@
         }
 
         // Get user data from session storage
-        const treasuryName = sessionStorage.getItem('treasuryName') || 'IT Cell HelpDesk';
-        const userName = sessionStorage.getItem('userName') || 'Admin User';
-        const userRole = sessionStorage.getItem('userRole') || 'Administrator';
-        const menuSheetName = sessionStorage.getItem('menuSheet') || 'nav-links';
+        function getUserData() {
+            return {
+                treasuryName: sessionStorage.getItem('treasuryName') || 'IT Cell HelpDesk',
+                userName: sessionStorage.getItem('userName') || 'Admin User',
+                userRole: sessionStorage.getItem('userRole') || 'Administrator',
+                menuSheetName: sessionStorage.getItem('menuSheet') || 'nav-links'
+            };
+        }
         
         // Set inactivity timeout to 15 minutes (900,000 milliseconds)
         const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
@@ -662,10 +636,11 @@
                         srcUrl = srcMatch ? srcMatch[1] : '';
                     }
                     
-                    if (treasuryName) {
+                    const userData = getUserData();
+                    if (userData.treasuryName) {
                         const urlObj = new URL(srcUrl, window.location.href);
                         if (!urlObj.searchParams.has('treasury')) {
-                            urlObj.searchParams.append('treasury', treasuryName);
+                            urlObj.searchParams.append('treasury', userData.treasuryName);
                             srcUrl = urlObj.toString();
                         }
                     }
@@ -692,11 +667,15 @@
 
         // Initialize dashboard
         function initializeDashboard() {
+            const userData = getUserData();
+            
+            console.log('Initializing dashboard with:', userData);
+            
             // Display user information
-            $('#treasury-name-display').text(treasuryName);
-            $('#session-storage-value').text(userName);
-            $('#user-name-display').text(treasuryName);
-            $('#user-role-display').text(userRole);
+            $('#treasury-name-display').text(userData.treasuryName);
+            $('#session-storage-value').text(userData.userName);
+            $('#user-name-display').text(userData.treasuryName);
+            $('#user-role-display').text(userData.userRole);
             
             // Start date/time updates
             updateDateTime();
@@ -706,14 +685,14 @@
             initInactivityTimer();
             
             // Load menu and initial content
-            loadDashboardContent();
+            loadDashboardContent(userData);
             
             // Initialize chatbot
             initializeChatbot();
         }
 
         // Function to load dashboard content
-        function loadDashboardContent() {
+        function loadDashboardContent(userData) {
             // Fetch data for the running text
             const reelSheetName = 'Scroll-reel';
             const reelUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${reelSheetName}?key=${apiKey}`;
@@ -730,13 +709,14 @@
                     });
                 }
 
-                $('#news-reel').text(runningText);
+                $('#news-reel').text(runningText || 'Welcome to IT Cell HelpDesk Dashboard');
             }).fail(function() {
                 console.log('Could not load running text');
+                $('#news-reel').text('Welcome to IT Cell HelpDesk Dashboard');
             });
 
             // Fetch and populate the sidebar menu
-            const menuUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${menuSheetName}?key=${apiKey}`;
+            const menuUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${userData.menuSheetName}?key=${apiKey}`;
 
             fetch(menuUrl)
                 .then(response => response.json())
@@ -792,6 +772,16 @@
                                 }
                             }
                         });
+                    } else {
+                        // If no menu data, show default message
+                        $('#sidebar-menu').html(`
+                            <li class="nav-item">
+                                <a href="#" class="nav-link">
+                                    <i class="nav-icon bi bi-info-circle"></i>
+                                    <p>No menu available</p>
+                                </a>
+                            </li>
+                        `);
                     }
                     
                     // Initialize treeview
@@ -802,12 +792,30 @@
                     if (firstSubmenuItem) {
                         loadDynamicContent(firstSubmenuItem);
                     } else {
-                        $('#dynamic-content').html('<div class="alert alert-info">Select a menu item to view content</div>');
+                        $('#dynamic-content').html(`
+                            <div style="padding: 20px;">
+                                <div class="alert alert-info">
+                                    <h4><i class="icon fas fa-info"></i> Welcome to IT Cell HelpDesk Dashboard!</h4>
+                                    <p>Select a menu item from the sidebar to view content.</p>
+                                    <p><strong>Treasury:</strong> ${userData.treasuryName}</p>
+                                    <p><strong>User:</strong> ${userData.userName} (${userData.userRole})</p>
+                                </div>
+                            </div>
+                        `);
                     }
                 })
                 .catch(error => {
                     console.error('Error loading menu:', error);
-                    $('#dynamic-content').html('<div class="alert alert-danger">Failed to load menu. Please try again later.</div>');
+                    $('#dynamic-content').html(`
+                        <div style="padding: 20px;">
+                            <div class="alert alert-warning">
+                                <h4><i class="icon fas fa-exclamation-triangle"></i> Menu Loading Error</h4>
+                                <p>Failed to load menu. Please try again later.</p>
+                                <p>Error: ${error.message}</p>
+                                <button onclick="window.location.reload()" class="btn btn-primary mt-2">Retry</button>
+                            </div>
+                        </div>
+                    `);
                     $('#loading-spinner').addClass('hidden');
                 });
         }
@@ -818,6 +826,8 @@
             const chatPopup = document.getElementById('chatPopup');
             const closePopup = document.getElementById('closePopup');
             const overlay = document.getElementById('overlay');
+            
+            if (!chatIcon || !chatPopup) return;
             
             chatIcon.addEventListener('click', function() {
                 chatPopup.style.display = 'flex';
@@ -846,11 +856,17 @@
             });
         }
 
-        // Also restart timer when page becomes visible again
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden) {
-                resetInactivityTimer();
-            }
+        // Start authentication check when page loads
+        $(document).ready(function() {
+            // Check authentication immediately
+            checkAuthentication();
+            
+            // Also restart timer when page becomes visible again
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    resetInactivityTimer();
+                }
+            });
         });
     </script>
 </body>
