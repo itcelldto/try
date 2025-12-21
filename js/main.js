@@ -3,53 +3,139 @@ const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
 const sheetId = '11wvVQ2G41ke3g6RdfYX8AJAl0w-fnf2NQ_Agufz0wXY';
 const loginPageUrl = 'login.html'; // Your login page URL
 
-// Check if user is logged in (compatible with your current login system)
+// Authentication variables
+let isAuthenticated = false;
+const AUTH_KEY = 'eadmin_auth_token';
+const LOGIN_TIME_KEY = 'eadmin_login_time';
+const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes in milliseconds
+
+// Generate authentication token
+function generateAuthToken() {
+    const timestamp = new Date().getTime();
+    const random = Math.random().toString(36).substring(2);
+    const userName = sessionStorage.getItem('userName') || 'anonymous';
+    const token = btoa(`${timestamp}:${random}:${userName}`);
+    sessionStorage.setItem(AUTH_KEY, token);
+    sessionStorage.setItem(LOGIN_TIME_KEY, timestamp.toString());
+    return token;
+}
+
+// Validate authentication token
+function validateAuthToken() {
+    const token = sessionStorage.getItem(AUTH_KEY);
+    const loginTime = sessionStorage.getItem(LOGIN_TIME_KEY);
+    
+    if (!token || !loginTime) {
+        return false;
+    }
+    
+    try {
+        const decoded = atob(token);
+        const parts = decoded.split(':');
+        if (parts.length !== 3) return false;
+        
+        const tokenTimestamp = parseInt(parts[0]);
+        const storedLoginTime = parseInt(loginTime);
+        
+        // Check if session has expired (15 minutes)
+        const currentTime = new Date().getTime();
+        if (currentTime - storedLoginTime > SESSION_TIMEOUT) {
+            console.log('Session expired due to timeout');
+            sessionStorage.removeItem(AUTH_KEY);
+            sessionStorage.removeItem(LOGIN_TIME_KEY);
+            return false;
+        }
+        
+        // Refresh login time on successful validation
+        sessionStorage.setItem(LOGIN_TIME_KEY, currentTime.toString());
+        return true;
+    } catch (e) {
+        console.error('Error validating auth token:', e);
+        return false;
+    }
+}
+
+// Enhanced checkAuthentication function
 function checkAuthentication() {
-    // Get values from sessionStorage (set by your login page)
+    // Check for authentication token first
+    const authTokenValid = validateAuthToken();
+    
+    // Get values from sessionStorage
     const treasuryName = sessionStorage.getItem('treasuryName');
     const userName = sessionStorage.getItem('userName');
     
     console.log('Checking authentication...');
     console.log('treasuryName:', treasuryName);
     console.log('userName:', userName);
-    console.log('All sessionStorage:', JSON.stringify(sessionStorage, null, 2));
+    console.log('Auth token valid:', authTokenValid);
     
-    // Check if we have required session data
-    if (treasuryName && userName) {
+    // Check if we have required session data AND valid auth token
+    if (treasuryName && userName && authTokenValid) {
         // User is authenticated
         document.getElementById('auth-check').style.display = 'none';
         document.body.style.display = 'block';
         
-        // Set a flag to indicate user is authenticated
-        sessionStorage.setItem('isAuthenticated', 'true');
+        isAuthenticated = true;
         
         // Initialize the dashboard
         initializeDashboard();
         return true;
     } else {
-        // Not authenticated
+        // Not authenticated - clear any existing auth data
+        clearAllAuthData();
+        
         document.getElementById('auth-message').style.display = 'none';
         document.getElementById('auth-error').style.display = 'block';
         
-        // Redirect to login after 3 seconds
+        // Redirect to login after 1 second
         setTimeout(() => {
-            window.location.href = loginPageUrl;
+            // Add cache-busting parameter
+            const timestamp = new Date().getTime();
+            window.location.href = `${loginPageUrl}?redirect=${timestamp}`;
         }, 1000);
         return false;
     }
 }
 
-// Logout function
+// Clear all authentication data
+function clearAllAuthData() {
+    sessionStorage.removeItem('treasuryName');
+    sessionStorage.removeItem('userName');
+    sessionStorage.removeItem('userRole');
+    sessionStorage.removeItem('treasuryRow');
+    sessionStorage.removeItem('menuSheet');
+    sessionStorage.removeItem('isLoggedIn');
+    sessionStorage.removeItem('isAuthenticated');
+    sessionStorage.removeItem(AUTH_KEY);
+    sessionStorage.removeItem(LOGIN_TIME_KEY);
+    
+    // Clear related localStorage items
+    localStorage.removeItem('treasuryName');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userRole');
+    
+    isAuthenticated = false;
+}
+
+// Enhanced logout function
 function logout() {
-    // Clear all session data
-    sessionStorage.clear();
-    localStorage.clear();
-    // Redirect to login page
-    window.location.href = loginPageUrl;
+    console.log('Logging out...');
+    clearAllAuthData();
+    
+    // Redirect to login page with cache-busting parameter
+    const timestamp = new Date().getTime();
+    window.location.replace(`${loginPageUrl}?logout=${timestamp}&nocache=${timestamp}`);
 }
 
 // Get user data from session storage
 function getUserData() {
+    // Always validate token before returning user data
+    if (!validateAuthToken()) {
+        console.log('Auth token invalid, logging out...');
+        logout();
+        return null;
+    }
+    
     return {
         treasuryName: sessionStorage.getItem('treasuryName') || 'IT Cell HelpDesk',
         userName: sessionStorage.getItem('userName') || 'Admin User',
@@ -59,7 +145,7 @@ function getUserData() {
 }
 
 // Set inactivity timeout to 15 minutes (900,000 milliseconds)
-const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
+const INACTIVITY_TIMEOUT = SESSION_TIMEOUT;
 let inactivityTimer;
 
 // Function to reset the inactivity timer
@@ -70,11 +156,11 @@ function resetInactivityTimer() {
 
 // Event listeners to detect activity
 function setupActivityListeners() {
-    document.addEventListener('mousemove', resetInactivityTimer);
-    document.addEventListener('click', resetInactivityTimer);
-    document.addEventListener('keydown', resetInactivityTimer);
-    document.addEventListener('touchstart', resetInactivityTimer);
-    document.addEventListener('touchmove', resetInactivityTimer);
+    const events = ['mousemove', 'click', 'keydown', 'scroll', 'touchstart', 'touchmove'];
+    
+    events.forEach(event => {
+        document.addEventListener(event, resetInactivityTimer, { passive: true });
+    });
 }
 
 // Initialize the timer and event listeners
@@ -104,6 +190,19 @@ function updateDateTime() {
 
 // Function to load dynamic content
 function loadDynamicContent(content) {
+    // Always validate authentication before loading content
+    if (!validateAuthToken()) {
+        console.log('Authentication failed while loading content');
+        logout();
+        return;
+    }
+    
+    const userData = getUserData();
+    if (!userData) {
+        logout();
+        return;
+    }
+    
     const contentArea = $('#dynamic-content');
     $('#loading-spinner').removeClass('hidden');
     
@@ -124,7 +223,6 @@ function loadDynamicContent(content) {
                 srcUrl = srcMatch ? srcMatch[1] : '';
             }
             
-            const userData = getUserData();
             if (userData.treasuryName) {
                 const urlObj = new URL(srcUrl, window.location.href);
                 if (!urlObj.searchParams.has('treasury')) {
@@ -156,8 +254,15 @@ function loadDynamicContent(content) {
 // Initialize dashboard
 function initializeDashboard() {
     const userData = getUserData();
+    if (!userData) {
+        logout();
+        return;
+    }
     
     console.log('Initializing dashboard with:', userData);
+    
+    // Generate or refresh auth token
+    generateAuthToken();
     
     // Display user information
     $('#treasury-name-display').text(userData.treasuryName);
@@ -177,10 +282,23 @@ function initializeDashboard() {
     
     // Initialize chatbot
     initializeChatbot();
+    
+    // Add beforeunload event to prevent caching
+    window.addEventListener('beforeunload', function() {
+        if (!isAuthenticated) {
+            clearAllAuthData();
+        }
+    });
 }
 
 // Function to load dashboard content
 function loadDashboardContent(userData) {
+    // Validate authentication first
+    if (!validateAuthToken()) {
+        logout();
+        return;
+    }
+    
     // Fetch data for the running text
     const reelSheetName = 'Scroll-reel';
     const reelUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${reelSheetName}?key=${apiKey}`;
@@ -318,6 +436,10 @@ function initializeChatbot() {
     if (!chatIcon || !chatPopup) return;
     
     chatIcon.addEventListener('click', function() {
+        if (!validateAuthToken()) {
+            logout();
+            return;
+        }
         chatPopup.style.display = 'flex';
         overlay.style.display = 'block';
         document.body.style.overflow = 'hidden';
@@ -344,15 +466,81 @@ function initializeChatbot() {
     });
 }
 
+// Handle browser back/forward navigation
+window.addEventListener('popstate', function(event) {
+    console.log('Browser navigation detected, checking authentication...');
+    if (!validateAuthToken()) {
+        logout();
+    }
+});
+
+// Handle page load from cache (bfcache)
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        console.log('Page loaded from browser cache, validating authentication...');
+        if (!validateAuthToken()) {
+            logout();
+        }
+    }
+});
+
+// Prevent page caching
+function disablePageCaching() {
+    // Add no-cache headers
+    const metaTags = [
+        { httpEquiv: 'Cache-Control', content: 'no-cache, no-store, must-revalidate' },
+        { httpEquiv: 'Pragma', content: 'no-cache' },
+        { httpEquiv: 'Expires', content: '0' }
+    ];
+    
+    metaTags.forEach(tag => {
+        let meta = document.querySelector(`meta[http-equiv="${tag.httpEquiv}"]`);
+        if (!meta) {
+            meta = document.createElement('meta');
+            meta.httpEquiv = tag.httpEquiv;
+            document.head.appendChild(meta);
+        }
+        meta.content = tag.content;
+    });
+}
+
 // Start authentication check when page loads
 $(document).ready(function() {
+    // Disable page caching
+    disablePageCaching();
+    
+    // Check URL parameters for logout or redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('logout')) {
+        console.log('Logout parameter detected, clearing auth data');
+        clearAllAuthData();
+    }
+    
     // Check authentication immediately
     checkAuthentication();
     
-    // Also restart timer when page becomes visible again
+    // Handle page visibility changes
     document.addEventListener('visibilitychange', function() {
         if (!document.hidden) {
-            resetInactivityTimer();
+            console.log('Page became visible, checking authentication...');
+            if (!validateAuthToken()) {
+                logout();
+            } else {
+                resetInactivityTimer();
+            }
         }
     });
+    
+    // Add periodic authentication check (every 30 seconds)
+    setInterval(function() {
+        if (!validateAuthToken()) {
+            console.log('Periodic authentication check failed');
+            logout();
+        }
+    }, 30000);
+    
+    // Replace history state to prevent back navigation to cached page
+    if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', window.location.href);
+    }
 });
