@@ -709,7 +709,7 @@
         // Check if user is already logged in
         if (sessionStorage.getItem('isLoggedIn') === 'true') {
             // Redirect to dashboard if already logged in
-            window.location.href = "index (74).html";
+            window.location.href = "eadmin.html";
         }
     </script>
 
@@ -882,7 +882,7 @@
                     sessionStorage.setItem('loginTime', new Date().getTime());
                     
                     // Show success and redirect to main dashboard
-                    loginButton.innerHTML = '<i class="bi bi-check-circle me-2"></i> Success! Redirecting...';
+                    loginButton.innerHTML = '<i class="bi bi-check-circle me-2"></i> Success!...';
                     loginButton.style.background = 'linear-gradient(135deg, #00a65a 0%, #008548 100%)';
                     
                     setTimeout(() => {
