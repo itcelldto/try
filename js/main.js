@@ -34,7 +34,7 @@ function checkAuthentication() {
         // Redirect to login after 3 seconds
         setTimeout(() => {
             window.location.href = loginPageUrl;
-        }, 3000);
+        }, 1000);
         return false;
     }
 }
