@@ -171,14 +171,19 @@ document.getElementById('login-form').addEventListener('submit', async function(
         if (loginSuccessful) {
             // Store user information
             sessionStorage.setItem('isLoggedIn', 'true');
-            sessionStorage.setItem('treasuryName', treasuryName);
-            sessionStorage.setItem('userName', userName);
-            sessionStorage.setItem('userRole', userRole);
-            sessionStorage.setItem('treasuryRow', treasuryRow);
-            sessionStorage.setItem('menuSheet', treasurySettings[treasuryRow][5] || 'nav-links');
+    sessionStorage.setItem('treasuryName', treasuryName);
+    sessionStorage.setItem('userName', userName);
+    sessionStorage.setItem('userRole', userRole);
+    sessionStorage.setItem('treasuryRow', treasuryRow);
+    sessionStorage.setItem('menuSheet', treasurySettings[treasuryRow][5] || 'nav-links');
             
             // Set login timestamp for session management
             sessionStorage.setItem('loginTime', new Date().getTime());
+             // Generate authentication token
+    const timestamp = new Date().getTime();
+    const random = Math.random().toString(36).substring(2);
+    const authToken = btoa(`${timestamp}:${random}:${userName}`);
+    sessionStorage.setItem('eadmin_auth_token', authToken);
             
             // Show success and redirect to main dashboard
             loginButton.innerHTML = '<i class="bi bi-check-circle me-2"></i> Success!...';
