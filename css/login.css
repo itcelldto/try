@@ -95,8 +95,8 @@ body {
 /* Login Container - Reduced to 50% of original size */
 .login-container {
     width: 100%;
-    max-width: 850px; /* Reduced from 1200px to 600px (50%) */
-    min-height: 400px; /* Reduced from 600px to 400px */
+    max-width: 875px; 
+    min-height: 400px; 
     margin: 20px;
     border-radius: 20px;
     overflow: hidden;
