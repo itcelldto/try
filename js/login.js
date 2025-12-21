@@ -22,9 +22,25 @@ if ('serviceWorker' in navigator) {
 }
 
 // Check if user is already logged in
-if (sessionStorage.getItem('isLoggedIn') === 'true') {
-    // Redirect to dashboard if already logged in
-    window.location.href = "eadmin.html";
+// IMPORTANT: Also check for authentication token to prevent back button issue
+const authToken = sessionStorage.getItem('eadmin_auth_token');
+if (sessionStorage.getItem('isLoggedIn') === 'true' && authToken) {
+    // Check if session is still valid (less than 15 minutes old)
+    const loginTime = sessionStorage.getItem('loginTime');
+    if (loginTime) {
+        const currentTime = new Date().getTime();
+        const sessionAge = currentTime - parseInt(loginTime);
+        const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+        
+        if (sessionAge < SESSION_TIMEOUT) {
+            // Redirect to dashboard if already logged in and session is valid
+            window.location.href = "eadmin.html";
+        } else {
+            // Session expired, clear all data
+            sessionStorage.clear();
+            localStorage.clear();
+        }
+    }
 }
 
 // Generate CAPTCHA function
@@ -171,27 +187,36 @@ document.getElementById('login-form').addEventListener('submit', async function(
         if (loginSuccessful) {
             // Store user information
             sessionStorage.setItem('isLoggedIn', 'true');
-    sessionStorage.setItem('treasuryName', treasuryName);
-    sessionStorage.setItem('userName', userName);
-    sessionStorage.setItem('userRole', userRole);
-    sessionStorage.setItem('treasuryRow', treasuryRow);
-    sessionStorage.setItem('menuSheet', treasurySettings[treasuryRow][5] || 'nav-links');
+            sessionStorage.setItem('treasuryName', treasuryName);
+            sessionStorage.setItem('userName', userName);
+            sessionStorage.setItem('userRole', userRole);
+            sessionStorage.setItem('treasuryRow', treasuryRow);
+            sessionStorage.setItem('menuSheet', treasurySettings[treasuryRow][5] || 'nav-links');
             
             // Set login timestamp for session management
-            sessionStorage.setItem('loginTime', new Date().getTime());
-             // Generate authentication token
-    const timestamp = new Date().getTime();
-    const random = Math.random().toString(36).substring(2);
-    const authToken = btoa(`${timestamp}:${random}:${userName}`);
-    sessionStorage.setItem('eadmin_auth_token', authToken);
+            const loginTime = new Date().getTime();
+            sessionStorage.setItem('loginTime', loginTime);
+            
+            // Generate authentication token (MATCHING main.js format)
+            const timestamp = loginTime;
+            const random = Math.random().toString(36).substring(2);
+            const authToken = btoa(`${timestamp}:${random}:${userName}`);
+            
+            // Store both tokens (compatible with main.js)
+            sessionStorage.setItem('eadmin_auth_token', authToken);
+            sessionStorage.setItem('eadmin_login_time', timestamp.toString());
+            
+            // Clear any previous CAPTCHA data
+            sessionStorage.removeItem('captcha');
             
             // Show success and redirect to main dashboard
             loginButton.innerHTML = '<i class="bi bi-check-circle me-2"></i> Success!...';
             loginButton.style.background = 'linear-gradient(135deg, #00a65a 0%, #008548 100%)';
             
             setTimeout(() => {
-                // Redirect to your main dashboard HTML file
-                window.location.href = "eadmin.html"; // Your main dashboard file
+                // Use replaceState to prevent back navigation to login page
+                window.history.replaceState(null, '', 'eadmin.html');
+                window.location.replace("eadmin.html");
             }, 1000);
             
         } else {
@@ -199,6 +224,11 @@ document.getElementById('login-form').addEventListener('submit', async function(
             errorText.textContent = 'Invalid User ID or Password';
             errorDiv.style.display = 'block';
             displayCaptcha();
+            
+            // Clear any sensitive data
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('eadmin_auth_token');
+            sessionStorage.removeItem('eadmin_login_time');
             
             // Shake animation for form
             const form = document.getElementById('login-form');
@@ -213,6 +243,11 @@ document.getElementById('login-form').addEventListener('submit', async function(
         errorText.textContent = 'Error connecting to server. Please try again later.';
         errorDiv.style.display = 'block';
         displayCaptcha();
+        
+        // Clear any sensitive data on error
+        sessionStorage.removeItem('isLoggedIn');
+        sessionStorage.removeItem('eadmin_auth_token');
+        sessionStorage.removeItem('eadmin_login_time');
     } finally {
         // Reset button state
         loginButton.classList.remove('loading');
@@ -237,8 +272,16 @@ function openForgotPasswordPopup() {
     );
 }
 
-// Initialize CAPTCHA on page load
+// Clear any leftover authentication data on page load
 window.addEventListener('DOMContentLoaded', () => {
+    // Check URL parameters for logout
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('logout') || urlParams.has('redirect')) {
+        // Clear all session data if coming from logout
+        sessionStorage.clear();
+        localStorage.clear();
+    }
+    
     displayCaptcha();
     document.getElementById('userid').focus();
     
@@ -257,4 +300,31 @@ window.addEventListener('DOMContentLoaded', () => {
             document.getElementById('login-form').dispatchEvent(new Event('submit'));
         }
     });
+    
+    // Prevent caching of login page
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            // Page was loaded from cache, refresh
+            window.location.reload();
+        }
+    });
 });
+
+// Add cache prevention meta tags dynamically
+(function() {
+    const metaTags = [
+        { httpEquiv: 'Cache-Control', content: 'no-cache, no-store, must-revalidate' },
+        { httpEquiv: 'Pragma', content: 'no-cache' },
+        { httpEquiv: 'Expires', content: '0' }
+    ];
+    
+    metaTags.forEach(tag => {
+        let meta = document.querySelector(`meta[http-equiv="${tag.httpEquiv}"]`);
+        if (!meta) {
+            meta = document.createElement('meta');
+            meta.httpEquiv = tag.httpEquiv;
+            document.head.appendChild(meta);
+        }
+        meta.content = tag.content;
+    });
+})();
