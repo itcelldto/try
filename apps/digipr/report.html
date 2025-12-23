@@ -458,7 +458,7 @@
                                 <th>Receipt Date</th>
                                 <th>Nature</th>
                                 <th>Disposal Date</th>
-                                <th>Attachment</th> <!-- New column -->
+                                <th>Attachment</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody">
@@ -508,6 +508,7 @@
         let allUniqueSections = [];
         let currentFilterCriteria = null;
         let currentDataForExport = [];
+        let attachmentColumnName = 'Attachment';
         
         $(document).ready(function() {
             // Initialize datepicker with modern styling
@@ -754,7 +755,7 @@
             const searchToDate = new Date(toDate);
             searchToDate.setHours(23, 59, 59, 999);
             
-            // Updated range to include column S (index 18)
+            // Get all columns including column S (index 18)
             const range = `${SHEET_NAME}!A:S`;
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
             
@@ -775,6 +776,24 @@
                     }
                     
                     const headers = rows[0];
+                    console.log('All headers:', headers);
+                    console.log('Header at index 18 (column S):', headers[18]);
+                    
+                    // Find attachment column name
+                    const possibleAttachmentNames = ['Attachment', 'attachment', 'Attachments', 'attachments', 'File', 'file', 'URL', 'url', 'Drive URL', 'Google Drive'];
+                    
+                    for (let i = 0; i < headers.length; i++) {
+                        const header = headers[i] || '';
+                        for (let possibleName of possibleAttachmentNames) {
+                            if (header.toLowerCase().includes(possibleName.toLowerCase())) {
+                                attachmentColumnName = header;
+                                console.log('Found attachment column at index', i, ':', attachmentColumnName);
+                                break;
+                            }
+                        }
+                        if (attachmentColumnName !== 'Attachment') break;
+                    }
+                    
                     const filteredData = rows.slice(1).filter(row => {
                         if (row.length < 6) return false;
                         if (row[1] !== treasuryCode) return false;
@@ -846,14 +865,48 @@
                 return;
             }
             
+            // Debug first few rows
+            console.log('First 3 rows data:', data.slice(0, 3));
+            console.log('Attachment column name:', attachmentColumnName);
+            
             // Populate table
             data.forEach((item, index) => {
-                const attachmentUrl = item['Attachment'] || ''; // Column S
-                const attachmentCell = attachmentUrl.trim() ? 
-                    `<a href="${attachmentUrl}" target="_blank" class="btn-attachment">
-                        <i class="bi bi-file-earmark-pdf"></i> View PDF
-                    </a>` : 
-                    `<span class="no-file-text">No file attached</span>`;
+                // Get attachment URL
+                let attachmentUrl = item[attachmentColumnName] || '';
+                
+                // If not found with the detected name, try to find any URL
+                if (!attachmentUrl.trim()) {
+                    for (let key in item) {
+                        const value = item[key] || '';
+                        if (value.includes('drive.google.com') || 
+                            value.includes('http') || 
+                            value.includes('https') ||
+                            value.includes('.pdf')) {
+                            attachmentUrl = value;
+                            console.log('Found URL in column', key, ':', value);
+                            break;
+                        }
+                    }
+                }
+                
+                // Clean up the URL
+                attachmentUrl = attachmentUrl.trim();
+                
+                // Create attachment cell
+                let attachmentCell = '';
+                if (attachmentUrl) {
+                    // Ensure URL starts with http/https
+                    if (!attachmentUrl.startsWith('http')) {
+                        attachmentUrl = 'https://' + attachmentUrl;
+                    }
+                    attachmentCell = `
+                        <a href="${attachmentUrl}" target="_blank" class="btn-attachment">
+                            <i class="bi bi-file-earmark-pdf"></i> View
+                        </a>
+                    `;
+                } else {
+                    attachmentCell = `<span class="no-file-text">No file attached</span>`;
+                }
                 
                 const row = `
                     <tr>
@@ -962,27 +1015,43 @@
                  'Nature of Disposal', 'Disposal Date', 'Attachment']
             ];
             
-            const tableData = currentDataForExport.map(item => [
-                item['ID'] || '',
-                item['Treasury Code'] || '',
-                item['Section'] || '',
-                item['SL.No'] || '',
-                item['Current No'] || '',
-                item['Date of Receipt by clerk'] || '',
-                item['Title'] || '',
-                item['From Whom  Outside no'] || '',
-                item['date'] || '',
-                item['Submitted by Clerk'] || '',
-                item['Returned to clerk'] || '',
-                item['Reference issued to whom'] || '',
-                item['reference issued date'] || '',
-                item['Replay or fresh Current received from whom and number'] || '',
-                item['received date'] || '',
-                item['Date of receipt by clerk'] || '',
-                item['Nature of Disposal'] || '',
-                item['Date of disposal'] || '',
-                item['Attachment'] || 'No file'
-            ]);
+            const tableData = currentDataForExport.map(item => {
+                // Get attachment URL
+                let attachmentUrl = item[attachmentColumnName] || '';
+                if (!attachmentUrl.trim()) {
+                    for (let key in item) {
+                        const value = item[key] || '';
+                        if (value.includes('drive.google.com') || 
+                            value.includes('http') || 
+                            value.includes('https')) {
+                            attachmentUrl = value;
+                            break;
+                        }
+                    }
+                }
+                
+                return [
+                    item['ID'] || '',
+                    item['Treasury Code'] || '',
+                    item['Section'] || '',
+                    item['SL.No'] || '',
+                    item['Current No'] || '',
+                    item['Date of Receipt by clerk'] || '',
+                    item['Title'] || '',
+                    item['From Whom  Outside no'] || '',
+                    item['date'] || '',
+                    item['Submitted by Clerk'] || '',
+                    item['Returned to clerk'] || '',
+                    item['Reference issued to whom'] || '',
+                    item['reference issued date'] || '',
+                    item['Replay or fresh Current received from whom and number'] || '',
+                    item['received date'] || '',
+                    item['Date of receipt by clerk'] || '',
+                    item['Nature of Disposal'] || '',
+                    item['Date of disposal'] || '',
+                    attachmentUrl.trim() || 'No file'
+                ];
+            });
             
             // Add title
             doc.setFontSize(20);
