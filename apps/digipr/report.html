@@ -157,6 +157,34 @@
             box-shadow: 0 4px 15px rgba(76, 201, 240, 0.4);
         }
         
+        /* Attachment button styling */
+        .btn-attachment {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            border: none;
+            border-radius: 6px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-attachment:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(255, 107, 107, 0.4);
+            color: white;
+        }
+        
+        .no-file-text {
+            color: #6c757d;
+            font-size: 0.75rem;
+            font-style: italic;
+        }
+        
         /* Loading spinner */
         .loading {
             display: none;
@@ -430,6 +458,7 @@
                                 <th>Receipt Date</th>
                                 <th>Nature</th>
                                 <th>Disposal Date</th>
+                                <th>Attachment</th> <!-- New column -->
                             </tr>
                         </thead>
                         <tbody id="tableBody">
@@ -437,7 +466,7 @@
                         </tbody>
                         <tfoot>
                             <tr class="table-light">
-                                <td colspan="17" class="text-end fw-bold">Total Records:</td>
+                                <td colspan="18" class="text-end fw-bold">Total Records:</td>
                                 <td id="totalRecords" class="fw-bold text-primary">0</td>
                             </tr>
                         </tfoot>
@@ -725,7 +754,8 @@
             const searchToDate = new Date(toDate);
             searchToDate.setHours(23, 59, 59, 999);
             
-            const range = `${SHEET_NAME}!A:R`;
+            // Updated range to include column S (index 18)
+            const range = `${SHEET_NAME}!A:S`;
             const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
             
             fetch(url)
@@ -786,7 +816,7 @@
             if (data.length === 0) {
                 const noDataRow = `
                     <tr>
-                        <td colspan="18" class="text-center py-5">
+                        <td colspan="19" class="text-center py-5">
                             <div class="no-data-message">
                                 <i class="bi bi-inbox"></i>
                                 <h5 class="mt-3">No Records Found</h5>
@@ -818,6 +848,13 @@
             
             // Populate table
             data.forEach((item, index) => {
+                const attachmentUrl = item['Attachment'] || ''; // Column S
+                const attachmentCell = attachmentUrl.trim() ? 
+                    `<a href="${attachmentUrl}" target="_blank" class="btn-attachment">
+                        <i class="bi bi-file-earmark-pdf"></i> View PDF
+                    </a>` : 
+                    `<span class="no-file-text">No file attached</span>`;
+                
                 const row = `
                     <tr>
                         <td><span class="badge bg-light text-dark">${item['ID'] || ''}</span></td>
@@ -838,6 +875,7 @@
                         <td>${item['Date of receipt by clerk'] || ''}</td>
                         <td><span class="badge bg-warning text-dark">${item['Nature of Disposal'] || ''}</span></td>
                         <td><span class="badge bg-secondary">${item['Date of disposal'] || ''}</span></td>
+                        <td>${attachmentCell}</td>
                     </tr>
                 `;
                 tableBody.append(row);
@@ -915,13 +953,13 @@
             
             const { treasuryCode, section, fromDate, toDate } = currentFilterCriteria;
             
-            // Prepare data
+            // Prepare data - including Attachment column
             const headers = [
                 ['ID', 'Treasury', 'Section', 'SL.No', 'Current No', 
                  'Date of Receipt', 'Title', 'From Whom', 'Date',
                  'Submitted by', 'Returned to', 'Reference to', 'Ref Date',
                  'Replay/Fresh', 'Received Date', 'Receipt Date', 
-                 'Nature of Disposal', 'Disposal Date']
+                 'Nature of Disposal', 'Disposal Date', 'Attachment']
             ];
             
             const tableData = currentDataForExport.map(item => [
@@ -942,7 +980,8 @@
                 item['received date'] || '',
                 item['Date of receipt by clerk'] || '',
                 item['Nature of Disposal'] || '',
-                item['Date of disposal'] || ''
+                item['Date of disposal'] || '',
+                item['Attachment'] || 'No file'
             ]);
             
             // Add title
