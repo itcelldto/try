@@ -13,8 +13,8 @@ body {
 }
 
 .header {
-    background: linear-gradient(135deg, var(--secondary-color), var(--secondary-color));
-    color: white;
+    background: #fff;
+    color: #0e56d1;
     padding: .2rem 0;
     border-radius: 15px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -39,8 +39,8 @@ body {
 }
 
 .card-header {
-    background: linear-gradient(to right, var(--secondary-color), var(--secondary-color));
-    color: white;
+    background: #fff;
+    color: #0e56d1;
     border-radius: 15px 15px 0 0 !important;
     padding: 1rem 1.5rem;
 }
