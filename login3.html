@@ -124,31 +124,33 @@
                 </div>
                 
                 <!-- CAPTCHA Section -->
-                <div class="captcha-container" id="captcha-section">
-                    <div class="captcha-header">
-                        <h6>Security Verification</h6>
-                        <button type="button" class="refresh-btn" id="refresh-captcha">
-                            <i class="bi bi-arrow-clockwise"></i>
-                        </button>
-                    </div>
-                    
-                    <div class="captcha-display">
-                        <span id="captcha-text"></span>
-                    </div>
-                    
-                    <input type="text" 
-                           class="form-control captcha-input" 
-                           id="captcha-input" 
-                           placeholder="Enter the code above" 
-                           maxlength="6" 
-                           required
-                           autocomplete="off">
-                    
-                    <div class="text-danger small mt-2" id="captcha-error" style="display: none;">
-                        <i class="bi bi-exclamation-circle me-1"></i>
-                        Incorrect CAPTCHA. Please try again.
-                    </div>
-                </div>
+               <!-- CAPTCHA Section -->
+<div class="captcha-container" id="captcha-section">
+    <div class="captcha-header">
+        <h6>Captcha</h6>
+        <button type="button" class="refresh-btn" id="refresh-captcha">
+            <i class="bi bi-arrow-clockwise"></i>
+        </button>
+    </div>
+    
+    <div class="captcha-display">
+        <!-- Add ID directly to span -->
+        <span id="captcha-text">LOADING...</span>
+    </div>
+    
+    <input type="text" 
+           class="form-control captcha-input" 
+           id="captcha-input" 
+           placeholder="Enter Captcha" 
+           maxlength="6" 
+           required
+           autocomplete="off">
+    
+    <div class="text-danger small mt-2" id="captcha-error" style="display: none;">
+        <i class="bi bi-exclamation-circle me-1"></i>
+        Incorrect CAPTCHA. Please try again.
+    </div>
+</div>
                 
                 <!-- Submit Button -->
                 <button type="submit" class="btn submit-btn w-100" id="login-button">
