@@ -127,12 +127,12 @@
                         <input type="text" class="form-control" id="pensionCode" placeholder="Pensioner code">
                     </div>
                 </div>
-                <div class="col-md-2">
-                    <div class="mb-2">
-                        <label for="period" class="form-label">Period (MM/YYYY)</label>
-                        <input type="text" class="form-control" id="period" placeholder="e.g., 12/2024">
-                    </div>
-                </div>
+               <div class="col-md-2">
+    <div class="mb-2">
+        <label for="period" class="form-label">Period (MM/YYYY)</label>
+        <input type="month" class="form-control" id="period">
+    </div>
+</div>
                 <div class="col-md-2">
                     <div class="mb-2">
                         <label for="returnReason" class="form-label">Return Reason</label>
@@ -249,11 +249,11 @@
         
         // Set current month in MM/YYYY format
         function setCurrentMonth() {
-            const currentDate = new Date();
-            const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0');
-            const currentYear = currentDate.getFullYear();
-            periodInput.value = `${currentMonth}/${currentYear}`;
-        }
+    const currentDate = new Date();
+    const currentMonth = String(currentDate.getMonth() + 1); // Without padding
+    const currentYear = currentDate.getFullYear();
+    periodInput.value = `${currentYear}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+}
         
         // Load pensioner names from the IndividualDetails sheet
         async function loadPensionerNames() {
@@ -433,11 +433,11 @@
         
         // Apply filters and display the data
         function applyFiltersAndDisplay() {
-            const trCodeFilter = trCodeInput.value.trim();
-            const pensionTypeFilter = pensionTypeInput.value.trim();
-            const pensionCodeFilter = pensionCodeInput.value.trim();
-            const periodFilter = periodInput.value.trim();
-            const returnReasonFilter = returnReasonSelect.value;
+             const trCodeFilter = trCodeInput.value.trim();
+    const pensionTypeFilter = pensionTypeInput.value.trim();
+    const pensionCodeFilter = pensionCodeInput.value.trim();
+    const periodFilter = formatMonthInputValue(periodInput.value);
+    const returnReasonFilter = returnReasonSelect.value;
             
             // Filter the data based on user inputs with STRICT matching
             let filteredData = allData;
@@ -611,6 +611,14 @@
             noDataAlert.textContent = message;
             noDataAlert.classList.remove('d-none');
         }
+
+        function formatMonthInputValue(monthValue) {
+    if (!monthValue) return '';
+    
+    // monthValue comes as "YYYY-MM" from input type="month"
+    const [year, month] = monthValue.split('-');
+    return `${parseInt(month, 10)}/${year}`; // Remove leading zero from month
+}
     </script>
 </body>
 </html>
