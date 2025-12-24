@@ -1,3 +1,5 @@
+[file name]: login.js
+[file content begin]
 // Configuration
 const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
 const sheetId = '11wvVQ2G41ke3g6RdfYX8AJAl0w-fnf2NQ_Agufz0wXY';
@@ -15,8 +17,10 @@ function isMobileDevice() {
 // Service Worker Registration
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/try/sw.js', { scope: '/try/' })
-            .then(reg => console.log('Service Worker registered'))
+        // Fix for Firefox PWA scope
+        const scope = window.location.pathname.includes('/try/') ? '/try/' : '/';
+        navigator.serviceWorker.register('/try/sw.js', { scope: scope })
+            .then(reg => console.log('Service Worker registered:', reg.scope))
             .catch(err => console.log('Registration failed:', err));
     });
 }
@@ -121,6 +125,29 @@ document.getElementById('captcha-input').addEventListener('input', function() {
     this.value = this.value.toUpperCase();
 });
 
+// Fetch data with CORS proxy for Firefox compatibility
+async function fetchWithCORS(url) {
+    try {
+        // First try direct fetch (works in Chrome)
+        const directResponse = await fetch(url);
+        if (directResponse.ok) {
+            return await directResponse.json();
+        }
+    } catch (directError) {
+        console.log('Direct fetch failed, trying CORS proxy:', directError);
+    }
+    
+    // Fallback to CORS proxy for Firefox
+    const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
+    const response = await fetch(proxyUrl);
+    
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    return await response.json();
+}
+
 // Form Submission
 document.getElementById('login-form').addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -154,15 +181,10 @@ document.getElementById('login-form').addEventListener('submit', async function(
     loginButton.disabled = true;
     
     try {
-        // Fetch credentials from Google Sheets
+        // Fetch credentials from Google Sheets with CORS proxy
         const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
         
-        const response = await fetch(settingsUrl);
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        
-        const data = await response.json();
+        const data = await fetchWithCORS(settingsUrl);
         const treasurySettings = data.values || [];
         
         let loginSuccessful = false;
@@ -245,9 +267,8 @@ document.getElementById('login-form').addEventListener('submit', async function(
         displayCaptcha();
         
         // Clear any sensitive data on error
-        sessionStorage.removeItem('isLoggedIn');
-        sessionStorage.removeItem('eadmin_auth_token');
-        sessionStorage.removeItem('eadmin_login_time');
+        sessionStorage.clear();
+        
     } finally {
         // Reset button state
         loginButton.classList.remove('loading');
@@ -308,6 +329,32 @@ window.addEventListener('DOMContentLoaded', () => {
             window.location.reload();
         }
     });
+    
+    // Firefox-specific fixes
+    if (typeof InstallTrigger !== 'undefined') {
+        // This is Firefox
+        console.log('Firefox browser detected, applying specific fixes');
+        
+        // Add specific Firefox CSS fixes
+        const style = document.createElement('style');
+        style.textContent = `
+            /* Firefox specific fixes */
+            @-moz-document url-prefix() {
+                .bg-overlay {
+                    background: rgba(6, 0, 44, 0.9);
+                }
+                
+                .login-container {
+                    background: rgba(255, 255, 255, 0.08);
+                }
+                
+                input.form-control {
+                    background-color: #ffffff;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
 });
 
 // Add cache prevention meta tags dynamically
@@ -328,3 +375,4 @@ window.addEventListener('DOMContentLoaded', () => {
         meta.content = tag.content;
     });
 })();
+[file content end]
