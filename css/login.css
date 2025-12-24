@@ -545,3 +545,24 @@ body {
 .shake {
     animation: shake 0.5s;
 }
+[file name]: login.css
+/* Add to existing CSS */
+@-moz-document url-prefix() {
+    /* Firefox specific fixes */
+    .bg-overlay {
+        background: rgba(6, 0, 44, 0.9);
+    }
+    
+    .login-container {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: none; /* Firefox has limited backdrop-filter support */
+    }
+    
+    input.form-control {
+        background-color: #ffffff !important;
+    }
+    
+    .captcha-display {
+        background: linear-gradient(45deg, #06002c, #2483c5);
+    }
+}
