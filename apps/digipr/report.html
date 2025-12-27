@@ -1,0 +1,1159 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digi PR Static Report | IT Cell Treasury</title>
+    
+    <!-- Bootstrap 5.3.0 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    
+    <!-- Select2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css">
+    
+    <!-- jQuery UI Datepicker -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.min.css">
+    
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --success-color: #4cc9f0;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+        .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered{
+        line-height: 1.5em !important;
+        color: #6c757d;
+        }
+        .container-main {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        /* Header styling */
+        .main-header {
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .main-header h1 {
+            color: white;
+            font-weight: 700;
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        
+        .main-header .badge {
+            background-color: rgba(255, 255, 255, 0.2);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        /* Card styling */
+        .modern-card {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+            padding: 15px;
+        }
+        
+        .modern-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .modern-card .card-header {
+            background: var(--light-bg);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 1.25rem 1.5rem;
+            border-radius: 12px 12px 0 0 !important;
+        }
+        
+        .modern-card .card-header h5 {
+            color: var(--secondary-color);
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .modern-card .card-header h5 i {
+            font-size: 1.2rem;
+        }
+        
+        /* Form controls */
+        .form-control, .select2-container--bootstrap4 .select2-selection {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus, .select2-container--bootstrap4 .select2-selection--single:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(67, 97, 238, 0.25);
+        }
+        
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-label.required::after {
+            content: " *";
+            color: #dc3545;
+        }
+        
+        /* Button styling */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4cc9f0 0%, #4895ef 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(76, 201, 240, 0.4);
+        }
+        
+        /* Attachment button styling */
+        .btn-attachment {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            border: none;
+            border-radius: 6px;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-attachment:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 3px 10px rgba(255, 107, 107, 0.4);
+            color: white;
+        }
+        
+        .no-file-text {
+            color: #6c757d;
+            font-size: 0.75rem;
+            font-style: italic;
+        }
+        
+        /* Loading spinner */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 3rem;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+            color: var(--primary-color);
+        }
+        
+        /* DataTable styling */
+        .dataTables_wrapper {
+            margin-top: 1rem;
+        }
+        
+        #reportTable {
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        #reportTable thead th {
+            background: var(--light-bg);
+            color: var(--secondary-color);
+            font-weight: 600;
+            border-bottom: 2px solid var(--primary-color);
+            padding: 1rem;
+            white-space: nowrap;
+        }
+        
+        #reportTable tbody td {
+            padding: 0.75rem 1rem;
+            vertical-align: middle;
+        }
+        
+        #reportTable tbody tr:hover {
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+        
+        /* Results header */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--light-bg);
+        }
+        
+        .results-header h5 {
+            color: var(--secondary-color);
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .record-badge {
+            background: linear-gradient(135deg, var(--success-color) 0%, #4895ef 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        /* Alert styling */
+        .alert-custom {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+        }
+        
+        /* Filter card */
+        .filter-card {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .results-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+            
+            .main-header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .btn-primary, .btn-success {
+                width: 100%;
+            }
+        }
+        
+        /* Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+        
+        /* Select2 custom */
+        .select2-container--bootstrap4 .select2-selection--single {
+            height: auto;
+            padding: 0.5rem;
+        }
+        
+        .select2-container--bootstrap4 .select2-selection__rendered {
+            line-height: 1.5;
+        }
+        
+        /* Datepicker customization */
+        .ui-datepicker {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .ui-datepicker .ui-state-active {
+            background: var(--primary-color);
+            color: white;
+            border-radius: 4px;
+        }
+        
+        /* No data message */
+        .no-data-message {
+            padding: 3rem;
+            text-align: center;
+            color: #6c757d;
+        }
+        
+        .no-data-message i {
+            font-size: 3rem;
+            color: #dee2e6;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container container-main py-4">
+        <!-- Header -->
+        <div class="main-header d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="bi bi-file-earmark-text"></i> Digi PR Static Report</h1>
+                <span class="badge">IT Cell IT Cell HelpDesk</span>
+            </div>
+            <div class="d-none d-md-block">
+                <span class="text-white-50">v1.0.0</span>
+            </div>
+        </div>
+        
+        <!-- Filter Card -->
+        <div class="modern-card filter-card mb-4 fade-in">
+           
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label for="treasuryCode" class="form-label required">
+                            <i class="bi bi-building"></i> Treasury Code
+                        </label>
+                        <select id="treasuryCode" class="form-control select2" required>
+                            <option value=""></option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="section" class="form-label required">
+                            <i class="bi bi-layers"></i> Section
+                        </label>
+                        <select id="section" class="form-control select2" required>
+                            <option value=""></option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="fromDate" class="form-label required">
+                            <i class="bi bi-calendar"></i> From Date
+                        </label>
+                        <input type="text" id="fromDate" class="form-control datepicker" placeholder="DD/MM/YYYY" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label for="toDate" class="form-label required">
+                            <i class="bi bi-calendar-check"></i> To Date
+                        </label>
+                        <input type="text" id="toDate" class="form-control datepicker" placeholder="DD/MM/YYYY" required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" onclick="validateAndLoadData()">
+                            <i class="bi bi-eye"></i> View Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading Indicator -->
+        <div class="loading mt-4" id="loading">
+            <div class="spinner-border" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="mt-3">
+                <h5 class="text-primary">Loading Data...</h5>
+                <p class="text-muted">Please wait while we fetch data from Google Sheets</p>
+            </div>
+        </div>
+        
+        <!-- Results Card -->
+        <div class="modern-card mb-4 fade-in" id="resultsCard" style="display: none;">
+            <div class="card-header">
+                <div class="results-header">
+                    <div>
+                        <h5 id="resultHeading">
+                            <i class="bi bi-table"></i> PR Report Details
+                            <span id="recordCount" class="record-badge ms-2">0 records</span>
+                        </h5>
+                        <small class="text-muted" id="filterInfo"></small>
+                    </div>
+                    <button class="btn btn-success" onclick="exportToPDF()" id="exportBtn" disabled>
+                        <i class="bi bi-file-earmark-pdf"></i> Export to PDF
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table id="reportTable" class="table table-hover" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Treasury Code</th>
+                                <th>Section</th>
+                                <th>SL.No</th>
+                                <th>Current No</th>
+                                <th>Date of Receipt</th>
+                                <th>Title</th>
+                                <th>From Whom</th>
+                                <th>Date</th>
+                                <th>Submitted by</th>
+                                <th>Returned to</th>
+                                <th>Reference to</th>
+                                <th>Ref Date</th>
+                                <th>Replay/Fresh</th>
+                                <th>Received Date</th>
+                                <th>Receipt Date</th>
+                                <th>Nature</th>
+                                <th>Disposal Date</th>
+                                <th>Attachment</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Data will be populated here -->
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td colspan="18" class="text-end fw-bold">Total Records:</td>
+                                <td id="totalRecords" class="fw-bold text-primary">0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- DataTables -->
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Select2 -->
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    
+    <!-- jQuery UI Datepicker -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/jquery-ui.min.js"></script>
+
+    <!-- Main Script -->
+    <script>
+        // Google Sheets configuration
+        const SHEET_ID = "1W3SlfTY_139CAyId57CDFV_BDgAadxED83D_2N1mNR8";
+        const SHEET_NAME = "DB";
+        const API_KEY = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+        
+        let dataTable = null;
+        let allUniqueTreasuryCodes = [];
+        let allUniqueSections = [];
+        let currentFilterCriteria = null;
+        let currentDataForExport = [];
+        let attachmentColumnName = 'Attachment';
+        
+        $(document).ready(function() {
+            // Check for treasury name in session storage (like in first HTML file)
+            const treasuryName = sessionStorage.getItem('treasuryName');
+            
+            // If no treasury in session, you might want to redirect or show error
+            if (!treasuryName) {
+                // You can redirect to login page or show an error
+                // For now, we'll just continue but treasury code will be empty
+                console.log('No treasury name found in session storage');
+            }
+            
+            // Initialize datepicker with modern styling
+            $(".datepicker").datepicker({
+                dateFormat: "dd/mm/yy",
+                changeMonth: true,
+                changeYear: true,
+                yearRange: "c-10:c+10",
+                showButtonPanel: true,
+                beforeShow: function(input, inst) {
+                    setTimeout(function() {
+                        inst.dpDiv.css({
+                            'margin-top': '5px',
+                            'border-radius': '8px',
+                            'box-shadow': '0 0.5rem 1rem rgba(0, 0, 0, 0.15)'
+                        });
+                    }, 0);
+                }
+            });
+            
+            // Set default dates
+            setDefaultDates();
+            
+            // Initialize Select2 with Bootstrap 4 theme
+            $('.select2').select2({
+                theme: 'bootstrap4',
+                width: '100%',
+                placeholder: '',
+                allowClear: true
+            });
+            
+            // Load filter options with treasury from session
+            loadFilterOptions(treasuryName);
+            
+            // Add validation on input change
+            $('#treasuryCode, #section, #fromDate, #toDate').on('change', function() {
+                validateField($(this));
+                clearResults();
+            });
+        });
+        
+        function setDefaultDates() {
+            const today = new Date();
+            const lastMonth = new Date(today);
+            lastMonth.setDate(today.getDate() - 30);
+            
+            const toDateStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth() + 1).padStart(2, '0')}/${today.getFullYear()}`;
+            const fromDateStr = `${String(lastMonth.getDate()).padStart(2, '0')}/${String(lastMonth.getMonth() + 1).padStart(2, '0')}/${lastMonth.getFullYear()}`;
+            
+            $('#toDate').val(toDateStr);
+            $('#fromDate').val(fromDateStr);
+        }
+        
+        function loadFilterOptions(treasuryFromSession) {
+            showLoading(true);
+            
+            const range = `${SHEET_NAME}!B:C`;
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const rows = data.values || [];
+                    
+                    if (rows.length === 0) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'No Data',
+                            text: 'No data found in the sheet',
+                            confirmButtonColor: '#4361ee'
+                        });
+                        showLoading(false);
+                        return;
+                    }
+                    
+                    const dataRows = rows.slice(1);
+                    
+                    // Filter sections based on treasury from session
+                    let filteredRows = dataRows;
+                    if (treasuryFromSession) {
+                        filteredRows = dataRows.filter(row => row[0] === treasuryFromSession);
+                    }
+                    
+                    // Get unique treasury codes (should only be the one from session if present)
+                    allUniqueTreasuryCodes = [...new Set(filteredRows.map(row => row[0] || '').filter(Boolean))].sort();
+                    
+                    // Get sections for the selected treasury
+                    allUniqueSections = [...new Set(filteredRows.map(row => row[1] || '').filter(Boolean))].sort();
+                    
+                    populateFilterDropdowns(treasuryFromSession);
+                    showLoading(false);
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Connection Error',
+                        text: 'Failed to load filter options',
+                        confirmButtonColor: '#4361ee'
+                    });
+                    showLoading(false);
+                });
+        }
+        
+        function populateFilterDropdowns(treasuryFromSession) {
+            const treasurySelect = $('#treasuryCode');
+            const sectionSelect = $('#section');
+            
+            treasurySelect.find('option:not(:first)').remove();
+            sectionSelect.find('option:not(:first)').remove();
+            
+            // If treasury from session exists, set it as the only option
+            if (treasuryFromSession && allUniqueTreasuryCodes.includes(treasuryFromSession)) {
+                treasurySelect.append(`<option value="${treasuryFromSession}" selected>${treasuryFromSession}</option>`);
+                
+                // Make the treasury select readonly but still functional
+                treasurySelect.prop('disabled', false);
+                
+                // Update the UI to show it's pre-selected
+                setTimeout(() => {
+                    treasurySelect.trigger('change.select2');
+                }, 100);
+            } else {
+                // If no session treasury or not found in data, show all options
+                allUniqueTreasuryCodes.forEach(code => {
+                    treasurySelect.append(`<option value="${code}">${code}</option>`);
+                });
+                treasurySelect.trigger('change.select2');
+            }
+            
+            // Populate sections for the selected treasury
+            allUniqueSections.forEach(section => {
+                sectionSelect.append(`<option value="${section}">${section}</option>`);
+            });
+            
+            sectionSelect.trigger('change.select2');
+        }
+        
+        function clearResults() {
+            $('#resultsCard').hide();
+            $('#tableBody').empty();
+            
+            if (dataTable) {
+                dataTable.destroy();
+                dataTable = null;
+            }
+            
+            $('#totalRecords').text('0');
+            $('#recordCount').text('0 records');
+            $('#filterInfo').html('');
+            $('#exportBtn').prop('disabled', true);
+        }
+        
+        function validateAndLoadData() {
+            const treasuryCode = $('#treasuryCode').val();
+            const section = $('#section').val();
+            const fromDate = $('#fromDate').val();
+            const toDate = $('#toDate').val();
+            
+            let isValid = true;
+            
+            // Validation
+            if (!treasuryCode) {
+                $('#treasuryCode').addClass('is-invalid');
+                isValid = false;
+            } else {
+                $('#treasuryCode').removeClass('is-invalid');
+            }
+            
+            if (!section) {
+                $('#section').addClass('is-invalid');
+                isValid = false;
+            } else {
+                $('#section').removeClass('is-invalid');
+            }
+            
+            if (!fromDate) {
+                $('#fromDate').addClass('is-invalid');
+                isValid = false;
+            } else {
+                $('#fromDate').removeClass('is-invalid');
+            }
+            
+            if (!toDate) {
+                $('#toDate').addClass('is-invalid');
+                isValid = false;
+            } else {
+                $('#toDate').removeClass('is-invalid');
+            }
+            
+            if (!isValid) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Please fill all required fields',
+                    confirmButtonColor: '#4361ee'
+                });
+                return;
+            }
+            
+            if (!isValidDate(fromDate) || !isValidDate(toDate)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Date',
+                    text: 'Please enter valid dates in DD/MM/YYYY format',
+                    confirmButtonColor: '#4361ee'
+                });
+                return;
+            }
+            
+            const fromDateObj = parseDate(fromDate);
+            const toDateObj = parseDate(toDate);
+            
+            if (fromDateObj > toDateObj) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Date Error',
+                    text: 'From Date cannot be greater than To Date',
+                    confirmButtonColor: '#4361ee'
+                });
+                return;
+            }
+            
+            const newCriteria = { treasuryCode, section, fromDate, toDate };
+            if (currentFilterCriteria && 
+                JSON.stringify(currentFilterCriteria) === JSON.stringify(newCriteria)) {
+                return;
+            }
+            
+            currentFilterCriteria = newCriteria;
+            loadDataByCriteria(treasuryCode, section, fromDateObj, toDateObj);
+        }
+        
+        function validateField(field) {
+            if (field.val()) {
+                field.removeClass('is-invalid');
+            }
+        }
+        
+        function isValidDate(dateStr) {
+            const pattern = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+            if (!pattern.test(dateStr)) return false;
+            
+            const parts = dateStr.split('/');
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10);
+            const year = parseInt(parts[2], 10);
+            
+            if (month < 1 || month > 12) return false;
+            
+            const date = new Date(year, month - 1, day);
+            return date.getDate() === day && 
+                   date.getMonth() === month - 1 && 
+                   date.getFullYear() === year;
+        }
+        
+        function parseDate(dateStr) {
+            const parts = dateStr.split('/');
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+        
+        function loadDataByCriteria(treasuryCode, section, fromDate, toDate) {
+            showLoading(true);
+            clearResults();
+            
+            const searchFromDate = new Date(fromDate);
+            searchFromDate.setHours(0, 0, 0, 0);
+            
+            const searchToDate = new Date(toDate);
+            searchToDate.setHours(23, 59, 59, 999);
+            
+            // Get all columns including column S (index 18)
+            const range = `${SHEET_NAME}!A:S`;
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const rows = data.values || [];
+                    
+                    if (rows.length === 0) {
+                        showLoading(false);
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'No Data',
+                            text: 'No data found in the sheet',
+                            confirmButtonColor: '#4361ee'
+                        });
+                        return;
+                    }
+                    
+                    const headers = rows[0];
+                    console.log('All headers:', headers);
+                    console.log('Header at index 18 (column S):', headers[18]);
+                    
+                    // Find attachment column name
+                    const possibleAttachmentNames = ['Attachment', 'attachment', 'Attachments', 'attachments', 'File', 'file', 'URL', 'url', 'Drive URL', 'Google Drive'];
+                    
+                    for (let i = 0; i < headers.length; i++) {
+                        const header = headers[i] || '';
+                        for (let possibleName of possibleAttachmentNames) {
+                            if (header.toLowerCase().includes(possibleName.toLowerCase())) {
+                                attachmentColumnName = header;
+                                console.log('Found attachment column at index', i, ':', attachmentColumnName);
+                                break;
+                            }
+                        }
+                        if (attachmentColumnName !== 'Attachment') break;
+                    }
+                    
+                    const filteredData = rows.slice(1).filter(row => {
+                        if (row.length < 6) return false;
+                        if (row[1] !== treasuryCode) return false;
+                        if (row[2] !== section) return false;
+                        
+                        const receiptDateStr = row[5];
+                        if (!receiptDateStr) return false;
+                        
+                        const receiptDate = parseDate(receiptDateStr);
+                        return receiptDate >= searchFromDate && receiptDate <= searchToDate;
+                    }).map(row => {
+                        const obj = {};
+                        headers.forEach((header, index) => {
+                            obj[header] = row[index] || '';
+                        });
+                        return obj;
+                    });
+                    
+                    currentDataForExport = filteredData;
+                    displayData(filteredData, treasuryCode, section, fromDate, toDate);
+                    showLoading(false);
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to load data from Google Sheets',
+                        confirmButtonColor: '#4361ee'
+                    });
+                    showLoading(false);
+                });
+        }
+        
+        function displayData(data, treasuryCode, section, fromDate, toDate) {
+            const tableBody = $('#tableBody');
+            tableBody.empty();
+            
+            if (data.length === 0) {
+                const noDataRow = `
+                    <tr>
+                        <td colspan="19" class="text-center py-5">
+                            <div class="no-data-message">
+                                <i class="bi bi-inbox"></i>
+                                <h5 class="mt-3">No Records Found</h5>
+                                <p class="text-muted">
+                                    Treasury Code: <strong>${treasuryCode}</strong> | 
+                                    Section: <strong>${section}</strong><br>
+                                    Date Range: <strong>${formatDateForDisplay(fromDate)} to ${formatDateForDisplay(toDate)}</strong>
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tableBody.append(noDataRow);
+                
+                $('#resultsCard').show();
+                $('#recordCount').text('0 records');
+                $('#totalRecords').text('0');
+                $('#filterInfo').html(`
+                    <span class="text-muted">
+                        <i class="bi bi-funnel"></i> Filters: ${treasuryCode} | ${section} | 
+                        ${formatDateForDisplay(fromDate)} to ${formatDateForDisplay(toDate)}
+                    </span>
+                `);
+                $('#exportBtn').prop('disabled', true);
+                currentDataForExport = [];
+                
+                return;
+            }
+            
+            // Debug first few rows
+            console.log('First 3 rows data:', data.slice(0, 3));
+            console.log('Attachment column name:', attachmentColumnName);
+            
+            // Populate table
+            data.forEach((item, index) => {
+                // Get attachment URL
+                let attachmentUrl = item[attachmentColumnName] || '';
+                
+                // If not found with the detected name, try to find any URL
+                if (!attachmentUrl.trim()) {
+                    for (let key in item) {
+                        const value = item[key] || '';
+                        if (value.includes('drive.google.com') || 
+                            value.includes('http') || 
+                            value.includes('https') ||
+                            value.includes('.pdf')) {
+                            attachmentUrl = value;
+                            console.log('Found URL in column', key, ':', value);
+                            break;
+                        }
+                    }
+                }
+                
+                // Clean up the URL
+                attachmentUrl = attachmentUrl.trim();
+                
+                // Create attachment cell
+                let attachmentCell = '';
+                if (attachmentUrl) {
+                    // Ensure URL starts with http/https
+                    if (!attachmentUrl.startsWith('http')) {
+                        attachmentUrl = 'https://' + attachmentUrl;
+                    }
+                    attachmentCell = `
+                        <a href="${attachmentUrl}" target="_blank" class="btn-attachment">
+                            <i class="bi bi-file-earmark-pdf"></i> View
+                        </a>
+                    `;
+                } else {
+                    attachmentCell = `<span class="no-file-text">No file attached</span>`;
+                }
+                
+                const row = `
+                    <tr>
+                        <td><span class="badge bg-light text-dark">${item['ID'] || ''}</span></td>
+                        <td>${item['Treasury Code'] || ''}</td>
+                        <td>${item['Section'] || ''}</td>
+                        <td>${item['SL.No'] || ''}</td>
+                        <td>${item['Current No'] || ''}</td>
+                        <td><span class="badge bg-info text-white">${item['Date of Receipt by clerk'] || ''}</span></td>
+                        <td>${item['Title'] || ''}</td>
+                        <td>${item['From Whom  Outside no'] || ''}</td>
+                        <td>${item['date'] || ''}</td>
+                        <td>${item['Submitted by Clerk'] || ''}</td>
+                        <td>${item['Returned to clerk'] || ''}</td>
+                        <td>${item['Reference issued to whom'] || ''}</td>
+                        <td>${item['reference issued date'] || ''}</td>
+                        <td>${item['Replay or fresh Current received from whom and number'] || ''}</td>
+                        <td>${item['received date'] || ''}</td>
+                        <td>${item['Date of receipt by clerk'] || ''}</td>
+                        <td><span class="badge bg-warning text-dark">${item['Nature of Disposal'] || ''}</span></td>
+                        <td><span class="badge bg-secondary">${item['Date of disposal'] || ''}</span></td>
+                        <td>${attachmentCell}</td>
+                    </tr>
+                `;
+                tableBody.append(row);
+            });
+            
+            // Update UI
+            $('#recordCount').text(`${data.length} records`);
+            $('#totalRecords').text(data.length);
+            $('#filterInfo').html(`
+                <span class="text-muted">
+                    ${treasuryCode} | ${section} | 
+                    ${formatDateForDisplay(fromDate)} to ${formatDateForDisplay(toDate)}
+                </span>
+            `);
+            $('#resultsCard').show();
+            $('#exportBtn').prop('disabled', false);
+            
+            // Initialize DataTable
+            if (dataTable) {
+                dataTable.destroy();
+            }
+            
+            dataTable = $('#reportTable').DataTable({
+                paging: true,
+                pageLength: 10,
+                lengthMenu: [10, 25, 50, 100],
+                searching: true,
+                ordering: true,
+                responsive: true,
+                scrollX: true,
+                dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>tip',
+                language: {
+                    search: "Search records:",
+                    lengthMenu: "Show _MENU_ entries",
+                    info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    }
+                }
+            });
+            
+            // Scroll to results
+            $('html, body').animate({
+                scrollTop: $('#resultsCard').offset().top - 100
+            }, 500);
+        }
+        
+        function formatDateForDisplay(date) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+        
+        function exportToPDF() {
+            if (!currentFilterCriteria || currentDataForExport.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No Data',
+                    text: 'Please load data first by clicking "View Report"',
+                    confirmButtonColor: '#4361ee'
+                });
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4'
+            });
+            
+            const { treasuryCode, section, fromDate, toDate } = currentFilterCriteria;
+            
+            // Prepare data - including Attachment column
+            const headers = [
+                ['ID', 'Treasury', 'Section', 'SL.No', 'Current No', 
+                 'Date of Receipt', 'Title', 'From Whom', 'Date',
+                 'Submitted by', 'Returned to', 'Reference to', 'Ref Date',
+                 'Replay/Fresh', 'Received Date', 'Receipt Date', 
+                 'Nature of Disposal', 'Disposal Date', 'Attachment']
+            ];
+            
+            const tableData = currentDataForExport.map(item => {
+                // Get attachment URL
+                let attachmentUrl = item[attachmentColumnName] || '';
+                if (!attachmentUrl.trim()) {
+                    for (let key in item) {
+                        const value = item[key] || '';
+                        if (value.includes('drive.google.com') || 
+                            value.includes('http') || 
+                            value.includes('https')) {
+                            attachmentUrl = value;
+                            break;
+                        }
+                    }
+                }
+                
+                return [
+                    item['ID'] || '',
+                    item['Treasury Code'] || '',
+                    item['Section'] || '',
+                    item['SL.No'] || '',
+                    item['Current No'] || '',
+                    item['Date of Receipt by clerk'] || '',
+                    item['Title'] || '',
+                    item['From Whom  Outside no'] || '',
+                    item['date'] || '',
+                    item['Submitted by Clerk'] || '',
+                    item['Returned to clerk'] || '',
+                    item['Reference issued to whom'] || '',
+                    item['reference issued date'] || '',
+                    item['Replay or fresh Current received from whom and number'] || '',
+                    item['received date'] || '',
+                    item['Date of receipt by clerk'] || '',
+                    item['Nature of Disposal'] || '',
+                    item['Date of disposal'] || '',
+                    attachmentUrl.trim() || 'No file'
+                ];
+            });
+            
+            // Add title
+            doc.setFontSize(20);
+            doc.setTextColor(67, 97, 238);
+            doc.text('Digi PR Static Report', 14, 15);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100, 100, 100);
+            doc.text(`Generated: ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}`, 14, 22);
+            
+            // Add filter criteria
+            let y = 28;
+            doc.setFontSize(10);
+            doc.setTextColor(0, 0, 0);
+            doc.text('Filter Criteria:', 14, y);
+            y += 5;
+            doc.text(`Treasury Code: ${treasuryCode}`, 14, y);
+            y += 5;
+            doc.text(`Section: ${section}`, 14, y);
+            y += 5;
+            doc.text(`Date Range: ${fromDate} to ${toDate}`, 14, y);
+            y += 5;
+            doc.text(`Total Records: ${currentDataForExport.length}`, 14, y);
+            
+            // Create table
+            doc.autoTable({
+                head: headers,
+                body: tableData,
+                startY: y + 5,
+                theme: 'grid',
+                styles: {
+                    fontSize: 6,
+                    cellPadding: 2,
+                    overflow: 'linebreak'
+                },
+                headStyles: {
+                    fillColor: [67, 97, 238],
+                    textColor: 255,
+                    fontSize: 7,
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [245, 245, 245]
+                },
+                margin: { left: 14, right: 14 }
+            });
+            
+            // Save PDF
+            const fileName = `DigiPR_Report_${treasuryCode}_${section}_${fromDate.replace(/\//g, '-')}_to_${toDate.replace(/\//g, '-')}.pdf`;
+            doc.save(fileName);
+            
+            Swal.fire({
+                icon: 'success',
+                title: 'PDF Exported',
+                text: `Report saved as ${fileName}`,
+                timer: 3000,
+                showConfirmButton: false
+            });
+        }
+        
+        function showLoading(show) {
+            if (show) {
+                $('#loading').show();
+            } else {
+                $('#loading').hide();
+            }
+        }
+    </script>
+</body>
+</html>
