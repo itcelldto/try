@@ -1,9 +1,17 @@
-
-        // Google Sheets API configuration
+   // Google Sheets API configuration
         const SPREADSHEET_ID = '11AWbKR2rR2YQYm6AdjEQsw-na9QObL0wfw6eAi4MEdM';
         const API_KEY = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
         const SHEET_NAME = '101';
         const SETTINGS_SHEET = 'settings';
+        
+        // Voice files configuration
+        const VOICE_BASE_URL = 'https://itcelldto.github.io/try/apps/dt-token/voices/';
+        
+        // Store section voice files that have been loaded
+        const sectionVoiceCache = new Map();
+        
+        // Audio cache for common voice files
+        const audioCache = new Map();
         
         // Configuration for max tokens to show
         const MAX_TOKENS_TO_SHOW = {
@@ -12,20 +20,282 @@
             mobile: 3
         };
         
-        // Fallback data in case API fails
-        const FALLBACK_DATA = {
-            "Section 1": { currentToken: 25, queuedTokens: [26, 27, 28, 29, 30, 31, 32, 33, 34, 35] },
-            "Section 2": { currentToken: 18, queuedTokens: [19, 20, 21, 22, 23, 24] },
-            "Section 3": { currentToken: 32, queuedTokens: [] }, // No queue
-            "Section 4": { currentToken: 15, queuedTokens: [16, 17, 18, 19, 20, 21, 22, 23] },
-            "Section 5": { currentToken: 22, queuedTokens: [] }, // No queue
-            "Section 6": { currentToken: 10, queuedTokens: [11, 12, 13, 14, 15] }
-        };
-        
         // Store previous token data for comparison
         let previousTokenData = {};
+        let previousAllPassedTokens = {}; // Track all passed tokens per section
         let fetchRetryCount = 0;
         const MAX_RETRIES = 3;
+        
+        // Preload notification bell sound
+        const notificationBell = new Audio("https://itcelltreasury.github.io/try/bell.mp3");
+        
+        // Common voice files to preload
+        const COMMON_VOICE_FILES = [
+            '0.wav', '1.wav', '2.wav', '3.wav', '4.wav',
+            '5.wav', '6.wav', '7.wav', '8.wav', '9.wav',
+            'token_no.wav',  // "token number" phrase
+            'and.wav',        // "and" for numbers like 25 (twenty five)
+            '10.wav', '20.wav', '30.wav', '40.wav', '50.wav',
+            '60.wav', '70.wav', '80.wav', '90.wav',
+            '100.wav', '200.wav', '300.wav', '400.wav', '500.wav',
+            '600.wav', '700.wav', '800.wav', '900.wav',
+            '1000.wav', '2000.wav', '3000.wav'
+        ];
+        
+        // Preload common voice files
+        function preloadCommonVoiceFiles() {
+            console.log('Preloading common voice files...');
+            COMMON_VOICE_FILES.forEach(filename => {
+                const audio = new Audio();
+                audio.src = VOICE_BASE_URL + filename;
+                audio.preload = 'auto';
+                audioCache.set(filename, audio);
+                
+                // Force load by playing and immediately pausing
+                audio.load();
+            });
+            console.log('Common voice files preloading initiated');
+        }
+        
+        // Extract section name and number
+        function extractSectionParts(sectionName) {
+            // Extract the last number from the section name
+            const numberMatch = sectionName.match(/\d+$/);
+            const sectionNumber = numberMatch ? numberMatch[0] : null;
+            
+            // Get section name without the number
+            const baseSectionName = sectionNumber ? 
+                sectionName.replace(new RegExp(`\\s*${sectionNumber}$`), '').trim() : 
+                sectionName.trim();
+            
+            return {
+                baseName: baseSectionName,
+                number: sectionNumber
+            };
+        }
+        
+        // Load section voice file if not already loaded
+        async function loadSectionVoice(sectionName) {
+            const { baseName } = extractSectionParts(sectionName);
+            
+            // Convert to lowercase and create filename
+            const fileName = baseName.toLowerCase().replace(/\s+/g, '_') + '.wav';
+            
+            // Check if already in cache
+            if (sectionVoiceCache.has(fileName)) {
+                return sectionVoiceCache.get(fileName);
+            }
+            
+            // Create new audio element
+            const audio = new Audio();
+            audio.src = VOICE_BASE_URL + fileName;
+            audio.preload = 'auto';
+            
+            // Load the audio file
+            return new Promise((resolve, reject) => {
+                audio.addEventListener('canplaythrough', () => resolve(audio));
+                audio.addEventListener('error', () => {
+                    console.warn(`Could not load voice file for section: ${baseName} (${fileName})`);
+                    // Return null instead of rejecting
+                    resolve(null);
+                });
+                audio.load();
+            }).then(audio => {
+                if (audio) {
+                    sectionVoiceCache.set(fileName, audio);
+                }
+                return audio;
+            });
+        }
+        
+        // Play common voice file
+        async function playCommonVoice(fileName) {
+            return new Promise((resolve) => {
+                const audio = audioCache.get(fileName);
+                
+                if (audio) {
+                    audio.currentTime = 0;
+                    audio.play().then(() => {
+                        audio.onended = resolve;
+                    }).catch(error => {
+                        console.warn(`Could not play ${fileName}:`, error);
+                        resolve();
+                    });
+                } else {
+                    console.warn(`Voice file not found: ${fileName}`);
+                    resolve();
+                }
+            });
+        }
+        
+        // Play individual digit voice
+        function playDigitVoice(digit) {
+            return playCommonVoice(`${digit}.wav`);
+        }
+        
+        // Play "token number" phrase
+        async function playTokenNumberPhrase() {
+            await playCommonVoice('token_no.wav');
+        }
+        
+        // Play number in words (for tokens up to 9999)
+        async function playNumberInWords(number) {
+            const num = parseInt(number);
+            if (isNaN(num)) return;
+            
+            // Handle common numbers first
+            if (num <= 9) {
+                await playDigitVoice(num);
+                return;
+            }
+            
+            // Handle tens and hundreds
+            if (num <= 99) {
+                const tens = Math.floor(num / 10) * 10;
+                const units = num % 10;
+                
+                if (tens > 0) {
+                    await playCommonVoice(`${tens}.wav`);
+                    if (units > 0) {
+                        await new Promise(resolve => setTimeout(resolve, 150));
+                        await playDigitVoice(units);
+                    }
+                } else if (units > 0) {
+                    await playDigitVoice(units);
+                }
+                return;
+            }
+            
+            // Handle hundreds
+            if (num <= 999) {
+                const hundreds = Math.floor(num / 100) * 100;
+                const remainder = num % 100;
+                
+                if (hundreds > 0) {
+                    await playCommonVoice(`${hundreds}.wav`);
+                    if (remainder > 0) {
+                        await new Promise(resolve => setTimeout(resolve, 150));
+                        await playNumberInWords(remainder);
+                    }
+                } else {
+                    await playNumberInWords(remainder);
+                }
+                return;
+            }
+            
+            // Handle thousands (for completeness, though unlikely for tokens)
+            if (num <= 9999) {
+                const thousands = Math.floor(num / 1000) * 1000;
+                const remainder = num % 1000;
+                
+                if (thousands > 0) {
+                    await playCommonVoice(`${thousands}.wav`);
+                    if (remainder > 0) {
+                        await new Promise(resolve => setTimeout(resolve, 150));
+                        await playNumberInWords(remainder);
+                    }
+                } else {
+                    await playNumberInWords(remainder);
+                }
+                return;
+            }
+            
+            // For larger numbers, fall back to digit-by-digit
+            const digits = num.toString().split('');
+            for (const digit of digits) {
+                await playDigitVoice(digit);
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+        
+        // Play section voice with number
+        async function playSectionVoiceWithNumber(sectionName) {
+            try {
+                const { baseName, number } = extractSectionParts(sectionName);
+                
+                if (!baseName) return;
+                
+                // Play section name
+                const fileName = baseName.toLowerCase().replace(/\s+/g, '_') + '.wav';
+                const audio = sectionVoiceCache.get(fileName);
+                
+                if (audio) {
+                    audio.currentTime = 0;
+                    await audio.play();
+                    await new Promise(resolve => audio.onended = resolve);
+                } else {
+                    console.warn(`Section voice file not loaded: ${fileName} for section ${sectionName}`);
+                    // Fallback: try to load it now
+                    const newAudio = await loadSectionVoice(sectionName);
+                    if (newAudio) {
+                        newAudio.currentTime = 0;
+                        await newAudio.play();
+                        await new Promise(resolve => newAudio.onended = resolve);
+                    }
+                }
+                
+                // If there's a number, play it after the section name
+                if (number) {
+                    // Pause between section name and number
+                    await new Promise(resolve => setTimeout(resolve, 150));
+                    
+                    // Play the section number
+                    await playNumberInWords(number);
+                }
+                
+            } catch (error) {
+                console.warn(`Could not play section voice for ${sectionName}:`, error);
+            }
+        }
+        
+        // Announce token in format: "Token number [words] [section name] [section number]"
+        async function announceToken(section, tokenNumber) {
+            if (!audioCache.size) {
+                console.warn('Voice files not loaded yet');
+                return;
+            }
+            
+            try {
+                // Play "token number" phrase
+                await playTokenNumberPhrase();
+                
+                // Pause before token number
+                await new Promise(resolve => setTimeout(resolve, 150));
+                
+                // Announce token number in words
+                await playNumberInWords(tokenNumber);
+                
+                // Pause between token number and section
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                // Announce section name with number
+                await playSectionVoiceWithNumber(section);
+                
+            } catch (error) {
+                console.error('Error in token announcement:', error);
+                // Fallback to digit-by-digit announcement
+                await announceTokenFallback(section, tokenNumber);
+            }
+        }
+        
+        // Fallback announcement (digit-by-digit)
+        async function announceTokenFallback(section, tokenNumber) {
+            try {
+                await playTokenNumberPhrase();
+                await new Promise(resolve => setTimeout(resolve, 150));
+                
+                const tokenDigits = tokenNumber.toString().split('');
+                for (const digit of tokenDigits) {
+                    await playDigitVoice(digit);
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 200));
+                await playSectionVoiceWithNumber(section);
+            } catch (error) {
+                console.error('Fallback announcement also failed:', error);
+            }
+        }
         
         // Function to get max tokens to show based on screen width
         function getMaxTokensToShow() {
@@ -65,16 +335,28 @@
                 // Otherwise use fallback data
                 if (fetchRetryCount >= MAX_RETRIES) {
                     console.log('Using fallback data');
-                    return FALLBACK_DATA;
+                    return getFallbackData();
                 }
                 
                 return null;
             }
         }
         
+        // Generate fallback data
+        function getFallbackData() {
+            const fallbackData = {
+                "Section 1": { currentToken: 25, queuedTokens: [26, 27, 28, 29, 30, 31, 32, 33, 34, 35], passedTokens: new Set([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]) },
+                "Section 2": { currentToken: 18, queuedTokens: [19, 20, 21, 22, 23, 24], passedTokens: new Set([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]) },
+                "Section 3": { currentToken: 32, queuedTokens: [], passedTokens: new Set([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32]) },
+                "Section 4": { currentToken: 15, queuedTokens: [16, 17, 18, 19, 20, 21, 22, 23], passedTokens: new Set([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]) },
+                "Section 5": { currentToken: 22, queuedTokens: [], passedTokens: new Set([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22]) }
+            };
+            return fallbackData;
+        }
+        
         // Process the data from Google Sheets
         function processData(values) {
-            if (!values || values.length < 2) return FALLBACK_DATA;
+            if (!values || values.length < 2) return getFallbackData();
             
             // Extract headers and rows
             const headers = values[0];
@@ -96,64 +378,38 @@
                 if (!sectionsMap[section]) {
                     sectionsMap[section] = {
                         currentToken: null,
-                        queuedTokens: []
+                        queuedTokens: [],
+                        passedTokens: new Set() // Track all passed tokens
                     };
                 }
                 
                 if (status === 'Pass') {
+                    // Add to passed tokens set
+                    sectionsMap[section].passedTokens.add(tokenNo);
+                    
                     // Update current token to the highest passed token
                     if (!sectionsMap[section].currentToken || tokenNo > sectionsMap[section].currentToken) {
                         sectionsMap[section].currentToken = tokenNo;
                     }
                 } else if (status === 'In Que') {
-                    // Add to queued tokens
-                    if (!sectionsMap[section].queuedTokens.includes(tokenNo)) {
+                    // Only add to queued if not passed
+                    if (!sectionsMap[section].passedTokens.has(tokenNo)) {
                         sectionsMap[section].queuedTokens.push(tokenNo);
                     }
                 }
             });
             
-            // Sort queued tokens for each section
+            // Sort queued tokens for each section (filter out passed tokens)
             for (const section in sectionsMap) {
-                sectionsMap[section].queuedTokens.sort((a, b) => a - b);
-                
-                // If no current token found, use the highest queued minus 1
-                if (!sectionsMap[section].currentToken && sectionsMap[section].queuedTokens.length > 0) {
-                    sectionsMap[section].currentToken = sectionsMap[section].queuedTokens[0] - 1;
-                }
+                sectionsMap[section].queuedTokens = sectionsMap[section].queuedTokens
+                    .filter(token => !sectionsMap[section].passedTokens.has(token))
+                    .sort((a, b) => a - b);
             }
             
-            return Object.keys(sectionsMap).length > 0 ? sectionsMap : FALLBACK_DATA;
+            return Object.keys(sectionsMap).length > 0 ? sectionsMap : getFallbackData();
         }
         
-        // Sort sections - those with queue first, then those without
-        function sortSections(sectionsData) {
-            const sectionsWithQueue = [];
-            const sectionsWithoutQueue = [];
-            
-            // Separate sections based on queue status
-            for (const section in sectionsData) {
-                if (sectionsData[section].queuedTokens && sectionsData[section].queuedTokens.length > 0) {
-                    sectionsWithQueue.push(section);
-                } else {
-                    sectionsWithoutQueue.push(section);
-                }
-            }
-            
-            // Sort each group by section number
-            const sortByNumber = (a, b) => {
-                const numA = parseInt(a.replace(/\D/g, '')) || 0;
-                const numB = parseInt(b.replace(/\D/g, '')) || 0;
-                return numA - numB;
-            };
-            
-            sectionsWithQueue.sort(sortByNumber);
-            sectionsWithoutQueue.sort(sortByNumber);
-            
-            // Combine: sections with queue first, then sections without queue
-            return [...sectionsWithQueue, ...sectionsWithoutQueue];
-        }
-           // Preload section voice files based on current sections
+        // Preload section voice files based on current sections
         async function preloadSectionVoices(sections) {
             console.log('Preloading section voice files...');
             
@@ -231,6 +487,34 @@
             });
         }
         
+        // Sort sections - those with queue first, then those without
+        function sortSections(sectionsData) {
+            const sectionsWithQueue = [];
+            const sectionsWithoutQueue = [];
+            
+            // Separate sections based on queue status
+            for (const section in sectionsData) {
+                if (sectionsData[section].queuedTokens && sectionsData[section].queuedTokens.length > 0) {
+                    sectionsWithQueue.push(section);
+                } else {
+                    sectionsWithoutQueue.push(section);
+                }
+            }
+            
+            // Sort each group by section number
+            const sortByNumber = (a, b) => {
+                const numA = parseInt(a.replace(/\D/g, '')) || 0;
+                const numB = parseInt(b.replace(/\D/g, '')) || 0;
+                return numA - numB;
+            };
+            
+            sectionsWithQueue.sort(sortByNumber);
+            sectionsWithoutQueue.sort(sortByNumber);
+            
+            // Combine: sections with queue first, then sections without queue
+            return [...sectionsWithQueue, ...sectionsWithoutQueue];
+        }
+        
         // Generate the HTML table from processed data
         function generateTable(data) {
             if (!data || Object.keys(data).length === 0) {
@@ -285,7 +569,7 @@
                 
                 html += `
                     <tr class="${rowClass}">
-                        <td style="font-size: 2.5vw; font-weight: bold;">${section}</td>
+                        <td style="font-size: 2vw; font-weight: bold;">${section}</td>
                         <td class="current-token">${sectionData.currentToken || '--'}</td>
                         <td>${queuedTokensHtml}</td>
                     </tr>
@@ -305,7 +589,13 @@
             try {
                 const data = await fetchTokenData();
                 if (data) {
-                    previousTokenData = data;
+                    // Preload section voices if this is the first load
+                    if (Object.keys(previousTokenData).length === 0) {
+                        const sections = Object.keys(data);
+                        await preloadSectionVoices(sections);
+                    }
+                    
+                    checkForChangesAndAnnounce(data);
                     document.getElementById('token-table').innerHTML = generateTable(data);
                 }
             } catch (error) {
@@ -389,6 +679,10 @@
         
         // Initial load
         window.addEventListener('load', function() {
+            // Preload voices first
+            preloadCommonVoiceFiles();
+            
+            // Then update display elements
             updateDateTime();
             updateTable();
             updateScrollReel();
@@ -400,7 +694,8 @@
             
             // Update table on window resize to adjust token display
             window.addEventListener('resize', function() {
-                updateTable();
+                if (Object.keys(previousTokenData).length > 0) {
+                    document.getElementById('token-table').innerHTML = generateTable(previousTokenData);
+                }
             });
         });
-    
