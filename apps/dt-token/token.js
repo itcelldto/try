@@ -569,7 +569,7 @@
                 
                 html += `
                     <tr class="${rowClass}">
-                        <td style="font-size: 2vw; font-weight: bold;">${section}</td>
+                        <td style="font-size: 2.5vw; font-weight: bold;">${section}</td>
                         <td class="current-token">${sectionData.currentToken || '--'}</td>
                         <td>${queuedTokensHtml}</td>
                     </tr>
