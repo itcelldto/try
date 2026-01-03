@@ -153,6 +153,83 @@
             // Combine: sections with queue first, then sections without queue
             return [...sectionsWithQueue, ...sectionsWithoutQueue];
         }
+           // Preload section voice files based on current sections
+        async function preloadSectionVoices(sections) {
+            console.log('Preloading section voice files...');
+            
+            // Get unique base section names
+            const uniqueBaseSections = new Set();
+            sections.forEach(section => {
+                const { baseName } = extractSectionParts(section);
+                if (baseName) {
+                    uniqueBaseSections.add(baseName);
+                }
+            });
+            
+            // Load each unique base section voice
+            for (const baseSection of uniqueBaseSections) {
+                try {
+                    await loadSectionVoice(baseSection);
+                    console.log(`Loaded voice file for section type: ${baseSection}`);
+                } catch (error) {
+                    console.warn(`Could not load voice file for section type ${baseSection}:`, error);
+                }
+            }
+            
+            console.log('Section voice files preloading completed');
+        }
+        
+        // Check for changes and announce if needed
+        function checkForChangesAndAnnounce(newData) {
+            if (!newData || Object.keys(previousTokenData).length === 0) {
+                previousTokenData = JSON.parse(JSON.stringify(newData));
+                // Initialize passed tokens tracking
+                for (const section in newData) {
+                    previousAllPassedTokens[section] = new Set();
+                    if (newData[section].passedTokens) {
+                        newData[section].passedTokens.forEach(token => {
+                            previousAllPassedTokens[section].add(token);
+                        });
+                    }
+                }
+                return;
+            }
+            
+            // Check each section for newly passed tokens
+            for (const section in newData) {
+                if (!previousAllPassedTokens[section]) {
+                    previousAllPassedTokens[section] = new Set();
+                }
+                
+                const newPassedTokens = newData[section].passedTokens || new Set();
+                
+                // Check for any newly passed tokens
+                newPassedTokens.forEach(token => {
+                    if (!previousAllPassedTokens[section].has(token)) {
+                        // This is a newly passed token, announce it
+                        console.log(`New token ${token} passed at ${section}`);
+                        playNotificationBell().then(() => {
+                            announceToken(section, token);
+                        });
+                        
+                        // Add to our set of passed tokens
+                        previousAllPassedTokens[section].add(token);
+                    }
+                });
+            }
+            
+            // Update previous data
+            previousTokenData = JSON.parse(JSON.stringify(newData));
+        }
+        
+        // Play notification bell sound
+        function playNotificationBell() {
+            return new Promise((resolve) => {
+                notificationBell.currentTime = 0;
+                notificationBell.play();
+                notificationBell.onended = resolve;
+            });
+        }
         
         // Generate the HTML table from processed data
         function generateTable(data) {
