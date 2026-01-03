@@ -1,11 +1,11 @@
-   // Google Sheets API configuration
+    // Google Sheets API configuration
         const SPREADSHEET_ID = '11AWbKR2rR2YQYm6AdjEQsw-na9QObL0wfw6eAi4MEdM';
         const API_KEY = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
         const SHEET_NAME = '101';
         const SETTINGS_SHEET = 'settings';
         
         // Voice files configuration
-        const VOICE_BASE_URL = './voices/';
+        const VOICE_BASE_URL = 'https://itcelldto.github.io/try/apps/dt-token/voices/';
         
         // Store section voice files that have been loaded
         const sectionVoiceCache = new Map();
@@ -27,19 +27,13 @@
         const MAX_RETRIES = 3;
         
         // Preload notification bell sound
-        const notificationBell = new Audio("./voices/bell.mp3");
+        const notificationBell = new Audio("https://itcelltreasury.github.io/try/bell.mp3");
         
-        // Common voice files to preload
+        // Common voice files to preload - ONLY DIGIT FILES
         const COMMON_VOICE_FILES = [
             '0.wav', '1.wav', '2.wav', '3.wav', '4.wav',
             '5.wav', '6.wav', '7.wav', '8.wav', '9.wav',
-            'token_no.wav',  // "token number" phrase
-            'and.wav',        // "and" for numbers like 25 (twenty five)
-            '10.wav', '20.wav', '30.wav', '40.wav', '50.wav',
-            '60.wav', '70.wav', '80.wav', '90.wav',
-            '100.wav', '200.wav', '300.wav', '400.wav', '500.wav',
-            '600.wav', '700.wav', '800.wav', '900.wav',
-            '1000.wav', '2000.wav', '3000.wav'
+            'token_no.wav'  // "token number" phrase
         ];
         
         // Preload common voice files
@@ -138,77 +132,7 @@
             await playCommonVoice('token_no.wav');
         }
         
-        // Play number in words (for tokens up to 9999)
-        async function playNumberInWords(number) {
-            const num = parseInt(number);
-            if (isNaN(num)) return;
-            
-            // Handle common numbers first
-            if (num <= 9) {
-                await playDigitVoice(num);
-                return;
-            }
-            
-            // Handle tens and hundreds
-            if (num <= 99) {
-                const tens = Math.floor(num / 10) * 10;
-                const units = num % 10;
-                
-                if (tens > 0) {
-                    await playCommonVoice(`${tens}.wav`);
-                    if (units > 0) {
-                        await new Promise(resolve => setTimeout(resolve, 150));
-                        await playDigitVoice(units);
-                    }
-                } else if (units > 0) {
-                    await playDigitVoice(units);
-                }
-                return;
-            }
-            
-            // Handle hundreds
-            if (num <= 999) {
-                const hundreds = Math.floor(num / 100) * 100;
-                const remainder = num % 100;
-                
-                if (hundreds > 0) {
-                    await playCommonVoice(`${hundreds}.wav`);
-                    if (remainder > 0) {
-                        await new Promise(resolve => setTimeout(resolve, 150));
-                        await playNumberInWords(remainder);
-                    }
-                } else {
-                    await playNumberInWords(remainder);
-                }
-                return;
-            }
-            
-            // Handle thousands (for completeness, though unlikely for tokens)
-            if (num <= 9999) {
-                const thousands = Math.floor(num / 1000) * 1000;
-                const remainder = num % 1000;
-                
-                if (thousands > 0) {
-                    await playCommonVoice(`${thousands}.wav`);
-                    if (remainder > 0) {
-                        await new Promise(resolve => setTimeout(resolve, 150));
-                        await playNumberInWords(remainder);
-                    }
-                } else {
-                    await playNumberInWords(remainder);
-                }
-                return;
-            }
-            
-            // For larger numbers, fall back to digit-by-digit
-            const digits = num.toString().split('');
-            for (const digit of digits) {
-                await playDigitVoice(digit);
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
-        }
-        
-        // Play section voice with number
+        // Play section voice with number (digit by digit)
         async function playSectionVoiceWithNumber(sectionName) {
             try {
                 const { baseName, number } = extractSectionParts(sectionName);
@@ -234,13 +158,18 @@
                     }
                 }
                 
-                // If there's a number, play it after the section name
+                // If there's a number, play it digit by digit after the section name
                 if (number) {
                     // Pause between section name and number
                     await new Promise(resolve => setTimeout(resolve, 150));
                     
-                    // Play the section number
-                    await playNumberInWords(number);
+                    // Play the number digit by digit (as in original HTML)
+                    const numberDigits = number.toString().split('');
+                    for (const digit of numberDigits) {
+                        await playDigitVoice(digit);
+                        // Small pause between digits
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
                 }
                 
             } catch (error) {
@@ -248,7 +177,7 @@
             }
         }
         
-        // Announce token in format: "Token number [words] [section name] [section number]"
+        // Announce token in format: "Token number [digits] [section name] [section number]"
         async function announceToken(section, tokenNumber) {
             if (!audioCache.size) {
                 console.warn('Voice files not loaded yet');
@@ -262,38 +191,24 @@
                 // Pause before token number
                 await new Promise(resolve => setTimeout(resolve, 150));
                 
-                // Announce token number in words
-                await playNumberInWords(tokenNumber);
+                // Announce token number digit by digit (AS IN ORIGINAL HTML)
+                const tokenDigits = tokenNumber.toString().split('');
+                
+                // Play each digit separately
+                for (const digit of tokenDigits) {
+                    await playDigitVoice(digit);
+                    // Small pause between digits
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
                 
                 // Pause between token number and section
                 await new Promise(resolve => setTimeout(resolve, 200));
                 
-                // Announce section name with number
+                // Announce section name with number (digit by digit)
                 await playSectionVoiceWithNumber(section);
                 
             } catch (error) {
                 console.error('Error in token announcement:', error);
-                // Fallback to digit-by-digit announcement
-                await announceTokenFallback(section, tokenNumber);
-            }
-        }
-        
-        // Fallback announcement (digit-by-digit)
-        async function announceTokenFallback(section, tokenNumber) {
-            try {
-                await playTokenNumberPhrase();
-                await new Promise(resolve => setTimeout(resolve, 150));
-                
-                const tokenDigits = tokenNumber.toString().split('');
-                for (const digit of tokenDigits) {
-                    await playDigitVoice(digit);
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 200));
-                await playSectionVoiceWithNumber(section);
-            } catch (error) {
-                console.error('Fallback announcement also failed:', error);
             }
         }
         
