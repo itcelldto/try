@@ -26,12 +26,37 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     
     <style>
-        .loading {
-            display: none;
-            text-align: center;
-            font-size: 18px;
-            font-weight: bold;
-        }
+           .loading {
+        display: none;
+        font-size: 16px;
+        font-weight: bold;
+        color: #5f87c5;
+        text-align: center;
+        margin: 20px 0;
+    }
+    
+    .loading-content {
+        display: inline-flex;
+        align-items: center;
+        gap: 15px;
+        background: white;
+        padding: 15px 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    .loading-spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid rgba(95, 135, 197, 0.3);
+        border-radius: 50%;
+        border-top-color: #5f87c5;
+        animation: spin 1s ease-in-out infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
         .select2-container .select2-selection--single {
             height: 37px !important;
             padding: 5px 10px;
@@ -147,10 +172,12 @@
         <br>
     </div>
     
-    <!-- Loading Indicator -->
-    <div class="loading mt-3">
-        <img src="https://itcelldto.github.io/try/Spinner-3.gif" alt="Loading..."> Loading. Please wait...
+     <div class="loading mt-3">
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <span>Loading. Please wait...</span>
     </div>
+</div>
     
     <br>
     
@@ -164,7 +191,7 @@
     </div>
     
     <!-- Second Card: Results Table (Hidden by default) -->
-    <div id="resultsCard" class="card p-4" style="display: none;">
+    <div id="resultsCard" class="card p-4" style="display: none;margin-top:20px;">
         <div class="result-header">
             <h5 id="resultHeading" style="color: #5f87c5;">Report Details <span id="reportCount" style="font-size: 14px; color: #ff0000;"></span></h5>
             <button id="pdfButton" class="pdf-btn" style="display: none;">Export to PDF</button>
