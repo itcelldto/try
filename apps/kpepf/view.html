@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KPEPF Schedule View | District Treasury</title>
+    <!-- Bootstrap & DataTables CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    
+    <!-- jQuery, Bootstrap, DataTables -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    
+    <style>
+        body {
+            background-color: #d7e2ff6e;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .card {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px 10px 0 0 !important;
+            padding: 15px 20px;
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 5px;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 10px 15px;
+            border: 1px solid #ced4da;
+            transition: all 0.3s;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .btn {
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-primary:disabled {
+            background: #cccccc;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            margin-top: 5px;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .table td {
+            vertical-align: middle;
+        }
+        
+        .receipt-badge {
+            background-color: #198754;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .payment-badge {
+            background-color: #dc3545;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+        
+        .pdf-btn {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .pdf-btn:hover {
+            background-color: #c82333;
+        }
+        
+        .total-row {
+            background-color: #e9ecef !important;
+            font-weight: bold;
+        }
+        
+        .total-amount {
+            color: #198754;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .confirmed-badge {
+            background-color: #0d6efd;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .month-year-display {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .result-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="bi bi-check-circle"></i> KPEPF Schedule Receipts & Payment Details</h4>
+            </div>
+            
+            <div class="card-body">
+                <!-- Filter Section -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <label class="form-label">District Treasury</label>
+                        <select class="form-select" id="district" required>
+                            <option value="">Select District</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">Month</label>
+                        <select class="form-select" id="month">
+                            <option value="">Select</option>
+                            <option value="January">January</option>
+                            <option value="February">February</option>
+                            <option value="March">March</option>
+                            <option value="April">April</option>
+                            <option value="May">May</option>
+                            <option value="June">June</option>
+                            <option value="July">July</option>
+                            <option value="August">August</option>
+                            <option value="September">September</option>
+                            <option value="October">October</option>
+                            <option value="November">November</option>
+                            <option value="December">December</option>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <label class="form-label">Year</label>
+                        <input type="text" class="form-control" id="year" placeholder="(YYYY format)">
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label class="form-label">Type</label>
+                        <div class="radio-group">
+                            <div class="radio-option">
+                                <input type="radio" id="typeAll" name="type" value="" checked>
+                                <label for="typeAll">All</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="typeReceipt" name="type" value="Receipt">
+                                <label for="typeReceipt">Receipt</label>
+                            </div>
+                            <div class="radio-option">
+                                <input type="radio" id="typePayment" name="type" value="Payment">
+                                <label for="typePayment">Payment</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button class="btn btn-primary w-100" onclick="viewConfirmedData()">
+                            <i class="bi bi-eye"></i> View Data
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Loading Spinner -->
+                <div id="loadingSection" class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading confirmed records. Please wait...</p>
+                </div>
+                
+                <!-- Results Section -->
+                <div id="resultsSection" style="display: none;">
+                    <div class="month-year-display">
+                        <div class="result-header">
+                            <h5 id="resultHeading" style="color: #667eea; margin: 0;"></h5>
+                            <button id="pdfButton" class="pdf-btn" style="display: none;">
+                                <i class="bi bi-file-pdf"></i> Export to PDF
+                            </button>
+                        </div>
+                        <div id="summaryInfo" class="mt-2"></div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table id="resultsTable" class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Treasury</th>
+                                    <th>Type</th>
+                                    <th>Month</th>
+                                    <th>Year</th>
+                                    <th>Gross Total</th>
+                                    <th>Document</th>
+                                    <th>Confirmed</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <!-- Data will be inserted here -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td colspan="5" class="text-end fw-bold">Grand Total:</td>
+                                    <td id="grandTotal" class="total-amount">0.00</td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- No Results -->
+                <div id="noResultsSection" class="text-center py-5" style="display: none;">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle fs-4"></i>
+                        <h5 class="mt-2">No Confirmed Records Found</h5>
+                        <p>No confirmed records match your filter criteria. Try different filters.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
+    <script>
+        // Global variables
+        let allDistricts = [];
+        let currentData = [];
+        let dataTable = null;
+        const API_KEY = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
+        const SHEET_ID = "1J3hQtpZv4zyCUVANURf9B4lhORp2_ml-XlIWLZWR3aA";
+        const RANGE = "response!A:I"; // Columns A to I (Timestamp to Confirm)
+        
+        // Initialize when page loads
+        $(document).ready(function() {
+            console.log("KPEPF Confirmed View application loaded");
+            loadDistricts();
+            
+            // Initialize PDF button
+            $('#pdfButton').click(generatePDF);
+            
+            // Set current year as default
+            const currentYear = new Date().getFullYear();
+            $('#year').val(currentYear);
+        });
+        
+        // Load districts from Google Sheets
+        function loadDistricts() {
+            $('#loadingSection').show();
+            
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/Treasuries!A:B?key=${API_KEY}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    $('#loadingSection').hide();
+                    
+                    if (data.values && data.values.length > 1) {
+                        // Extract unique districts from column A (skip header)
+                        const rows = data.values.slice(1);
+                        const districtSet = new Set();
+                        
+                        rows.forEach(row => {
+                            if (row[0] && row[0].trim()) {
+                                districtSet.add(row[0].trim());
+                            }
+                        });
+                        
+                        allDistricts = Array.from(districtSet).sort();
+                        
+                        const select = $('#district');
+                        allDistricts.forEach(district => {
+                            select.append(new Option(district, district));
+                        });
+                        
+                        console.log("Districts loaded:", allDistricts.length);
+                    } else {
+                        showMessage('No district data found in Treasuries sheet.', 'danger');
+                    }
+                })
+                .catch(error => {
+                    $('#loadingSection').hide();
+                    console.error("Error loading districts:", error);
+                    showMessage('Error loading districts. Please refresh the page.', 'danger');
+                });
+        }
+        
+        // View confirmed data based on filters
+        function viewConfirmedData() {
+            const district = $('#district').val();
+            const month = $('#month').val();
+            const year = $('#year').val();
+            const type = $('input[name="type"]:checked').val();
+            
+            if (!district) {
+                showMessage('Please select a District Treasury.', 'warning');
+                return;
+            }
+            
+            // Validate year if provided
+            if (year && !/^\d{4}$/.test(year)) {
+                showMessage('Please enter a valid 4-digit year.', 'warning');
+                return;
+            }
+            
+            // Show loading
+            $('#loadingSection').show();
+            $('#resultsSection').hide();
+            $('#noResultsSection').hide();
+            
+            // Destroy existing DataTable if it exists
+            if (dataTable) {
+                dataTable.destroy();
+                dataTable = null;
+            }
+            
+            console.log("Fetching confirmed data with filters:", { district, month, year, type });
+            
+            // Fetch data from response sheet
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    $('#loadingSection').hide();
+                    
+                    if (data.values && data.values.length > 1) {
+                        processData(data.values, district, month, year, type);
+                    } else {
+                        showMessage('No data found in response sheet.', 'info');
+                        $('#noResultsSection').show();
+                    }
+                })
+                .catch(error => {
+                    $('#loadingSection').hide();
+                    console.error("Error fetching data:", error);
+                    showMessage('Error fetching data. Please try again.', 'danger');
+                    $('#noResultsSection').show();
+                });
+        }
+        
+        // Process and filter data
+        function processData(rows, district, month, year, type) {
+            // Extract headers
+            const headers = rows[0];
+            const dataRows = rows.slice(1);
+            
+            // Find column indices
+            const colIndex = {
+                timestamp: headers.indexOf("Timestamp"),
+                district: headers.indexOf("Name of District Treasury"),
+                treasury: headers.indexOf("Name of Treasury"),
+                type: headers.indexOf("Type"),
+                month: headers.indexOf("Month"),
+                year: headers.indexOf("Year"),
+                grossTotal: headers.indexOf("Gross total"),
+                document: headers.indexOf("Document"),
+                confirm: headers.indexOf("Confirm")
+            };
+            
+            // Filter data
+            const filteredData = dataRows.filter(row => {
+                // Check if all required columns exist
+                if (colIndex.confirm === -1 || colIndex.district === -1) {
+                    return false;
+                }
+                
+                const rowDistrict = row[colIndex.district] || '';
+                const rowType = row[colIndex.type] || '';
+                const rowMonth = row[colIndex.month] || '';
+                const rowYear = row[colIndex.year] || '';
+                const rowConfirm = row[colIndex.confirm] || '';
+                
+                // Apply filters
+                const matchesDistrict = rowDistrict.toString().trim() === district;
+                const matchesType = !type || rowType.toString().trim() === type;
+                const matchesMonth = !month || rowMonth.toString().trim() === month;
+                const matchesYear = !year || rowYear.toString().trim().replace(/^'/, '') === year;
+                const isConfirmed = rowConfirm.toString().trim().toLowerCase() === 'yes';
+                
+                return matchesDistrict && matchesType && matchesMonth && matchesYear && isConfirmed;
+            });
+            
+            currentData = filteredData;
+            
+            if (filteredData.length > 0) {
+                displayData(filteredData, headers, colIndex, district, month, year, type);
+                $('#resultsSection').show();
+                $('#noResultsSection').hide();
+            } else {
+                $('#resultsSection').hide();
+                $('#noResultsSection').show();
+                $('#pdfButton').hide();
+            }
+        }
+        
+        // Display data in table
+        function displayData(data, headers, colIndex, district, month, year, type) {
+            const tableBody = $('#tableBody');
+            tableBody.empty();
+            
+            let grandTotal = 0;
+            
+            data.forEach((row, index) => {
+                const rowType = row[colIndex.type] || '';
+                const rowMonth = row[colIndex.month] || '';
+                const rowYear = row[colIndex.year] || '';
+                const rowGrossTotal = row[colIndex.grossTotal] || '0';
+                const rowTreasury = row[colIndex.treasury] || '';
+                const rowDocument = row[colIndex.document] || '';
+                
+                // Parse gross total (remove apostrophe if present)
+                const grossTotalStr = rowGrossTotal.toString().replace(/^'/, '');
+                const grossTotalNum = parseFloat(grossTotalStr) || 0;
+                grandTotal += grossTotalNum;
+                
+                // Format gross total for display
+                const formattedGrossTotal = grossTotalNum.toLocaleString('en-IN', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+                
+                // Format year (remove apostrophe if present)
+                const formattedYear = rowYear.toString().replace(/^'/, '');
+                
+                const rowHtml = `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${escapeHtml(rowTreasury)}</td>
+                        <td>
+                            <span class="${rowType === 'Receipt' ? 'receipt-badge' : 'payment-badge'}">
+                                ${escapeHtml(rowType)}
+                            </span>
+                        </td>
+                        <td>${escapeHtml(rowMonth)}</td>
+                        <td>${escapeHtml(formattedYear)}</td>
+                        <td class="text-end">${formattedGrossTotal}</td>
+                        <td>
+                            ${rowDocument ? 
+                                `<a href="${escapeHtml(rowDocument)}" target="_blank" 
+                                    class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-file-pdf"></i> View
+                                </a>` : 
+                                '<span class="text-muted">No Document</span>'
+                            }
+                        </td>
+                        <td>
+                            <span class="confirmed-badge">
+                                <i class="bi bi-check"></i> Confirmed
+                            </span>
+                        </td>
+                    </tr>
+                `;
+                
+                tableBody.append(rowHtml);
+            });
+            
+            // Update totals
+            const formattedGrandTotal = grandTotal.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            $('#grandTotal').text(formattedGrandTotal);
+            
+            // Update heading and summary
+            updateHeading(district, month, year, type, data.length, grandTotal);
+            
+            // Show PDF button
+            $('#pdfButton').show();
+            
+            // Initialize DataTable
+            initializeDataTable();
+        }
+        
+        // Update heading and summary information
+        function updateHeading(district, month, year, type, count, total) {
+            let heading = `${district} - Confirmed Records`;
+            
+            if (month) heading += ` | Month: ${month}`;
+            if (year) heading += ` | Year: ${year}`;
+            if (type) heading += ` | Type: ${type}`;
+            
+            $('#resultHeading').text(heading);
+            
+            // Update summary info
+            const summary = `
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>Total Records:</strong> ${count}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Grand Total:</strong> ₹${total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Type:</strong> ${type || 'All'}
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Date:</strong> ${new Date().toLocaleDateString('en-IN')}
+                    </div>
+                </div>
+            `;
+            
+            $('#summaryInfo').html(summary);
+        }
+        
+        // Initialize DataTable
+        function initializeDataTable() {
+            dataTable = $('#resultsTable').DataTable({
+                paging: true,
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                ordering: true,
+                order: [[4, 'desc'], [3, 'asc']], // Sort by Year desc, then Month asc
+                columnDefs: [
+                    { orderable: false, targets: [0, 6, 7] } // Disable sorting for S.No, Document, and Confirm columns
+                ],
+                language: {
+                    search: "Search records:",
+                    lengthMenu: "Show _MENU_ records per page",
+                    info: "Showing _START_ to _END_ of _TOTAL_ records",
+                    infoEmpty: "Showing 0 to 0 of 0 records",
+                    infoFiltered: "(filtered from _MAX_ total records)",
+                    zeroRecords: "No matching records found",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    }
+                }
+            });
+        }
+        
+        // Generate PDF
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a4'
+            });
+            
+            const today = new Date();
+            const dateStr = today.toLocaleDateString('en-IN');
+            
+            // Prepare data for PDF
+            const pdfData = currentData.map((row, index) => {
+                // Find column indices again
+                const headers = ["Timestamp", "Name of District Treasury", "Name of Treasury", "Type", "Month", "Year", "Gross total", "Document", "Confirm"];
+                const colIndex = {
+                    treasury: headers.indexOf("Name of Treasury"),
+                    type: headers.indexOf("Type"),
+                    month: headers.indexOf("Month"),
+                    year: headers.indexOf("Year"),
+                    grossTotal: headers.indexOf("Gross total"),
+                    document: headers.indexOf("Document")
+                };
+                
+                const rowType = row[colIndex.type] || '';
+                const rowMonth = row[colIndex.month] || '';
+                const rowYear = row[colIndex.year] || '';
+                const rowGrossTotal = row[colIndex.grossTotal] || '0';
+                const rowTreasury = row[colIndex.treasury] || '';
+                
+                // Parse and format values
+                const grossTotalNum = parseFloat(rowGrossTotal.toString().replace(/^'/, '')) || 0;
+                const formattedYear = rowYear.toString().replace(/^'/, '');
+                
+                return [
+                    index + 1,
+                    rowTreasury,
+                    rowType,
+                    rowMonth,
+                    formattedYear,
+                    '₹' + grossTotalNum.toFixed(2)
+                ];
+            });
+            
+            // Calculate grand total
+            const grandTotal = currentData.reduce((sum, row) => {
+                const grossTotal = row[headers.indexOf("Gross total")] || '0';
+                return sum + (parseFloat(grossTotal.toString().replace(/^'/, '')) || 0);
+            }, 0);
+            
+            // Header
+            doc.setFontSize(16);
+            doc.text('KPEPF Confirmed Records Report', 105, 15, { align: 'center' });
+            
+            doc.setFontSize(10);
+            doc.text(`District: ${$('#district').val()}`, 14, 25);
+            doc.text(`Month: ${$('#month').val() || 'All'}`, 14, 30);
+            doc.text(`Year: ${$('#year').val() || 'All'}`, 14, 35);
+            doc.text(`Type: ${$('input[name="type"]:checked').val() || 'All'}`, 14, 40);
+            doc.text(`Generated On: ${dateStr}`, 14, 45);
+            
+            doc.text(`Total Records: ${currentData.length}`, 180, 25);
+            doc.text(`Grand Total: ₹${grandTotal.toFixed(2)}`, 180, 30);
+            
+            // Table
+            doc.autoTable({
+                startY: 50,
+                head: [['S.No', 'Treasury', 'Type', 'Month', 'Year', 'Gross Total (₹)']],
+                body: pdfData,
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [102, 126, 234],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    fontSize: 9
+                },
+                styles: {
+                    cellPadding: 3,
+                    fontSize: 8,
+                    textColor: [0, 0, 0],
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.1
+                },
+                columnStyles: {
+                    0: { cellWidth: 15, halign: 'center' },
+                    1: { cellWidth: 40 },
+                    2: { cellWidth: 25, halign: 'center' },
+                    3: { cellWidth: 25, halign: 'center' },
+                    4: { cellWidth: 25, halign: 'center' },
+                    5: { cellWidth: 30, halign: 'right' }
+                },
+                margin: { left: 10, right: 10 }
+            });
+            
+            // Footer with total
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 10,
+                body: [[
+                    '',
+                    '',
+                    '',
+                    '',
+                    'Grand Total:',
+                    '₹' + grandTotal.toFixed(2)
+                ]],
+                theme: 'plain',
+                styles: {
+                    fontStyle: 'bold',
+                    fontSize: 9,
+                    textColor: [0, 0, 0]
+                },
+                columnStyles: {
+                    5: { halign: 'right' }
+                },
+                margin: { left: 10, right: 10 }
+            });
+            
+            // Save PDF
+            const fileName = `KPEPF_Confirmed_${$('#district').val().replace(/\s+/g, '_')}_${dateStr.replace(/\//g, '-')}.pdf`;
+            doc.save(fileName);
+        }
+        
+        // Show message
+        function showMessage(message, type) {
+            // Create alert element
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <i class="bi bi-info-circle"></i> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            // Insert at top of card body
+            const cardBody = document.querySelector('.card-body');
+            cardBody.insertBefore(alertDiv, cardBody.firstChild);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    $(alertDiv).alert('close');
+                }
+            }, 5000);
+        }
+        
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text ? text.toString().replace(/[&<>"']/g, m => map[m]) : '';
+        }
+    </script>
+</body>
+</html>
