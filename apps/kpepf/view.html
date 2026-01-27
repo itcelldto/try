@@ -143,23 +143,6 @@
             font-weight: 600;
         }
         
-        .pdf-btn {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 4px;
-            font-size: 14px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .pdf-btn:hover {
-            background-color: #c82333;
-        }
-        
         .total-row {
             background-color: #e9ecef !important;
             font-weight: bold;
@@ -180,12 +163,41 @@
             font-weight: 600;
         }
         
+        .unconfirmed-badge {
+            background-color: #6c757d;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
         .month-year-display {
             background-color: #f8f9fa;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 20px;
             border-left: 4px solid #667eea;
+        }
+        
+        .section-header {
+            background-color: #e9ecef;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin: 20px 0 10px;
+            border-left: 4px solid #28a745;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .dt-schedule-header {
+            background-color: #e9ecef;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin: 20px 0 10px;
+            border-left: 4px solid #ffc107;
+            font-weight: 600;
+            color: #495057;
         }
         
         @media (max-width: 768px) {
@@ -251,11 +263,7 @@
                         <label class="form-label">Type</label>
                         <div class="radio-group">
                             <div class="radio-option">
-                                <input type="radio" id="typeAll" name="type" value="" checked>
-                                <label for="typeAll">All</label>
-                            </div>
-                            <div class="radio-option">
-                                <input type="radio" id="typeReceipt" name="type" value="Receipt">
+                                <input type="radio" id="typeReceipt" name="type" value="Receipt" checked>
                                 <label for="typeReceipt">Receipt</label>
                             </div>
                             <div class="radio-option">
@@ -275,7 +283,7 @@
                 <!-- Loading Spinner -->
                 <div id="loadingSection" class="loading">
                     <div class="loading-spinner"></div>
-                    <p>Loading confirmed records. Please wait...</p>
+                    <p>Loading data. Please wait...</p>
                 </div>
                 
                 <!-- Results Section -->
@@ -283,15 +291,17 @@
                     <div class="month-year-display">
                         <div class="result-header">
                             <h5 id="resultHeading" style="color: #667eea; margin: 0;"></h5>
-                            <button id="pdfButton" class="pdf-btn" style="display: none;">
-                                <i class="bi bi-file-pdf"></i> Export to PDF
-                            </button>
                         </div>
                         <div id="summaryInfo" class="mt-2"></div>
                     </div>
                     
-                    <div class="table-responsive">
-                        <table id="resultsTable" class="table table-hover table-striped">
+                    <!-- Receipt Schedules Section -->
+                    <div class="section-header">
+                        <i class="bi bi-check-circle-fill text-success"></i> All Treasury Schedules 
+                    </div>
+                    
+                    <div class="table-responsive mb-4">
+                        <table id="receiptScheduleTable" class="table table-hover table-striped">
                             <thead>
                                 <tr>
                                     <th>#</th>
@@ -301,16 +311,48 @@
                                     <th>Year</th>
                                     <th>Gross Total</th>
                                     <th>Document</th>
-                                    <th>Confirmed</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
-                            <tbody id="tableBody">
-                                <!-- Data will be inserted here -->
+                            <tbody id="receiptScheduleTableBody">
+                                <!-- Receipt schedule data will be inserted here -->
                             </tbody>
                             <tfoot>
                                 <tr class="total-row">
-                                    <td colspan="5" class="text-end fw-bold">Grand Total:</td>
-                                    <td id="grandTotal" class="total-amount">0.00</td>
+                                    <td colspan="5" class="text-end fw-bold">Schedule Total:</td>
+                                    <td id="receiptScheduleGrandTotal" class="total-amount">0.00</td>
+                                    <td colspan="2"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    
+                    <!-- DT- Schedule Details Section -->
+                    <div class="dt-schedule-header">
+                        <i class="bi bi-list-check text-warning"></i> DT- Schedule 
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table id="dtScheduleTable" class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Treasury</th>
+                                    <th>Type</th>
+                                    <th>Month</th>
+                                    <th>Year</th>
+                                    <th>Gross Total</th>
+                                    <th>Document</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dtScheduleTableBody">
+                                <!-- DTresponse data will be inserted here -->
+                            </tbody>
+                            <tfoot>
+                                <tr class="total-row">
+                                    <td colspan="5" class="text-end fw-bold">DT-Schedule Total:</td>
+                                    <td id="dtScheduleGrandTotal" class="total-amount">0.00</td>
                                     <td colspan="2"></td>
                                 </tr>
                             </tfoot>
@@ -322,38 +364,35 @@
                 <div id="noResultsSection" class="text-center py-5" style="display: none;">
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle fs-4"></i>
-                        <h5 class="mt-2">No Confirmed Records Found</h5>
-                        <p>No confirmed records match your filter criteria. Try different filters.</p>
+                        <h5 class="mt-2">No Records Found</h5>
+                        <p>No records match your filter criteria. Try different filters.</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <!-- jsPDF for PDF generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-    
     <script>
         // Global variables
         let allDistricts = [];
-        let currentData = [];
-        let dataTable = null;
+        let receiptScheduleData = [];
+        let dtScheduleData = [];
+        let receiptScheduleTable = null;
+        let dtScheduleTable = null;
         const API_KEY = "AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4";
         const SHEET_ID = "1J3hQtpZv4zyCUVANURf9B4lhORp2_ml-XlIWLZWR3aA";
-        const RANGE = "response!A:I"; // Columns A to I (Timestamp to Confirm)
         
         // Initialize when page loads
         $(document).ready(function() {
-            console.log("KPEPF Confirmed View application loaded");
+            console.log("KPEPF Data View application loaded");
             loadDistricts();
-            
-            // Initialize PDF button
-            $('#pdfButton').click(generatePDF);
             
             // Set current year as default
             const currentYear = new Date().getFullYear();
             $('#year').val(currentYear);
+            
+            // Set Receipt as default selection
+            $('#typeReceipt').prop('checked', true);
         });
         
         // Load districts from Google Sheets
@@ -397,7 +436,7 @@
                 });
         }
         
-        // View confirmed data based on filters
+        // View data based on filters
         function viewConfirmedData() {
             const district = $('#district').val();
             const month = $('#month').val();
@@ -420,26 +459,37 @@
             $('#resultsSection').hide();
             $('#noResultsSection').hide();
             
-            // Destroy existing DataTable if it exists
-            if (dataTable) {
-                dataTable.destroy();
-                dataTable = null;
+            // Destroy existing DataTables if they exist
+            if (receiptScheduleTable) {
+                receiptScheduleTable.destroy();
+                receiptScheduleTable = null;
             }
             
-            console.log("Fetching confirmed data with filters:", { district, month, year, type });
+            if (dtScheduleTable) {
+                dtScheduleTable.destroy();
+                dtScheduleTable = null;
+            }
             
-            // Fetch data from response sheet
-            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${RANGE}?key=${API_KEY}`;
+            console.log("Fetching data with filters:", { district, month, year, type });
             
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
+            // Fetch data from both sheets
+            const promises = [
+                fetchDataFromSheet("response", district, month, year, type),
+                fetchDataFromSheet("DTresponse", district, month, year, type)
+            ];
+            
+            Promise.all(promises)
+                .then(([receiptScheduleDataResult, dtScheduleDataResult]) => {
                     $('#loadingSection').hide();
                     
-                    if (data.values && data.values.length > 1) {
-                        processData(data.values, district, month, year, type);
+                    const totalRecords = receiptScheduleDataResult.length + dtScheduleDataResult.length;
+                    
+                    if (totalRecords > 0) {
+                        displayData(receiptScheduleDataResult, dtScheduleDataResult, district, month, year, type);
+                        $('#resultsSection').show();
+                        $('#noResultsSection').hide();
                     } else {
-                        showMessage('No data found in response sheet.', 'info');
+                        $('#resultsSection').hide();
                         $('#noResultsSection').show();
                     }
                 })
@@ -451,8 +501,27 @@
                 });
         }
         
-        // Process and filter data
-        function processData(rows, district, month, year, type) {
+        // Fetch data from a specific sheet
+        function fetchDataFromSheet(sheetName, district, month, year, type) {
+            const range = `${sheetName}!A:I`; // Columns A to I
+            const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${range}?key=${API_KEY}`;
+            
+            return fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.values && data.values.length > 1) {
+                        return processSheetData(data.values, district, month, year, type, sheetName);
+                    }
+                    return [];
+                })
+                .catch(error => {
+                    console.error(`Error fetching data from ${sheetName}:`, error);
+                    return [];
+                });
+        }
+        
+        // Process data from a sheet
+        function processSheetData(rows, district, month, year, type, sheetName) {
             // Extract headers
             const headers = rows[0];
             const dataRows = rows.slice(1);
@@ -470,10 +539,15 @@
                 confirm: headers.indexOf("Confirm")
             };
             
+            // If confirm column doesn't exist, set it to -1
+            if (colIndex.confirm === -1) {
+                colIndex.confirm = -1;
+            }
+            
             // Filter data
-            const filteredData = dataRows.filter(row => {
-                // Check if all required columns exist
-                if (colIndex.confirm === -1 || colIndex.district === -1) {
+            return dataRows.filter(row => {
+                // Check if district column exists
+                if (colIndex.district === -1) {
                     return false;
                 }
                 
@@ -481,130 +555,232 @@
                 const rowType = row[colIndex.type] || '';
                 const rowMonth = row[colIndex.month] || '';
                 const rowYear = row[colIndex.year] || '';
-                const rowConfirm = row[colIndex.confirm] || '';
+                const rowConfirm = colIndex.confirm !== -1 ? (row[colIndex.confirm] || '') : '';
                 
                 // Apply filters
                 const matchesDistrict = rowDistrict.toString().trim() === district;
-                const matchesType = !type || rowType.toString().trim() === type;
+                const matchesType = rowType.toString().trim() === type;
                 const matchesMonth = !month || rowMonth.toString().trim() === month;
                 const matchesYear = !year || rowYear.toString().trim().replace(/^'/, '') === year;
-                const isConfirmed = rowConfirm.toString().trim().toLowerCase() === 'yes';
                 
-                return matchesDistrict && matchesType && matchesMonth && matchesYear && isConfirmed;
+                // For response sheet, only show confirmed records
+                // For DTresponse sheet, show all records
+                if (sheetName === "response") {
+                    const isConfirmed = rowConfirm.toString().trim().toLowerCase() === 'yes';
+                    return matchesDistrict && matchesType && matchesMonth && matchesYear && isConfirmed;
+                } else {
+                    return matchesDistrict && matchesType && matchesMonth && matchesYear;
+                }
             });
-            
-            currentData = filteredData;
-            
-            if (filteredData.length > 0) {
-                displayData(filteredData, headers, colIndex, district, month, year, type);
-                $('#resultsSection').show();
-                $('#noResultsSection').hide();
-            } else {
-                $('#resultsSection').hide();
-                $('#noResultsSection').show();
-                $('#pdfButton').hide();
-            }
         }
         
-        // Display data in table
-        function displayData(data, headers, colIndex, district, month, year, type) {
-            const tableBody = $('#tableBody');
+        // Display data in tables
+        function displayData(receiptScheduleDataArray, dtScheduleDataArray, district, month, year, type) {
+            // Store data globally
+            receiptScheduleData = receiptScheduleDataArray;
+            dtScheduleData = dtScheduleDataArray;
+            
+            // Display receipt schedule data (sorted by treasury ascending)
+            displayReceiptScheduleData(receiptScheduleDataArray);
+            
+            // Display DT-Schedule data
+            displayDTScheduleData(dtScheduleDataArray);
+            
+            // Update heading and summary
+            updateHeading(district, month, year, type, receiptScheduleDataArray.length, dtScheduleDataArray.length);
+            
+            // Initialize DataTables
+            initializeDataTables();
+        }
+        
+        // Display receipt schedule data sorted by treasury ascending
+        function displayReceiptScheduleData(data) {
+            const tableBody = $('#receiptScheduleTableBody');
             tableBody.empty();
             
             let grandTotal = 0;
             
-            data.forEach((row, index) => {
-                const rowType = row[colIndex.type] || '';
-                const rowMonth = row[colIndex.month] || '';
-                const rowYear = row[colIndex.year] || '';
-                const rowGrossTotal = row[colIndex.grossTotal] || '0';
-                const rowTreasury = row[colIndex.treasury] || '';
-                const rowDocument = row[colIndex.document] || '';
-                
-                // Parse gross total (remove apostrophe if present)
-                const grossTotalStr = rowGrossTotal.toString().replace(/^'/, '');
-                const grossTotalNum = parseFloat(grossTotalStr) || 0;
-                grandTotal += grossTotalNum;
-                
-                // Format gross total for display
-                const formattedGrossTotal = grossTotalNum.toLocaleString('en-IN', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
+            if (data.length === 0) {
+                const noDataRow = `<tr><td colspan="8" class="text-center text-muted">No records found</td></tr>`;
+                tableBody.append(noDataRow);
+            } else {
+                // Sort data by Treasury column (index 2) in ascending order
+                const sortedData = [...data].sort((a, b) => {
+                    const treasuryA = (a[2] || '').toString().toLowerCase();
+                    const treasuryB = (b[2] || '').toString().toLowerCase();
+                    return treasuryA.localeCompare(treasuryB);
                 });
                 
-                // Format year (remove apostrophe if present)
-                const formattedYear = rowYear.toString().replace(/^'/, '');
-                
-                const rowHtml = `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${escapeHtml(rowTreasury)}</td>
-                        <td>
-                            <span class="${rowType === 'Receipt' ? 'receipt-badge' : 'payment-badge'}">
-                                ${escapeHtml(rowType)}
-                            </span>
-                        </td>
-                        <td>${escapeHtml(rowMonth)}</td>
-                        <td>${escapeHtml(formattedYear)}</td>
-                        <td class="text-end">${formattedGrossTotal}</td>
-                        <td>
-                            ${rowDocument ? 
-                                `<a href="${escapeHtml(rowDocument)}" target="_blank" 
-                                    class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-file-pdf"></i> View
-                                </a>` : 
-                                '<span class="text-muted">No Document</span>'
-                            }
-                        </td>
-                        <td>
-                            <span class="confirmed-badge">
-                                <i class="bi bi-check"></i> Confirmed
-                            </span>
-                        </td>
-                    </tr>
-                `;
-                
-                tableBody.append(rowHtml);
-            });
+                sortedData.forEach((row, index) => {
+                    // Since we don't have headers in the filtered data, we need to parse based on position
+                    const rowType = row[3] || ''; // Type column
+                    const rowMonth = row[4] || ''; // Month column
+                    const rowYear = row[5] || ''; // Year column
+                    const rowGrossTotal = row[6] || '0'; // Gross total column
+                    const rowTreasury = row[2] || ''; // Treasury column
+                    const rowDocument = row[7] || ''; // Document column
+                    
+                    // Parse gross total (remove apostrophe if present)
+                    const grossTotalStr = rowGrossTotal.toString().replace(/^'/, '');
+                    const grossTotalNum = parseFloat(grossTotalStr) || 0;
+                    grandTotal += grossTotalNum;
+                    
+                    // Format gross total for display
+                    const formattedGrossTotal = grossTotalNum.toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    
+                    // Format year (remove apostrophe if present)
+                    const formattedYear = rowYear.toString().replace(/^'/, '');
+                    
+                    const rowHtml = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${escapeHtml(rowTreasury)}</td>
+                            <td>
+                                <span class="${rowType === 'Receipt' ? 'receipt-badge' : 'payment-badge'}">
+                                    ${escapeHtml(rowType)}
+                                </span>
+                            </td>
+                            <td>${escapeHtml(rowMonth)}</td>
+                            <td>${escapeHtml(formattedYear)}</td>
+                            <td class="text-end">${formattedGrossTotal}</td>
+                            <td>
+                                ${rowDocument ? 
+                                    `<a href="${escapeHtml(rowDocument)}" target="_blank" 
+                                        class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-file-pdf"></i> View
+                                    </a>` : 
+                                    '<span class="text-muted">No Document</span>'
+                                }
+                            </td>
+                            <td>
+                                <span class="confirmed-badge">
+                                    <i class="bi bi-check"></i> Confirmed
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                    
+                    tableBody.append(rowHtml);
+                });
+            }
             
-            // Update totals
+            // Update grand total
             const formattedGrandTotal = grandTotal.toLocaleString('en-IN', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
-            $('#grandTotal').text(formattedGrandTotal);
+            $('#receiptScheduleGrandTotal').text(formattedGrandTotal);
+        }
+        
+        // Display DT-Schedule data
+        function displayDTScheduleData(data) {
+            const tableBody = $('#dtScheduleTableBody');
+            tableBody.empty();
             
-            // Update heading and summary
-            updateHeading(district, month, year, type, data.length, grandTotal);
+            let grandTotal = 0;
             
-            // Show PDF button
-            $('#pdfButton').show();
+            if (data.length === 0) {
+                const noDataRow = `<tr><td colspan="8" class="text-center text-muted">No records found</td></tr>`;
+                tableBody.append(noDataRow);
+            } else {
+                data.forEach((row, index) => {
+                    // Since we don't have headers in the filtered data, we need to parse based on position
+                    const rowType = row[3] || ''; // Type column
+                    const rowMonth = row[4] || ''; // Month column
+                    const rowYear = row[5] || ''; // Year column
+                    const rowGrossTotal = row[6] || '0'; // Gross total column
+                    const rowTreasury = row[2] || ''; // Treasury column
+                    const rowDocument = row[7] || ''; // Document column
+                    const rowConfirm = row[8] || ''; // Confirm column
+                    
+                    // Parse gross total (remove apostrophe if present)
+                    const grossTotalStr = rowGrossTotal.toString().replace(/^'/, '');
+                    const grossTotalNum = parseFloat(grossTotalStr) || 0;
+                    grandTotal += grossTotalNum;
+                    
+                    // Format gross total for display
+                    const formattedGrossTotal = grossTotalNum.toLocaleString('en-IN', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    });
+                    
+                    // Format year (remove apostrophe if present)
+                    const formattedYear = rowYear.toString().replace(/^'/, '');
+                    
+                    // Determine status badge
+                    const isConfirmed = rowConfirm.toString().trim().toLowerCase() === 'yes';
+                    const statusBadge = isConfirmed ? 
+                        `<span class="confirmed-badge">
+                            <i class="bi bi-check"></i> Confirmed
+                        </span>` :
+                        `<span class="unconfirmed-badge">
+                            <i class="bi bi-clock"></i> Pending
+                        </span>`;
+                    
+                    const rowHtml = `
+                        <tr>
+                            <td>${index + 1}</td>
+                            <td>${escapeHtml(rowTreasury)}</td>
+                            <td>
+                                <span class="${rowType === 'Receipt' ? 'receipt-badge' : 'payment-badge'}">
+                                    ${escapeHtml(rowType)}
+                                </span>
+                            </td>
+                            <td>${escapeHtml(rowMonth)}</td>
+                            <td>${escapeHtml(formattedYear)}</td>
+                            <td class="text-end">${formattedGrossTotal}</td>
+                            <td>
+                                ${rowDocument ? 
+                                    `<a href="${escapeHtml(rowDocument)}" target="_blank" 
+                                        class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-file-pdf"></i> View
+                                    </a>` : 
+                                    '<span class="text-muted">No Document</span>'
+                                }
+                            </td>
+                            <td>${statusBadge}</td>
+                        </tr>
+                    `;
+                    
+                    tableBody.append(rowHtml);
+                });
+            }
             
-            // Initialize DataTable
-            initializeDataTable();
+            // Update grand total
+            const formattedGrandTotal = grandTotal.toLocaleString('en-IN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+            $('#dtScheduleGrandTotal').text(formattedGrandTotal);
         }
         
         // Update heading and summary information
-        function updateHeading(district, month, year, type, count, total) {
-            let heading = `${district} - Confirmed Records`;
+        function updateHeading(district, month, year, type, receiptScheduleCount, dtScheduleCount) {
+            let heading = `${district} - Records Summary`;
             
             if (month) heading += ` | Month: ${month}`;
             if (year) heading += ` | Year: ${year}`;
-            if (type) heading += ` | Type: ${type}`;
+            heading += ` | Type: ${type}`;
             
             $('#resultHeading').text(heading);
             
             // Update summary info
             const summary = `
                 <div class="row">
-                    <div class="col-md-3">
-                        <strong>Total Records:</strong> ${count}
+                    <div class="col-md-2">
+                        <strong>Receipt Schedules:</strong> ${receiptScheduleCount}
+                    </div>
+                    <div class="col-md-2">
+                        <strong>DT-Schedule Records:</strong> ${dtScheduleCount}
+                    </div>
+                    <div class="col-md-2">
+                        <strong>Total Records:</strong> ${receiptScheduleCount + dtScheduleCount}
                     </div>
                     <div class="col-md-3">
-                        <strong>Grand Total:</strong> ₹${total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
-                    </div>
-                    <div class="col-md-3">
-                        <strong>Type:</strong> ${type || 'All'}
+                        <strong>Type:</strong> ${type}
                     </div>
                     <div class="col-md-3">
                         <strong>Date:</strong> ${new Date().toLocaleDateString('en-IN')}
@@ -615,20 +791,21 @@
             $('#summaryInfo').html(summary);
         }
         
-        // Initialize DataTable
-        function initializeDataTable() {
-            dataTable = $('#resultsTable').DataTable({
+        // Initialize DataTables
+        function initializeDataTables() {
+            // Initialize Receipt Schedules DataTable (sorted by Treasury column ascending by default)
+            receiptScheduleTable = $('#receiptScheduleTable').DataTable({
                 paging: true,
-                pageLength: 25,
-                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
+                pageLength: 10,
+                lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
                 ordering: true,
-                order: [[4, 'desc'], [3, 'asc']], // Sort by Year desc, then Month asc
+                order: [[1, 'asc']], // Sort by Treasury column (index 1) ascending
                 columnDefs: [
-                    { orderable: false, targets: [0, 6, 7] } // Disable sorting for S.No, Document, and Confirm columns
+                    { orderable: false, targets: [0, 6, 7] } // Disable sorting for S.No, Document, and Status columns
                 ],
                 language: {
-                    search: "Search records:",
-                    lengthMenu: "Show _MENU_ records per page",
+                    search: "Search:",
+                    lengthMenu: "Show _MENU_ records",
                     info: "Showing _START_ to _END_ of _TOTAL_ records",
                     infoEmpty: "Showing 0 to 0 of 0 records",
                     infoFiltered: "(filtered from _MAX_ total records)",
@@ -641,129 +818,32 @@
                     }
                 }
             });
-        }
-        
-        // Generate PDF
-        function generatePDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF({
-                orientation: 'landscape',
-                unit: 'mm',
-                format: 'a4'
+            
+            // Initialize DT-Schedule DataTable
+            dtScheduleTable = $('#dtScheduleTable').DataTable({
+                paging: true,
+                pageLength: 10,
+                lengthMenu: [[5, 10, 25, 50], [5, 10, 25, 50]],
+                ordering: true,
+                order: [[1, 'asc']], // Sort by Treasury column (index 1) ascending
+                columnDefs: [
+                    { orderable: false, targets: [0, 6, 7] } // Disable sorting for S.No, Document, and Status columns
+                ],
+                language: {
+                    search: "Search:",
+                    lengthMenu: "Show _MENU_ records",
+                    info: "Showing _START_ to _END_ of _TOTAL_ records",
+                    infoEmpty: "Showing 0 to 0 of 0 records",
+                    infoFiltered: "(filtered from _MAX_ total records)",
+                    zeroRecords: "No matching records found",
+                    paginate: {
+                        first: "First",
+                        last: "Last",
+                        next: "Next",
+                        previous: "Previous"
+                    }
+                }
             });
-            
-            const today = new Date();
-            const dateStr = today.toLocaleDateString('en-IN');
-            
-            // Prepare data for PDF
-            const pdfData = currentData.map((row, index) => {
-                // Find column indices again
-                const headers = ["Timestamp", "Name of District Treasury", "Name of Treasury", "Type", "Month", "Year", "Gross total", "Document", "Confirm"];
-                const colIndex = {
-                    treasury: headers.indexOf("Name of Treasury"),
-                    type: headers.indexOf("Type"),
-                    month: headers.indexOf("Month"),
-                    year: headers.indexOf("Year"),
-                    grossTotal: headers.indexOf("Gross total"),
-                    document: headers.indexOf("Document")
-                };
-                
-                const rowType = row[colIndex.type] || '';
-                const rowMonth = row[colIndex.month] || '';
-                const rowYear = row[colIndex.year] || '';
-                const rowGrossTotal = row[colIndex.grossTotal] || '0';
-                const rowTreasury = row[colIndex.treasury] || '';
-                
-                // Parse and format values
-                const grossTotalNum = parseFloat(rowGrossTotal.toString().replace(/^'/, '')) || 0;
-                const formattedYear = rowYear.toString().replace(/^'/, '');
-                
-                return [
-                    index + 1,
-                    rowTreasury,
-                    rowType,
-                    rowMonth,
-                    formattedYear,
-                    '₹' + grossTotalNum.toFixed(2)
-                ];
-            });
-            
-            // Calculate grand total
-            const grandTotal = currentData.reduce((sum, row) => {
-                const grossTotal = row[headers.indexOf("Gross total")] || '0';
-                return sum + (parseFloat(grossTotal.toString().replace(/^'/, '')) || 0);
-            }, 0);
-            
-            // Header
-            doc.setFontSize(16);
-            doc.text('KPEPF Confirmed Records Report', 105, 15, { align: 'center' });
-            
-            doc.setFontSize(10);
-            doc.text(`District: ${$('#district').val()}`, 14, 25);
-            doc.text(`Month: ${$('#month').val() || 'All'}`, 14, 30);
-            doc.text(`Year: ${$('#year').val() || 'All'}`, 14, 35);
-            doc.text(`Type: ${$('input[name="type"]:checked').val() || 'All'}`, 14, 40);
-            doc.text(`Generated On: ${dateStr}`, 14, 45);
-            
-            doc.text(`Total Records: ${currentData.length}`, 180, 25);
-            doc.text(`Grand Total: ₹${grandTotal.toFixed(2)}`, 180, 30);
-            
-            // Table
-            doc.autoTable({
-                startY: 50,
-                head: [['S.No', 'Treasury', 'Type', 'Month', 'Year', 'Gross Total (₹)']],
-                body: pdfData,
-                theme: 'grid',
-                headStyles: {
-                    fillColor: [102, 126, 234],
-                    textColor: [255, 255, 255],
-                    fontStyle: 'bold',
-                    fontSize: 9
-                },
-                styles: {
-                    cellPadding: 3,
-                    fontSize: 8,
-                    textColor: [0, 0, 0],
-                    lineColor: [0, 0, 0],
-                    lineWidth: 0.1
-                },
-                columnStyles: {
-                    0: { cellWidth: 15, halign: 'center' },
-                    1: { cellWidth: 40 },
-                    2: { cellWidth: 25, halign: 'center' },
-                    3: { cellWidth: 25, halign: 'center' },
-                    4: { cellWidth: 25, halign: 'center' },
-                    5: { cellWidth: 30, halign: 'right' }
-                },
-                margin: { left: 10, right: 10 }
-            });
-            
-            // Footer with total
-            doc.autoTable({
-                startY: doc.lastAutoTable.finalY + 10,
-                body: [[
-                    '',
-                    '',
-                    '',
-                    '',
-                    'Grand Total:',
-                    '₹' + grandTotal.toFixed(2)
-                ]],
-                theme: 'plain',
-                styles: {
-                    fontStyle: 'bold',
-                    fontSize: 9,
-                    textColor: [0, 0, 0]
-                },
-                columnStyles: {
-                    5: { halign: 'right' }
-                },
-                margin: { left: 10, right: 10 }
-            });
-            
-            // Save PDF
-            const fileName = `KPEPF_Confirmed_${$('#district').val().replace(/\s+/g, '_')}_${dateStr.replace(/\//g, '-')}.pdf`;
-            doc.save(fileName);
         }
         
         // Show message
