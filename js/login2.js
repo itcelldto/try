@@ -15,28 +15,24 @@ function isMobileDevice() {
 // Service Worker Registration
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/try/sw.js', { scope: '/try/' })
+        navigator.serviceWorker.register('/try/sw.js')
             .then(reg => console.log('Service Worker registered'))
             .catch(err => console.log('Registration failed:', err));
     });
 }
 
 // Check if user is already logged in
-// IMPORTANT: Also check for authentication token to prevent back button issue
 const authToken = sessionStorage.getItem('eadmin_auth_token');
 if (sessionStorage.getItem('isLoggedIn') === 'true' && authToken) {
-    // Check if session is still valid (less than 15 minutes old)
     const loginTime = sessionStorage.getItem('loginTime');
     if (loginTime) {
         const currentTime = new Date().getTime();
         const sessionAge = currentTime - parseInt(loginTime);
-        const SESSION_TIMEOUT = 15 * 60 * 1000; // 15 minutes
+        const SESSION_TIMEOUT = 15 * 60 * 1000;
         
         if (sessionAge < SESSION_TIMEOUT) {
-            // Redirect to dashboard if already logged in and session is valid
-            window.location.href = "eadmin.html";
+            window.location.href = "eadmin2.html";
         } else {
-            // Session expired, clear all data
             sessionStorage.clear();
             localStorage.clear();
         }
@@ -59,10 +55,22 @@ function generateCaptcha() {
 // Display CAPTCHA
 function displayCaptcha() {
     currentCaptcha = generateCaptcha();
-    document.getElementById('captcha-text').textContent = currentCaptcha;
-    sessionStorage.setItem('captcha', currentCaptcha);
-    document.getElementById('captcha-input').value = '';
-    document.getElementById('captcha-error').style.display = 'none';
+    const captchaElement = document.getElementById('captcha-text');
+    
+    if (captchaElement) {
+        captchaElement.textContent = currentCaptcha;
+        sessionStorage.setItem('captcha', currentCaptcha);
+    }
+    
+    const captchaInput = document.getElementById('captcha-input');
+    if (captchaInput) {
+        captchaInput.value = '';
+    }
+    
+    const captchaError = document.getElementById('captcha-error');
+    if (captchaError) {
+        captchaError.style.display = 'none';
+    }
 }
 
 // Validate CAPTCHA
@@ -77,7 +85,6 @@ function validateCaptcha() {
         document.getElementById('captcha-error').style.display = 'block';
         displayCaptcha();
         
-        // Shake animation
         const captchaContainer = document.getElementById('captcha-section');
         captchaContainer.classList.add('shake');
         setTimeout(() => {
@@ -88,38 +95,108 @@ function validateCaptcha() {
     }
 }
 
-// Toggle Password Visibility
-document.getElementById('togglePassword').addEventListener('click', function() {
-    const passwordInput = document.getElementById('password');
-    const icon = this.querySelector('i');
+// Initialize event listeners when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize CAPTCHA
+    displayCaptcha();
     
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        icon.classList.remove('bi-eye');
-        icon.classList.add('bi-eye-slash');
-    } else {
-        passwordInput.type = 'password';
-        icon.classList.remove('bi-eye-slash');
-        icon.classList.add('bi-eye');
+    // Toggle Password Visibility
+    const togglePasswordBtn = document.getElementById('togglePassword');
+    if (togglePasswordBtn) {
+        togglePasswordBtn.addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        });
+    }
+    
+    // Refresh CAPTCHA
+    const refreshCaptchaBtn = document.getElementById('refresh-captcha');
+    if (refreshCaptchaBtn) {
+        refreshCaptchaBtn.addEventListener('click', function() {
+            displayCaptcha();
+            
+            const captchaDisplay = document.getElementById('captcha-text').parentElement;
+            captchaDisplay.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                captchaDisplay.style.transform = 'scale(1)';
+            }, 150);
+        });
+    }
+    
+    // CAPTCHA input auto-uppercase
+    const captchaInput = document.getElementById('captcha-input');
+    if (captchaInput) {
+        captchaInput.addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+    }
+    
+    // Auto-focus on user ID
+    const userIdInput = document.getElementById('userid');
+    if (userIdInput) {
+        userIdInput.focus();
+    }
+    
+    // Auto-focus on CAPTCHA after password
+    const passwordInput = document.getElementById('password');
+    if (passwordInput) {
+        passwordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('captcha-input').focus();
+            }
+        });
+    }
+    
+    // Auto-submit on CAPTCHA enter
+    if (captchaInput) {
+        captchaInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('login-form').dispatchEvent(new Event('submit'));
+            }
+        });
     }
 });
 
-// Refresh CAPTCHA
-document.getElementById('refresh-captcha').addEventListener('click', function() {
-    displayCaptcha();
+// Fetch data from Google Sheets
+async function fetchWithCORS(url) {
+    try {
+        // Try direct fetch first
+        const directResponse = await fetch(url);
+        if (directResponse.ok) {
+            return await directResponse.json();
+        }
+    } catch (directError) {
+        console.log('Direct fetch failed, trying CORS proxy');
+    }
     
-    // Add animation effect
-    const captchaDisplay = document.getElementById('captcha-text').parentElement;
-    captchaDisplay.style.transform = 'scale(0.9)';
-    setTimeout(() => {
-        captchaDisplay.style.transform = 'scale(1)';
-    }, 150);
-});
-
-// CAPTCHA input auto-uppercase
-document.getElementById('captcha-input').addEventListener('input', function() {
-    this.value = this.value.toUpperCase();
-});
+    // Fallback to CORS proxy for Firefox
+    try {
+        const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+        const response = await fetch(proxyUrl);
+        
+        if (!response.ok) {
+            throw new Error(`Proxy HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return JSON.parse(data.contents);
+    } catch (proxyError) {
+        console.error('Proxy fetch failed:', proxyError);
+        throw new Error('Failed to fetch data from server');
+    }
+}
 
 // Form Submission
 document.getElementById('login-form').addEventListener('submit', async function(e) {
@@ -127,15 +204,12 @@ document.getElementById('login-form').addEventListener('submit', async function(
     
     const userId = document.getElementById('userid').value.trim();
     const password = document.getElementById('password').value.trim();
-    const captchaInput = document.getElementById('captcha-input').value.trim();
     const loginButton = document.getElementById('login-button');
     const errorDiv = document.getElementById('login-error');
     const errorText = document.getElementById('error-message-text');
-    const captchaError = document.getElementById('captcha-error');
     
     // Reset errors
     errorDiv.style.display = 'none';
-    captchaError.style.display = 'none';
     
     // Basic validation
     if (!userId || !password) {
@@ -157,12 +231,7 @@ document.getElementById('login-form').addEventListener('submit', async function(
         // Fetch credentials from Google Sheets
         const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
         
-        const response = await fetch(settingsUrl);
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        
-        const data = await response.json();
+        const data = await fetchWithCORS(settingsUrl);
         const treasurySettings = data.values || [];
         
         let loginSuccessful = false;
@@ -193,29 +262,28 @@ document.getElementById('login-form').addEventListener('submit', async function(
             sessionStorage.setItem('treasuryRow', treasuryRow);
             sessionStorage.setItem('menuSheet', treasurySettings[treasuryRow][5] || 'nav-links');
             
-            // Set login timestamp for session management
+            // Set login timestamp
             const loginTime = new Date().getTime();
             sessionStorage.setItem('loginTime', loginTime);
             
-            // Generate authentication token (MATCHING main.js format)
+            // Generate authentication token
             const timestamp = loginTime;
             const random = Math.random().toString(36).substring(2);
             const authToken = btoa(`${timestamp}:${random}:${userName}`);
             
-            // Store both tokens (compatible with main.js)
+            // Store tokens
             sessionStorage.setItem('eadmin_auth_token', authToken);
             sessionStorage.setItem('eadmin_login_time', timestamp.toString());
             
-            // Clear any previous CAPTCHA data
+            // Clear CAPTCHA data
             sessionStorage.removeItem('captcha');
             
-            // Show success and redirect to main dashboard
+            // Show success and redirect
             loginButton.innerHTML = '<i class="bi bi-check-circle me-2"></i> Success!...';
             loginButton.style.background = 'linear-gradient(135deg, #00a65a 0%, #008548 100%)';
             
             setTimeout(() => {
-                // Use replaceState to prevent back navigation to login page
-                window.history.replaceState(null, '', 'eadmin.html');
+                window.history.replaceState(null, '', 'eadmin2.html');
                 window.location.replace("eadmin.html");
             }, 1000);
             
@@ -225,12 +293,12 @@ document.getElementById('login-form').addEventListener('submit', async function(
             errorDiv.style.display = 'block';
             displayCaptcha();
             
-            // Clear any sensitive data
+            // Clear sensitive data
             sessionStorage.removeItem('isLoggedIn');
             sessionStorage.removeItem('eadmin_auth_token');
             sessionStorage.removeItem('eadmin_login_time');
             
-            // Shake animation for form
+            // Shake animation
             const form = document.getElementById('login-form');
             form.classList.add('shake');
             setTimeout(() => {
@@ -244,10 +312,9 @@ document.getElementById('login-form').addEventListener('submit', async function(
         errorDiv.style.display = 'block';
         displayCaptcha();
         
-        // Clear any sensitive data on error
-        sessionStorage.removeItem('isLoggedIn');
-        sessionStorage.removeItem('eadmin_auth_token');
-        sessionStorage.removeItem('eadmin_login_time');
+        // Clear data on error
+        sessionStorage.clear();
+        
     } finally {
         // Reset button state
         loginButton.classList.remove('loading');
@@ -272,59 +339,39 @@ function openForgotPasswordPopup() {
     );
 }
 
-// Clear any leftover authentication data on page load
-window.addEventListener('DOMContentLoaded', () => {
+// Clear authentication data on page load
+window.addEventListener('load', () => {
     // Check URL parameters for logout
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('logout') || urlParams.has('redirect')) {
-        // Clear all session data if coming from logout
         sessionStorage.clear();
         localStorage.clear();
     }
     
-    displayCaptcha();
-    document.getElementById('userid').focus();
-    
-    // Auto-focus on CAPTCHA after password
-    document.getElementById('password').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            document.getElementById('captcha-input').focus();
+    // Ensure CAPTCHA is displayed
+    setTimeout(() => {
+        if (!currentCaptcha) {
+            displayCaptcha();
         }
-    });
+    }, 100);
     
-    // Auto-submit on CAPTCHA enter
-    document.getElementById('captcha-input').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            document.getElementById('login-form').dispatchEvent(new Event('submit'));
-        }
-    });
-    
-    // Prevent caching of login page
-    window.addEventListener('pageshow', function(event) {
-        if (event.persisted) {
-            // Page was loaded from cache, refresh
-            window.location.reload();
-        }
-    });
+    // Firefox-specific fixes
+    if (typeof InstallTrigger !== 'undefined') {
+        const style = document.createElement('style');
+        style.textContent = `
+            @-moz-document url-prefix() {
+                .login-container {
+                    backdrop-filter: blur(5px);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    }
 });
 
-// Add cache prevention meta tags dynamically
-(function() {
-    const metaTags = [
-        { httpEquiv: 'Cache-Control', content: 'no-cache, no-store, must-revalidate' },
-        { httpEquiv: 'Pragma', content: 'no-cache' },
-        { httpEquiv: 'Expires', content: '0' }
-    ];
-    
-    metaTags.forEach(tag => {
-        let meta = document.querySelector(`meta[http-equiv="${tag.httpEquiv}"]`);
-        if (!meta) {
-            meta = document.createElement('meta');
-            meta.httpEquiv = tag.httpEquiv;
-            document.head.appendChild(meta);
-        }
-        meta.content = tag.content;
-    });
-})();
+// Cache prevention
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted) {
+        window.location.reload();
+    }
+});
