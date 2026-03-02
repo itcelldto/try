@@ -1,444 +1,161 @@
-// Chatbot functionality
-document.addEventListener('DOMContentLoaded', function() {
-    const chatIcon = document.getElementById('chatIcon');
-    const chatPopup = document.getElementById('chatPopup');
-    const closePopup = document.getElementById('closePopup');
-    const overlay = document.getElementById('overlay');
-    
-    // Open popup when chat icon is clicked
-    chatIcon.addEventListener('click', function() {
-        chatPopup.style.display = 'flex';
-        overlay.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-    });
-    
-    // Close popup when X button is clicked
-    closePopup.addEventListener('click', function() {
-        chatPopup.style.display = 'none';
-        overlay.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    });
-    
-    // Close popup when clicking outside
-    overlay.addEventListener('click', function() {
-        chatPopup.style.display = 'none';
-        overlay.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    });
-    
-    // Close popup when pressing Escape key
-    document.addEventListener('keydown', function(event) {
-        if (event.key === 'Escape') {
-            chatPopup.style.display = 'none';
-            overlay.style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-    });
-});
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eAdmin | IT Cell HelpDesk</title>
+    <link rel="stylesheet" href="./css/all.min.css">
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link rel="stylesheet" href="./css/bootstrap-icons.css">
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" href="./css/adminlte.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Favicons -->
+    <link href="./icons/favicon.png" rel="icon">
+    <link href="./icons/favicon.png" rel="apple-touch-icon">
+    <!-- Custom Admin CSS -->
+    <link rel="stylesheet" href="./css/main.css">
+</head>
+<body class="hold-transition sidebar-mini layout-fixed" style="display: none;">
+    <!-- Simple Authentication Check -->
+    <div class="auth-check" id="auth-check">
+        <div class="auth-check-content">
+            <div class="auth-spinner"></div>
+            <h4>Checking Authentication...</h4>
+            <p class="mt-3" id="auth-message">Please wait while we verify your session.</p>
+            <div id="auth-error" class="text-danger mt-2" style="display: none;">
+                <p>Authentication required. Redirecting to login...</p>
+                <button onclick="window.location.href='login.html'" class="btn btn-primary mt-2">Go to Login</button>
+            </div>
+        </div>
+    </div>
 
-// Set inactivity timeout to 15 minutes (900,000 milliseconds)
-const INACTIVITY_TIMEOUT = 15 * 60 * 1000;
-let inactivityTimer;
+    <!-- Main Content -->
+    <div class="wrapper" id="main-wrapper">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+            <!-- Left navbar links -->
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+                </li>
+                <li class="nav-item d-none d-sm-inline-block">
+                    <h4 style="font-size: 25px;color: #343a40;font-weight: bold;text-shadow: 2px 2px #f8f9fa;margin: 0;">eAdmin</h4>
+                </li>
+            </ul>
 
-// Function to reset the inactivity timer
-function resetInactivityTimer() {
-    clearTimeout(inactivityTimer);
-    inactivityTimer = setTimeout(reloadPage, INACTIVITY_TIMEOUT);
-}
-
-// Function to reload the page
-function reloadPage() {
-    window.location.reload(true); // Force reload from server
-}
-
-// Event listeners to detect activity
-function setupActivityListeners() {
-    // Mouse movement
-    document.addEventListener('mousemove', resetInactivityTimer);
-    // Mouse clicks
-    document.addEventListener('click', resetInactivityTimer);
-    // Keyboard input
-    document.addEventListener('keydown', resetInactivityTimer);
-    // Touch events for mobile
-    document.addEventListener('touchstart', resetInactivityTimer);
-    document.addEventListener('touchmove', resetInactivityTimer);
-}
-
-// Initialize the timer and event listeners
-function initInactivityTimer() {
-    setupActivityListeners();
-    resetInactivityTimer(); // Start the initial timer
-}
-
-// Start the inactivity monitoring when page loads
-window.addEventListener('load', initInactivityTimer);
-
-// Also restart timer when page becomes visible again
-document.addEventListener('visibilitychange', function() {
-    if (!document.hidden) {
-        resetInactivityTimer();
-    }
-});
-
-// Update date and time function
-function updateDateTime() {
-    const now = new Date();
-
-    // Format date as dd-mm-yyyy
-    const day = String(now.getDate()).padStart(2, '0');
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
-    const dateString = `${day}-${month}-${year}`;
-
-    // Format time in 12-hour base with AM/PM
-    let hours = now.getHours();
-    const minutes = String(now.getMinutes()).padStart(2, '0');
-    const seconds = String(now.getSeconds()).padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12 || 12;
-    const timeString = `${hours}:${minutes}:${seconds} ${ampm}`;
-
-    // Combine date and time
-    const dateTimeString = `${dateString} ${timeString}`;
-
-    // Update the date and time in the navbar
-    document.getElementById('current-date-time').textContent = dateTimeString;
-}
-
-// Function to load dynamic content
-function loadDynamicContent(content) {
-    const contentArea = $('#dynamic-content');
-    $('#loading-spinner').removeClass('hidden');
-    
-    if (content) {
-        // First empty the content area
-        contentArea.empty();
-        
-        // Check if content is an iframe URL
-        if (content.startsWith('<iframe') || content.includes('src="')) {
-            // Create iframe element
-            const iframe = document.createElement('iframe');
-            iframe.style.width = '100%';
-            iframe.style.height = 'calc(100vh - 1px)';
-            iframe.style.border = 'none';
-            
-            // Set src attribute - extract URL from content if needed
-            let srcUrl;
-            if (content.startsWith('http')) {
-                srcUrl = content;
-            } else {
-                // Extract URL from iframe HTML string
-                const srcMatch = content.match(/src="([^"]*)"/);
-                srcUrl = srcMatch ? srcMatch[1] : '';
-            }
-            
-            // Append treasury name as query parameter if it's not already there
-            const treasuryName = sessionStorage.getItem('treasuryName');
-            if (treasuryName) {
-                const urlObj = new URL(srcUrl, window.location.href);
-                if (!urlObj.searchParams.has('treasury')) {
-                    urlObj.searchParams.append('treasury', treasuryName);
-                    srcUrl = urlObj.toString();
-                }
-            }
-            
-            iframe.src = srcUrl;
-            contentArea.append(iframe);
-        } else {
-            // Regular content handling
-            contentArea.html(content);
-            
-            // Execute any scripts in the content
-            contentArea.find('script').each(function() {
-                try {
-                    eval($(this).text());
-                } catch (error) {
-                    console.error('Error executing script:', error);
-                }
-            });
-        }
-        
-        $('#loading-spinner').addClass('hidden');
-    } else {
-        contentArea.html('<div class="alert alert-info">No content available for this item.</div>');
-        $('#loading-spinner').addClass('hidden');
-    }
-}
-
-// CAPTCHA functionality
-function generateCaptcha() {
-    const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Remove lowercase letters
-    let captcha = '';
-    const length = 6;
-    
-    for (let i = 0; i < length; i++) {
-        captcha += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    
-    return captcha;
-}
-
-function displayCaptcha() {
-    const captchaText = generateCaptcha();
-    // Store ONLY uppercase version for validation
-    sessionStorage.setItem('captcha', captchaText);
-    $('#captcha-text').text(captchaText); // Display as uppercase only
-    $('#captcha-input').val('');
-    $('#captcha-error').hide();
-}
-
-function validateCaptcha() {
-    const userInput = $('#captcha-input').val().trim().toUpperCase(); // Convert input to uppercase
-    const storedCaptcha = sessionStorage.getItem('captcha');
-    
-    // Compare exactly (both in uppercase)
-    if (userInput === storedCaptcha) {
-        $('#captcha-error').hide();
-        return true;
-    } else {
-        $('#captcha-error').show();
-        displayCaptcha(); // Generate new CAPTCHA on failure
-        return false;
-    }
-}
-
-// Login functionality
-$(document).ready(function() {
-    const apiKey = 'AIzaSyBAuS3Brpsw5JOJnjNJii1UlFa7ClXf8d4';
-    const sheetId = '11wvVQ2G41ke3g6RdfYX8AJAl0w-fnf2NQ_Agufz0wXY';
-    const settingsSheetName = 'settings';
-    
-    // Current step in forgot password process
-    let currentStep = 1;
-    let otp = '';
-    let treasuryRow = -1;
-    let treasurySettings = [];
-    
-    // Initialize CAPTCHA
-    displayCaptcha();
-    
-    // Refresh CAPTCHA button
-    $('#refresh-captcha').click(function() {
-        displayCaptcha();
-    });
-    
-    // CAPTCHA input event - auto convert to uppercase
-    $('#captcha-input').on('input', function() {
-        // Convert input to uppercase automatically
-        $(this).val($(this).val().toUpperCase());
-    });
-    
-    // Handle login form submission
-    $('#login-form').submit(function(e) {
-        e.preventDefault();
-        
-        // Validate CAPTCHA first
-        if (!validateCaptcha()) {
-            return;
-        }
-        
-        // Get button and disable it
-        const loginButton = $('#login-button');
-        loginButton.prop('disabled', true);
-        loginButton.addClass('loading');
-        
-        const userId = $('#userid').val().trim();
-        const password = $('#password').val().trim();
-        
-        // Show loading state
-        $('#login-error').hide();
-        
-        // Fetch credentials
-        const settingsUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${settingsSheetName}!A2:F?key=${apiKey}`;
-        
-        fetch(settingsUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                return response.json();
-            })
-            .then(data => {
-                treasurySettings = data.values;
-                let loginSuccessful = false;
-                let treasuryName = '';
-                let userName = '';
-                let userRole = '';
+            <!-- Right navbar links -->
+            <ul class="navbar-nav ml-auto">
+                <!-- Current Date and Time -->
+                <li class="nav-item">
+                    <span id="current-date-time" style="padding: 8px 15px; color: #343a40; font-weight: bold;"></span>
+                </li>
                 
-                // Check each row for matching credentials
-                for (let i = 0; i < treasurySettings.length; i++) {
-                    const row = treasurySettings[i];
-                    if (row[1] === userId && row[2] === password) {
-                        loginSuccessful = true;
-                        treasuryName = row[0]; // A column - Treasury name
-                        userName = row[1] || userId; // D column - User Name
-                        userRole = row[3] || UserRole; // E column - User Role
-                        treasuryRow = i; // Store the row index for later use
-                        break;
-                    }
-                }
+                <!-- User Menu -->
+                <li class="nav-item dropdown user-menu">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-circle" style="color: #0e56d1;"></i>
+                        <span class="d-none d-md-inline" id="session-storage-value"></span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right" style="box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);">
+                        <!-- User image -->
+                        <li class="user-header">
+                            <img src="./img/user.png" class="img-circle elevation-2" alt="User Image">
+                            <p id="user-name-display">
+                                <small id="user-name-display"></small>
+                            </p>
+                            <p id="user-role-display">
+                                <small id="user-role-display"></small>
+                            </p>
+                        </li>
+                        <!-- Menu Footer-->
+                        <li class="user-footer">
+                            <a href="#" class="btn btn-default btn2-flat">Profile</a>
+                            <a href="javascript:void(0)" class="btn btn-default btn2-flat float-right" onclick="logout()">Sign out</a>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+        <!-- /.navbar -->
+
+        <!-- Main Sidebar Container -->
+        <aside class="main-sidebar sidebar-dark-primary elevation-4">
+            <!-- Brand Logo -->
+            <a href="" class="brand-link">
+                <span class="brand-text font-weight-light"><b>IT Cell</b> Help Desk</span>
+            </a>
+
+            <!-- Treasury Name Display -->
+            <div class="treasury-name" id="treasury-name-display"></div>
+
+            <!-- Sidebar -->
+            <div class="sidebar">
+                <!-- Sidebar Menu -->
+                <nav class="mt-2">
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false" id="sidebar-menu">
+                        <!-- Menu items will be dynamically populated here -->
+                    </ul>
+                </nav>
+                <!-- /.sidebar-menu -->
+            </div>
+            <!-- /.sidebar -->
+        </aside>
+
+        <!-- Content Wrapper. Contains page content -->
+        <div class="content-wrapper">
+            <!-- Running Text (News Reel) 
+            <div class="running-text">
+                <marquee id="news-reel" direction="left" scrollamount="3"></marquee>
+            </div> -->
+            
+            <!-- Main Content -->
+            <section class="content">
+                <!-- Loading Spinner -->
+                <div class="loading-container hidden" id="loading-spinner">
+                    <div class="loading-content">
+                        <img src="https://itcelldto.github.io/try/Spinner-3.gif" alt="Loading...">
+                        <p>Loading. Please wait...</p>
+                    </div>
+                </div>
                 
-                if (loginSuccessful) {
-                    // Successful login
-                    $('#login-error').hide();
-                    $('#login-overlay').hide();
-                    
-                    // Display treasury name in sidebar
-                    $('#treasury-name-display').text(treasuryName);
-                    
-                    // Store user information in session storage
-                    sessionStorage.setItem('treasuryName', treasuryName);
-                    sessionStorage.setItem('userName', userName);
-                    sessionStorage.setItem('userRole', userRole);
-                    
-                    // Update user display in navbar
-                    $('#session-storage-value').text(userName);
-                    $('#user-name-display').text(treasuryName);
-                    $('#user-role-display').text(userRole);
-                    
-                    // Show the main content wrapper
-                    $('#main-wrapper').show();
-                    
-                    // Initialize the main application with the menu sheet name from column F
-                    initializeApplication(treasurySettings[treasuryRow][5] || 'nav-links');
-                } else {
-                    // Failed login
-                    $('#login-error').text('Invalid User ID or Password').show();
-                    displayCaptcha(); // Generate new CAPTCHA on login failure
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                $('#login-error').text('Error connecting to server. Please try again later.').show();
-                displayCaptcha(); // Generate new CAPTCHA on error
-            })
-            .finally(() => {
-                // Re-enable button
-                loginButton.prop('disabled', false);
-                loginButton.removeClass('loading');
-            });
-    });
+                <!-- Dynamic Content Area -->
+                <div id="dynamic-content"></div>
+            </section>
+        </div>
+
+        <!-- /.content-wrapper -->
+        <!-- Main Footer -->
+        <footer class="main-footer">
+            <div class="float-right d-none d-sm-block">
+                Version 1 
+            </div>
+            <strong> &copy; eAdmin - Designed & Maintained by <a href="#">IT Cell HelpDesk</a>.</strong> All rights reserved.
+        </footer>
+    </div>
     
-    // Function to initialize the application after successful login
-    function initializeApplication(menuSheetName) {
-        // Start updating date and time
-        updateDateTime();
-        setInterval(updateDateTime, 1000);
-        
-        // Fetch data for the sidebar menu
-        const menuUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${menuSheetName}?key=${apiKey}`;
+    <!-- Chatbot area -->
+    <div class="chat-icon" id="chatIcon">
+        <i class="fas fa-comment"></i>
+    </div>
 
-        // Fetch data for the running text
-        const reelSheetName = 'Scroll-reel';
-        const reelUrl = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${reelSheetName}?key=${apiKey}`;
+    <div class="chat-popup" id="chatPopup">
+        <div class="popup-header">
+            <h3>eAdmin Support</h3>
+            <button class="close-btn" id="closePopup">&times;</button>
+        </div>
+        <iframe src="https://itcelltreasury.github.io/try/chat/e-chatplus.html" class="popup-iframe" id="chatIframe"></iframe>
+    </div>
 
-        // Fetch and populate the running text
-        $.get(reelUrl, function(data) {
-            const rows = data.values;
-            let runningText = '';
+    <div class="overlay" id="overlay"></div>
 
-            // Combine all text from column A2:A into a single string
-            rows.slice(1).forEach(row => {
-                if (row[0]) {
-                    runningText += row[0] + ' • '; // Add a separator between items
-                }
-            });
-
-            // Set the running text content
-            $('#news-reel').text(runningText);
-        });
-
-        // Fetch and populate the sidebar menu with Bootstrap Icons
-        fetch(menuUrl)
-            .then(response => response.json())
-            .then(data => {
-                const rows = data.values;
-                let currentMainMenu = '';
-                let mainMenuLi = null;
-                let subMenuUl = null;
-                let firstSubmenuItem = null;
-
-                rows.slice(1).forEach((row, index) => {
-                    const mainMenu = row[0];
-                    const subMenu = row[1];
-                    const subMenuLink = row[2];
-                    const dynamicContent = row[3]; // Content from column D
-                    const mainMenuIcon = row[4] || 'bi bi-folder'; // Column E - Main menu icon (default: folder)
-                    const subMenuIcon = row[5] || 'bi bi-circle'; // Column F - Submenu icon (default: circle)
-
-                    if (mainMenu !== currentMainMenu) {
-                        currentMainMenu = mainMenu;
-                        mainMenuLi = $('<li>').addClass('nav-item has-treeview');
-                        subMenuUl = $('<ul>').addClass('nav nav-treeview');
-
-                        // Add main menu item with Bootstrap Icon
-                        const mainMenuLink = $('<a>')
-                            .addClass('nav-link')
-                            .append($('<i>').addClass('nav-icon ' + mainMenuIcon))
-                            .append('<p>' + mainMenu + '<i class="right fas fa-angle-left"></i></p>')
-                            .click(function(e) {
-                                e.preventDefault();
-                                // Close other open menus
-                                $('.nav-item.has-treeview').not(mainMenuLi).removeClass('menu-open');
-                                // Toggle current menu
-                                mainMenuLi.toggleClass('menu-open');
-                            });
-
-                        mainMenuLi.append(mainMenuLink);
-                        mainMenuLi.append(subMenuUl);
-                        $('#sidebar-menu').append(mainMenuLi);
-                    }
-
-                    if (subMenu && subMenuLink) {
-                        const subMenuLi = $('<li>').addClass('nav-item').append(
-                            $('<a>').addClass('nav-link').attr('href', '#').append(
-                                $('<i>').addClass('nav-icon ' + subMenuIcon)
-                            ).append('<p>' + subMenu + '</p>').click(function(e) {
-                                e.preventDefault();
-                                loadDynamicContent(dynamicContent);
-                            })
-                        );
-                        subMenuUl.append(subMenuLi);
-                        
-                        // Store the first submenu item to load its content automatically
-                        if (!firstSubmenuItem && dynamicContent) {
-                            firstSubmenuItem = dynamicContent;
-                        }
-                    }
-                });
-                
-                // Initialize the treeview after adding new elements
-                $('[data-widget="treeview"]').Treeview('init');
-                $('#loading-spinner').addClass('hidden');
-                
-                // Load the first submenu item's content automatically
-                if (firstSubmenuItem) {
-                    loadDynamicContent(firstSubmenuItem);
-                } else {
-                    $('#dynamic-content').html('<div class="alert alert-info">Select a menu item to view content</div>');
-                }
-            })
-            .catch(error => {
-                console.error('Error loading menu:', error);
-                $('#dynamic-content').html('<div class="alert alert-danger">Failed to load menu. Please try again later.</div>');
-                $('#loading-spinner').addClass('hidden');
-            });
-    }
-});
-
-function openForgotPasswordPopup() {
-    // Set your desired popup dimensions
-    const width = 600;
-    const height = 500;
-    
-    // Calculate centered position
-    const left = (screen.width - width) / 2;
-    const top = (screen.height - height) / 2;
-    
-    // Open popup window
-    window.open(
-        'https://script.google.com/macros/s/AKfycbztfDzKffRaQXd5-_JyYGr_I26_7cXbmCApixAxv6ps/dev',
-        'ForgotPasswordPopup',
-        `width=${width},height=${height},top=${top},left=${left},resizable=yes,scrollbars=yes,toolbar=no,location=no`
-    );
-}
+    <!-- jQuery -->
+    <script src="./js/jquery.min.js"></script>
+    <!-- Bootstrap 4 -->
+    <script src="./js/bootstrap.bundle.min.js"></script>
+    <!-- AdminLTE App -->
+    <script src="./js/adminlte.min.js"></script>
+    <!-- Custom Admin JavaScript -->
+    <script src="./js/main.js"></script>
+</body>
+</html>
