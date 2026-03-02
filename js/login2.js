@@ -284,7 +284,7 @@ document.getElementById('login-form').addEventListener('submit', async function(
             
             setTimeout(() => {
                 window.history.replaceState(null, '', 'eadmin2.html');
-                window.location.replace("eadmin.html");
+                window.location.replace("eadmin2.html");
             }, 1000);
             
         } else {
